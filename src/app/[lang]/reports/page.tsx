@@ -1,9 +1,10 @@
 
 import React from 'react';
+import Link from 'next/link';
 import { PageTitle } from '@/components/shared/PageTitle';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import type { Order, Product, User as AppUser, Branch } from '@/types';
-import { ShoppingCart } from 'lucide-react';
+import { ShoppingCart, ListChecks, Undo2, AlertTriangle } from 'lucide-react';
 import { ref, get, query, orderByChild } from "firebase/database";
 import { database } from "@/lib/firebase";
 import { ReportChartsClient, type ReportDataItem, type OverallSalesSummary } from '@/components/reports/ReportChartsClient';
@@ -108,13 +109,23 @@ async function getReportsData(lang: 'ar' | 'en', selectedBranchId?: string): Pro
   const salesByProduct: Record<string, number> = {};
   orders.forEach(order => {
     if (order.transactionType === 'Sale') {
-      salesByProduct[order.productId] = (salesByProduct[order.productId] || 0) + 1;
+      // Handle both new format (items array) and old format (productId)
+      if (order.items && order.items.length > 0) {
+        order.items.forEach(item => {
+          const productKey = item.productName || item.productId || 'Unknown Product';
+          salesByProduct[productKey] = (salesByProduct[productKey] || 0) + item.quantity;
+        });
+      } else if (order.productId) {
+        // Fallback for old format
+        const product = productsMap.get(order.productId);
+        const productKey = product?.name || order.productId;
+        salesByProduct[productKey] = (salesByProduct[productKey] || 0) + 1;
+      }
     }
   });
   const mostSoldProductsData = Object.entries(salesByProduct)
-    .map(([productId, count]) => {
-      const product = productsMap.get(productId);
-      return { name: product?.name || productId, value: count };
+    .map(([productName, count]) => {
+      return { name: productName, value: count };
     })
     .sort((a, b) => b.value - a.value)
     .slice(0, 10);
@@ -123,13 +134,23 @@ async function getReportsData(lang: 'ar' | 'en', selectedBranchId?: string): Pro
   const rentalsByProduct: Record<string, number> = {};
   orders.forEach(order => {
     if (order.transactionType === 'Rental') {
-      rentalsByProduct[order.productId] = (rentalsByProduct[order.productId] || 0) + 1;
+      // Handle both new format (items array) and old format (productId)
+      if (order.items && order.items.length > 0) {
+        order.items.forEach(item => {
+          const productKey = item.productName || item.productId || 'Unknown Product';
+          rentalsByProduct[productKey] = (rentalsByProduct[productKey] || 0) + item.quantity;
+        });
+      } else if (order.productId) {
+        // Fallback for old format
+        const product = productsMap.get(order.productId);
+        const productKey = product?.name || order.productId;
+        rentalsByProduct[productKey] = (rentalsByProduct[productKey] || 0) + 1;
+      }
     }
   });
   const mostRentedProductsData = Object.entries(rentalsByProduct)
-    .map(([productId, count]) => {
-      const product = productsMap.get(productId);
-      return { name: product?.name || productId, value: count };
+    .map(([productName, count]) => {
+      return { name: productName, value: count };
     })
     .sort((a, b) => b.value - a.value)
     .slice(0, 10);
@@ -138,13 +159,24 @@ async function getReportsData(lang: 'ar' | 'en', selectedBranchId?: string): Pro
   const rentalRevenueByProduct: Record<string, number> = {};
   orders.forEach(order => {
     if (order.transactionType === 'Rental') {
-      rentalRevenueByProduct[order.productId] = (rentalRevenueByProduct[order.productId] || 0) + (order.totalPrice || 0);
+      // Handle both new format (items array) and old format (productId)
+      if (order.items && order.items.length > 0) {
+        order.items.forEach(item => {
+          const productKey = item.productName || item.productId || 'Unknown Product';
+          const itemRevenue = item.priceAtTimeOfOrder * item.quantity;
+          rentalRevenueByProduct[productKey] = (rentalRevenueByProduct[productKey] || 0) + itemRevenue;
+        });
+      } else if (order.productId) {
+        // Fallback for old format
+        const product = productsMap.get(order.productId);
+        const productKey = product?.name || order.productId;
+        rentalRevenueByProduct[productKey] = (rentalRevenueByProduct[productKey] || 0) + (order.totalPrice || 0);
+      }
     }
   });
   const mostProfitableRentalsData = Object.entries(rentalRevenueByProduct)
-    .map(([productId, totalRevenue]) => {
-      const product = productsMap.get(productId);
-      return { name: product?.name || productId, value: parseFloat(totalRevenue.toFixed(2)) };
+    .map(([productName, totalRevenue]) => {
+      return { name: productName, value: parseFloat(totalRevenue.toFixed(2)) };
     })
     .sort((a, b) => b.value - a.value)
     .slice(0, 10);
@@ -285,6 +317,86 @@ export default async function ReportsPage({
         translations={t}
         lang={effectiveLang}
       />
+
+      {/* Quick Links to Detailed Reports */}
+      <Card className="shadow-lg rounded-lg">
+        <CardHeader>
+          <CardTitle className="font-headline text-xl">
+            {effectiveLang === 'ar' ? 'التقارير التفصيلية' : 'Detailed Reports'}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <Link
+              href={`/${effectiveLang}/reports/sales`}
+              className="p-4 border rounded-lg hover:bg-muted/50 transition-colors group"
+            >
+              <div className="flex items-center space-x-3 rtl:space-x-reverse">
+                <div className="p-2 bg-blue-100 rounded-lg group-hover:bg-blue-200 transition-colors">
+                  <ShoppingCart className="h-5 w-5 text-blue-600" />
+                </div>
+                <div>
+                  <h3 className="font-semibold">{effectiveLang === 'ar' ? 'تفاصيل المبيعات' : 'Sales Details'}</h3>
+                  <p className="text-sm text-muted-foreground">
+                    {effectiveLang === 'ar' ? 'عرض جميع المبيعات' : 'View all sales'}
+                  </p>
+                </div>
+              </div>
+            </Link>
+
+            <Link
+              href={`/${effectiveLang}/reports/active-rentals`}
+              className="p-4 border rounded-lg hover:bg-muted/50 transition-colors group"
+            >
+              <div className="flex items-center space-x-3 rtl:space-x-reverse">
+                <div className="p-2 bg-green-100 rounded-lg group-hover:bg-green-200 transition-colors">
+                  <ListChecks className="h-5 w-5 text-green-600" />
+                </div>
+                <div>
+                  <h3 className="font-semibold">{effectiveLang === 'ar' ? 'الإيجارات النشطة' : 'Active Rentals'}</h3>
+                  <p className="text-sm text-muted-foreground">
+                    {effectiveLang === 'ar' ? 'الإيجارات الجارية' : 'Current rentals'}
+                  </p>
+                </div>
+              </div>
+            </Link>
+
+            <Link
+              href={`/${effectiveLang}/reports/upcoming-returns`}
+              className="p-4 border rounded-lg hover:bg-muted/50 transition-colors group"
+            >
+              <div className="flex items-center space-x-3 rtl:space-x-reverse">
+                <div className="p-2 bg-yellow-100 rounded-lg group-hover:bg-yellow-200 transition-colors">
+                  <Undo2 className="h-5 w-5 text-yellow-600" />
+                </div>
+                <div>
+                  <h3 className="font-semibold">{effectiveLang === 'ar' ? 'المرتجعات القادمة' : 'Upcoming Returns'}</h3>
+                  <p className="text-sm text-muted-foreground">
+                    {effectiveLang === 'ar' ? 'خلال الأسبوع القادم' : 'Within next week'}
+                  </p>
+                </div>
+              </div>
+            </Link>
+
+            <Link
+              href={`/${effectiveLang}/reports/overdue-returns`}
+              className="p-4 border rounded-lg hover:bg-muted/50 transition-colors group"
+            >
+              <div className="flex items-center space-x-3 rtl:space-x-reverse">
+                <div className="p-2 bg-red-100 rounded-lg group-hover:bg-red-200 transition-colors">
+                  <AlertTriangle className="h-5 w-5 text-red-600" />
+                </div>
+                <div>
+                  <h3 className="font-semibold">{effectiveLang === 'ar' ? 'المرتجعات المتأخرة' : 'Overdue Returns'}</h3>
+                  <p className="text-sm text-muted-foreground">
+                    {effectiveLang === 'ar' ? 'تحتاج متابعة عاجلة' : 'Need urgent follow-up'}
+                  </p>
+                </div>
+              </div>
+            </Link>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

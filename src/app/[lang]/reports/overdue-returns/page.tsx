@@ -1,18 +1,15 @@
-
 import React from 'react';
 import Link from 'next/link';
 import { PageTitle } from '@/components/shared/PageTitle';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft, Undo2, AlertCircle } from 'lucide-react';
+import { ArrowLeft, AlertTriangle, AlertCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { arSA, enUS } from 'date-fns/locale';
-import { getUpcomingReturnsData } from '@/lib/reports-data';
+import { getOverdueReturnsData } from '@/lib/reports-data';
 
-
-
-export default async function UpcomingReturnsPage({
+export default async function OverdueReturnsPage({
   params: routeParams
 }: {
   params: Promise<{ lang: string }>
@@ -22,30 +19,31 @@ export default async function UpcomingReturnsPage({
   const locale = effectiveLang === 'ar' ? arSA : enUS;
 
   const t = {
-    pageTitle: effectiveLang === 'ar' ? 'تفاصيل المرتجعات القادمة' : 'Upcoming Returns Details',
-    allTimeDataNote: effectiveLang === 'ar' ? 'البيانات المعروضة تشمل الإيجارات النشطة المطلوب إرجاعها خلال الأسبوع القادم.' : 'Data shown includes active rentals due for return within the next week.',
+    pageTitle: effectiveLang === 'ar' ? 'تفاصيل المرتجعات المتأخرة' : 'Overdue Returns Details',
+    allTimeDataNote: effectiveLang === 'ar' ? 'البيانات المعروضة تشمل الإيجارات النشطة المتأخرة عن موعد الإرجاع.' : 'Data shown includes active rentals that are past their return date.',
     backToDashboard: effectiveLang === 'ar' ? 'العودة إلى التقارير' : 'Back to Reports',
     orderId: effectiveLang === 'ar' ? 'رقم الطلب' : 'Order ID',
     productName: effectiveLang === 'ar' ? 'اسم المنتج' : 'Product Name',
     customerName: effectiveLang === 'ar' ? 'اسم العميل' : 'Customer Name',
     sellerName: effectiveLang === 'ar' ? 'اسم البائع' : 'Seller Name',
     returnDate: effectiveLang === 'ar' ? 'تاريخ الإرجاع' : 'Return Date',
-    noUpcomingReturns: effectiveLang === 'ar' ? 'لا توجد مرتجعات قادمة خلال الأسبوع القادم.' : 'No upcoming returns within the next week.',
+    noOverdueReturns: effectiveLang === 'ar' ? 'لا توجد مرتجعات متأخرة حالياً.' : 'No overdue returns currently.',
     viewOrder: effectiveLang === 'ar' ? 'عرض الطلب' : 'View Order',
     totalPrice: effectiveLang === 'ar' ? 'السعر الإجمالي' : 'Total Price',
     currencySymbol: effectiveLang === 'ar' ? 'ج.م' : 'EGP',
     errorLoadingData: effectiveLang === 'ar' ? 'خطأ في تحميل البيانات' : 'Error loading data',
     tryAgain: effectiveLang === 'ar' ? 'حاول مرة أخرى' : 'Try Again',
-    daysUntilReturn: effectiveLang === 'ar' ? 'أيام حتى الإرجاع' : 'Days Until Return',
+    daysOverdue: effectiveLang === 'ar' ? 'أيام التأخير' : 'Days Overdue',
+    contactCustomer: effectiveLang === 'ar' ? 'اتصال بالعميل' : 'Contact Customer',
   };
 
-  let upcomingReturns: any[] = [];
+  let overdueReturns: any[] = [];
   let error = false;
 
   try {
-    upcomingReturns = await getUpcomingReturnsData(effectiveLang);
+    overdueReturns = await getOverdueReturnsData(effectiveLang);
   } catch (err) {
-    console.error("Error in UpcomingReturnsPage:", err);
+    console.error("Error in OverdueReturnsPage:", err);
     error = true;
   }
 
@@ -58,10 +56,10 @@ export default async function UpcomingReturnsPage({
     }
   };
 
-  const getDaysUntilReturn = (returnDate: string) => {
+  const getDaysOverdue = (returnDate: string) => {
     const today = new Date();
     const returnDateObj = new Date(returnDate);
-    const diffTime = returnDateObj.getTime() - today.getTime();
+    const diffTime = today.getTime() - returnDateObj.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     return diffDays;
   };
@@ -107,12 +105,12 @@ export default async function UpcomingReturnsPage({
       <Card className="shadow-lg rounded-lg">
         <CardHeader>
           <CardTitle className="font-headline text-xl flex items-center">
-            <Undo2 className="mr-2 h-5 w-5 text-primary rtl:ml-2 rtl:mr-0" />
+            <AlertTriangle className="mr-2 h-5 w-5 text-destructive rtl:ml-2 rtl:mr-0" />
             {t.pageTitle}
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {upcomingReturns.length > 0 ? (
+          {overdueReturns.length > 0 ? (
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
@@ -122,14 +120,14 @@ export default async function UpcomingReturnsPage({
                     <TableHead className="font-semibold">{t.customerName}</TableHead>
                     <TableHead className="font-semibold">{t.sellerName}</TableHead>
                     <TableHead className="font-semibold">{t.returnDate}</TableHead>
-                    <TableHead className="font-semibold">{t.daysUntilReturn}</TableHead>
+                    <TableHead className="font-semibold">{t.daysOverdue}</TableHead>
                     <TableHead className="font-semibold">{t.totalPrice}</TableHead>
                     <TableHead className="text-center font-semibold">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {upcomingReturns.map((order) => {
-                    const daysUntil = getDaysUntilReturn(order.returnDate!);
+                  {overdueReturns.map((order) => {
+                    const daysOverdue = getDaysOverdue(order.returnDate!);
                     return (
                       <TableRow key={order.id} className="hover:bg-muted/50">
                         <TableCell className="font-medium">{order.id}</TableCell>
@@ -138,28 +136,19 @@ export default async function UpcomingReturnsPage({
                         <TableCell>{order.sellerName}</TableCell>
                         <TableCell>{formatDate(order.returnDate)}</TableCell>
                         <TableCell>
-                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                            daysUntil <= 1
-                              ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
-                              : daysUntil <= 3
-                              ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
-                              : 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                          }`}>
-                            {daysUntil <= 0
-                              ? (effectiveLang === 'ar' ? 'متأخر' : 'Overdue')
-                              : daysUntil === 1
-                              ? (effectiveLang === 'ar' ? 'غداً' : 'Tomorrow')
-                              : `${daysUntil} ${effectiveLang === 'ar' ? 'أيام' : 'days'}`
-                            }
+                          <span className="px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">
+                            {daysOverdue} {effectiveLang === 'ar' ? 'يوم' : 'days'}
                           </span>
                         </TableCell>
                         <TableCell className="font-semibold">{t.currencySymbol} {order.totalPrice?.toLocaleString() || 0}</TableCell>
                         <TableCell className="text-center">
-                          <Button asChild variant="ghost" size="sm">
-                            <Link href={`/${effectiveLang}/orders/${order.id}`}>
-                              {t.viewOrder}
-                            </Link>
-                          </Button>
+                          <div className="flex gap-2 justify-center">
+                            <Button asChild variant="ghost" size="sm">
+                              <Link href={`/${effectiveLang}/orders/${order.id}`}>
+                                {t.viewOrder}
+                              </Link>
+                            </Button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     );
@@ -169,8 +158,8 @@ export default async function UpcomingReturnsPage({
             </div>
           ) : (
             <div className="text-center py-12">
-              <Undo2 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <p className="text-muted-foreground text-lg">{t.noUpcomingReturns}</p>
+              <AlertTriangle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <p className="text-muted-foreground text-lg">{t.noOverdueReturns}</p>
             </div>
           )}
         </CardContent>

@@ -1,30 +1,30 @@
 
-'use client';
-
-import React, { useMemo } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import React from 'react';
 import Link from 'next/link';
 import { PageTitle } from '@/components/shared/PageTitle';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { mockOrders, mockProducts, mockCustomers, mockUsers } from '@/lib/mock-data';
-import type { Order } from '@/types';
-import { ArrowLeft, ListChecks } from 'lucide-react';
+import { ArrowLeft, ListChecks, AlertCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { arSA, enUS } from 'date-fns/locale';
+import { getActiveRentalsData } from '@/lib/reports-data';
 
-export default function ActiveRentalsPage() {
-  const params = useParams();
-  const router = useRouter();
-  const lang = params.lang as 'ar' | 'en';
-  const effectiveLang = lang === 'en' ? 'en' : 'ar';
+
+
+export default async function ActiveRentalsPage({
+  params: routeParams
+}: {
+  params: Promise<{ lang: string }>
+}) {
+  const { lang } = await routeParams;
+  const effectiveLang = lang as 'ar' | 'en';
   const locale = effectiveLang === 'ar' ? arSA : enUS;
 
   const t = {
     pageTitle: effectiveLang === 'ar' ? 'تفاصيل الإيجارات النشطة' : 'Active Rentals Details',
     allTimeDataNote: effectiveLang === 'ar' ? 'البيانات المعروضة تشمل جميع الإيجارات النشطة حاليًا. التصفية حسب الفترة ستتوفر مستقبلاً.' : 'Data shown includes all currently active rentals. Period filtering will be available in a future update.',
-    backToDashboard: effectiveLang === 'ar' ? 'العودة إلى الصفحة الرئيسية' : 'Back to Dashboard',
+    backToDashboard: effectiveLang === 'ar' ? 'العودة إلى التقارير' : 'Back to Reports',
     orderId: effectiveLang === 'ar' ? 'رقم الطلب' : 'Order ID',
     productName: effectiveLang === 'ar' ? 'اسم المنتج' : 'Product Name',
     customerName: effectiveLang === 'ar' ? 'اسم العميل' : 'Customer Name',
@@ -33,24 +33,21 @@ export default function ActiveRentalsPage() {
     returnDate: effectiveLang === 'ar' ? 'تاريخ الإرجاع' : 'Return Date',
     noActiveRentals: effectiveLang === 'ar' ? 'لا توجد إيجارات نشطة حاليًا.' : 'No active rentals currently.',
     viewOrder: effectiveLang === 'ar' ? 'عرض الطلب' : 'View Order',
+    totalPrice: effectiveLang === 'ar' ? 'السعر الإجمالي' : 'Total Price',
+    currencySymbol: effectiveLang === 'ar' ? 'ج.م' : 'EGP',
+    errorLoadingData: effectiveLang === 'ar' ? 'خطأ في تحميل البيانات' : 'Error loading data',
+    tryAgain: effectiveLang === 'ar' ? 'حاول مرة أخرى' : 'Try Again',
   };
 
-  const activeRentals = useMemo(() => {
-    return mockOrders
-      .filter(order => order.transactionType === 'Rental' && order.status === 'Ongoing')
-      .map(order => {
-        const product = mockProducts.find(p => p.id === order.productId);
-        const customer = mockCustomers.find(c => c.id === order.customerId);
-        const seller = mockUsers.find(u => u.id === order.sellerId);
-        return {
-          ...order,
-          productName: product?.name || order.productId,
-          customerName: customer?.fullName || order.customerId,
-          sellerName: seller?.fullName || (effectiveLang === 'ar' ? 'بائع غير معروف' : 'Unknown Seller'),
-        };
-      })
-      .sort((a, b) => new Date(a.deliveryDate).getTime() - new Date(b.deliveryDate).getTime());
-  }, [effectiveLang]);
+  let activeRentals: any[] = [];
+  let error = false;
+
+  try {
+    activeRentals = await getActiveRentalsData(effectiveLang);
+  } catch (err) {
+    console.error("Error in ActiveRentalsPage:", err);
+    error = true;
+  }
 
   const formatDate = (dateString?: string) => {
     if (!dateString) return effectiveLang === 'ar' ? 'غير محدد' : 'N/A';
@@ -61,13 +58,38 @@ export default function ActiveRentalsPage() {
     }
   };
 
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <PageTitle>{t.pageTitle}</PageTitle>
+          <Button asChild variant="outline">
+            <Link href={`/${effectiveLang}/reports`}>
+              <ArrowLeft className="mr-2 h-4 w-4 rtl:ml-2 rtl:mr-0 rtl:rotate-180" />
+              {t.backToDashboard}
+            </Link>
+          </Button>
+        </div>
+        <Card className="shadow-lg rounded-lg">
+          <CardContent className="flex flex-col items-center justify-center py-12">
+            <AlertCircle className="h-12 w-12 text-destructive mb-4" />
+            <h3 className="text-lg font-semibold mb-2">{t.errorLoadingData}</h3>
+            <Button onClick={() => window.location.reload()} variant="outline">
+              {t.tryAgain}
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-8">
-      <div className="flex justify-between items-center">
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
         <PageTitle>{t.pageTitle}</PageTitle>
         <Button asChild variant="outline">
-          <Link href={`/${effectiveLang}`}>
-            <ArrowLeft className={effectiveLang === 'ar' ? 'ml-2' : 'mr-2'} />
+          <Link href={`/${effectiveLang}/reports`}>
+            <ArrowLeft className="mr-2 h-4 w-4 rtl:ml-2 rtl:mr-0 rtl:rotate-180" />
             {t.backToDashboard}
           </Link>
         </Button>
@@ -87,25 +109,27 @@ export default function ActiveRentalsPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>{t.orderId}</TableHead>
-                    <TableHead>{t.productName}</TableHead>
-                    <TableHead>{t.customerName}</TableHead>
-                    <TableHead>{t.sellerName}</TableHead>
-                    <TableHead>{t.deliveryDate}</TableHead>
-                    <TableHead>{t.returnDate}</TableHead>
-                    <TableHead className="text-center">{t.viewOrder}</TableHead>
+                    <TableHead className="font-semibold">{t.orderId}</TableHead>
+                    <TableHead className="font-semibold">{t.productName}</TableHead>
+                    <TableHead className="font-semibold">{t.customerName}</TableHead>
+                    <TableHead className="font-semibold">{t.sellerName}</TableHead>
+                    <TableHead className="font-semibold">{t.deliveryDate}</TableHead>
+                    <TableHead className="font-semibold">{t.returnDate}</TableHead>
+                    <TableHead className="font-semibold">{t.totalPrice}</TableHead>
+                    <TableHead className="text-center font-semibold">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {activeRentals.map((order) => (
-                    <TableRow key={order.id}>
+                    <TableRow key={order.id} className="hover:bg-muted/50">
                       <TableCell className="font-medium">{order.id}</TableCell>
                       <TableCell>{order.productName}</TableCell>
                       <TableCell>{order.customerName}</TableCell>
                       <TableCell>{order.sellerName}</TableCell>
                       <TableCell>{formatDate(order.deliveryDate)}</TableCell>
                       <TableCell>{formatDate(order.returnDate)}</TableCell>
-                       <TableCell className="text-center">
+                      <TableCell className="font-semibold">{t.currencySymbol} {order.totalPrice?.toLocaleString() || 0}</TableCell>
+                      <TableCell className="text-center">
                         <Button asChild variant="ghost" size="sm">
                           <Link href={`/${effectiveLang}/orders/${order.id}`}>
                             {t.viewOrder}
@@ -118,7 +142,10 @@ export default function ActiveRentalsPage() {
               </Table>
             </div>
           ) : (
-            <p className="text-muted-foreground text-center py-4">{t.noActiveRentals}</p>
+            <div className="text-center py-12">
+              <ListChecks className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <p className="text-muted-foreground text-lg">{t.noActiveRentals}</p>
+            </div>
           )}
         </CardContent>
       </Card>

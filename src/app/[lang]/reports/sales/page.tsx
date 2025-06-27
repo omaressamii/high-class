@@ -1,30 +1,30 @@
 
-'use client';
-
-import React, { useMemo } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import React from 'react';
 import Link from 'next/link';
 import { PageTitle } from '@/components/shared/PageTitle';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { mockOrders, mockProducts, mockCustomers, mockUsers } from '@/lib/mock-data';
-import type { Order } from '@/types';
-import { ArrowLeft, ShoppingCart } from 'lucide-react';
+import { ArrowLeft, ShoppingCart, AlertCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { arSA, enUS } from 'date-fns/locale';
+import { getSalesData } from '@/lib/reports-data';
 
-export default function SalesDetailsPage() {
-  const params = useParams();
-  const router = useRouter();
-  const lang = params.lang as 'ar' | 'en';
-  const effectiveLang = lang === 'en' ? 'en' : 'ar';
+
+
+export default async function SalesDetailsPage({
+  params: routeParams
+}: {
+  params: Promise<{ lang: string }>
+}) {
+  const { lang } = await routeParams;
+  const effectiveLang = lang as 'ar' | 'en';
   const locale = effectiveLang === 'ar' ? arSA : enUS;
 
   const t = {
     pageTitle: effectiveLang === 'ar' ? 'تفاصيل المبيعات' : 'Sales Details',
     allTimeDataNote: effectiveLang === 'ar' ? 'البيانات المعروضة تشمل جميع المبيعات المسجلة. التصفية حسب الفترة ستتوفر مستقبلاً.' : 'Data shown includes all recorded sales. Period filtering will be available in a future update.',
-    backToDashboard: effectiveLang === 'ar' ? 'العودة إلى الصفحة الرئيسية' : 'Back to Dashboard',
+    backToDashboard: effectiveLang === 'ar' ? 'العودة إلى التقارير' : 'Back to Reports',
     orderId: effectiveLang === 'ar' ? 'رقم الطلب' : 'Order ID',
     productName: effectiveLang === 'ar' ? 'اسم المنتج' : 'Product Name',
     customerName: effectiveLang === 'ar' ? 'اسم العميل' : 'Customer Name',
@@ -34,24 +34,20 @@ export default function SalesDetailsPage() {
     noSalesFound: effectiveLang === 'ar' ? 'لا توجد مبيعات مسجلة حاليًا.' : 'No sales recorded currently.',
     currencySymbol: effectiveLang === 'ar' ? 'ج.م' : 'EGP',
     viewOrder: effectiveLang === 'ar' ? 'عرض الطلب' : 'View Order',
+    errorLoadingData: effectiveLang === 'ar' ? 'خطأ في تحميل البيانات' : 'Error loading data',
+    tryAgain: effectiveLang === 'ar' ? 'حاول مرة أخرى' : 'Try Again',
+    status: effectiveLang === 'ar' ? 'الحالة' : 'Status',
   };
 
-  const salesOrders = useMemo(() => {
-    return mockOrders
-      .filter(order => order.transactionType === 'Sale')
-      .map(order => {
-        const product = mockProducts.find(p => p.id === order.productId);
-        const customer = mockCustomers.find(c => c.id === order.customerId);
-        const seller = mockUsers.find(u => u.id === order.sellerId);
-        return {
-          ...order,
-          productName: product?.name || order.productId,
-          customerName: customer?.fullName || order.customerId,
-          sellerName: seller?.fullName || (effectiveLang === 'ar' ? 'بائع غير معروف' : 'Unknown Seller'),
-        };
-      })
-      .sort((a, b) => new Date(b.orderDate).getTime() - new Date(a.orderDate).getTime());
-  }, [effectiveLang]);
+  let salesOrders: any[] = [];
+  let error = false;
+
+  try {
+    salesOrders = await getSalesData(effectiveLang);
+  } catch (err) {
+    console.error("Error in SalesDetailsPage:", err);
+    error = true;
+  }
 
   const formatDate = (dateString: string) => {
     try {
@@ -61,13 +57,38 @@ export default function SalesDetailsPage() {
     }
   };
 
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <PageTitle>{t.pageTitle}</PageTitle>
+          <Button asChild variant="outline">
+            <Link href={`/${effectiveLang}/reports`}>
+              <ArrowLeft className="mr-2 h-4 w-4 rtl:ml-2 rtl:mr-0 rtl:rotate-180" />
+              {t.backToDashboard}
+            </Link>
+          </Button>
+        </div>
+        <Card className="shadow-lg rounded-lg">
+          <CardContent className="flex flex-col items-center justify-center py-12">
+            <AlertCircle className="h-12 w-12 text-destructive mb-4" />
+            <h3 className="text-lg font-semibold mb-2">{t.errorLoadingData}</h3>
+            <Button onClick={() => window.location.reload()} variant="outline">
+              {t.tryAgain}
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-8">
-      <div className="flex justify-between items-center">
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
         <PageTitle>{t.pageTitle}</PageTitle>
         <Button asChild variant="outline">
-          <Link href={`/${effectiveLang}`}>
-            <ArrowLeft className={effectiveLang === 'ar' ? 'ml-2' : 'mr-2'} />
+          <Link href={`/${effectiveLang}/reports`}>
+            <ArrowLeft className="mr-2 h-4 w-4 rtl:ml-2 rtl:mr-0 rtl:rotate-180" />
             {t.backToDashboard}
           </Link>
         </Button>
@@ -87,24 +108,36 @@ export default function SalesDetailsPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>{t.orderId}</TableHead>
-                    <TableHead>{t.orderDate}</TableHead>
-                    <TableHead>{t.productName}</TableHead>
-                    <TableHead>{t.customerName}</TableHead>
-                    <TableHead>{t.sellerName}</TableHead>
-                    <TableHead className="text-right">{t.totalPrice}</TableHead>
-                    <TableHead className="text-center">{t.viewOrder}</TableHead>
+                    <TableHead className="font-semibold">{t.orderId}</TableHead>
+                    <TableHead className="font-semibold">{t.orderDate}</TableHead>
+                    <TableHead className="font-semibold">{t.productName}</TableHead>
+                    <TableHead className="font-semibold">{t.customerName}</TableHead>
+                    <TableHead className="font-semibold">{t.sellerName}</TableHead>
+                    <TableHead className="font-semibold">{t.status}</TableHead>
+                    <TableHead className="text-right font-semibold">{t.totalPrice}</TableHead>
+                    <TableHead className="text-center font-semibold">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {salesOrders.map((order) => (
-                    <TableRow key={order.id}>
+                    <TableRow key={order.id} className="hover:bg-muted/50">
                       <TableCell className="font-medium">{order.id}</TableCell>
                       <TableCell>{formatDate(order.orderDate)}</TableCell>
                       <TableCell>{order.productName}</TableCell>
                       <TableCell>{order.customerName}</TableCell>
                       <TableCell>{order.sellerName}</TableCell>
-                      <TableCell className="text-right">{t.currencySymbol} {order.totalPrice.toFixed(2)}</TableCell>
+                      <TableCell>
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          order.status === 'Completed'
+                            ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                            : order.status === 'Pending Preparation'
+                            ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
+                            : 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
+                        }`}>
+                          {order.status}
+                        </span>
+                      </TableCell>
+                      <TableCell className="text-right font-semibold">{t.currencySymbol} {order.totalPrice?.toLocaleString() || 0}</TableCell>
                       <TableCell className="text-center">
                         <Button asChild variant="ghost" size="sm">
                           <Link href={`/${effectiveLang}/orders/${order.id}`}>
@@ -118,7 +151,10 @@ export default function SalesDetailsPage() {
               </Table>
             </div>
           ) : (
-            <p className="text-muted-foreground text-center py-4">{t.noSalesFound}</p>
+            <div className="text-center py-12">
+              <ShoppingCart className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <p className="text-muted-foreground text-lg">{t.noSalesFound}</p>
+            </div>
           )}
         </CardContent>
       </Card>
