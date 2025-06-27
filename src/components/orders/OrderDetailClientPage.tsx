@@ -117,7 +117,7 @@ export function OrderDetailClientPage({ initialOrderDetails, lang, orderId }: Or
     unknownProduct: effectiveLang === 'ar' ? 'منتج غير معروف' : 'Unknown Product',
     unknownCustomer: effectiveLang === 'ar' ? 'عميل غير معروف' : 'Unknown Customer',
     unknownBranch: effectiveLang === 'ar' ? 'فرع غير محدد' : 'Unassigned Branch',
-    shopName: effectiveLang === 'ar' ? 'كلاسيك' : 'Clasic',
+    shopName: effectiveLang === 'ar' ? 'هاي كلاس' : 'Clasic',
     thankYou: effectiveLang === 'ar' ? 'شكراً لتعاملكم معنا!' : 'Thank you for your business!',
     loadingPage: effectiveLang === 'ar' ? 'جار تحميل الصفحة...' : 'Loading page...',
   };
@@ -265,7 +265,228 @@ export function OrderDetailClientPage({ initialOrderDetails, lang, orderId }: Or
   };
 
   const handlePrint = () => {
-    window.print();
+    // Create a new window for printing
+    const printWindow = window.open('', '_blank', 'width=800,height=600');
+    if (!printWindow) return;
+
+    const formatReceiptDate = (dateString?: string) => {
+      if (!dateString) return '';
+      try {
+        const dateObj = new Date(dateString.replace(/-/g, '/'));
+        if (isNaN(dateObj.getTime())) return dateString;
+        return format(dateObj, 'dd/MM/yyyy', { locale: effectiveLang === 'ar' ? arSA : enUS });
+      } catch {
+        return dateString;
+      }
+    };
+
+    const displayTransactionType = (type: string) => {
+      return type === 'Rental' ? (effectiveLang === 'ar' ? 'إيجار' : 'Rental') : (effectiveLang === 'ar' ? 'بيع' : 'Sale');
+    };
+
+    const invoiceHTML = `
+      <!DOCTYPE html>
+      <html dir="${effectiveLang === 'ar' ? 'rtl' : 'ltr'}">
+      <head>
+        <meta charset="UTF-8">
+        <title>Invoice - ${order.id}</title>
+        <style>
+          * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+          }
+          body {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 12px;
+            line-height: 1.4;
+            color: black;
+            background: white;
+            width: 80mm;
+            margin: 0 auto;
+            padding: 10px;
+          }
+          .header {
+            text-align: center;
+            margin-bottom: 15px;
+            border-bottom: 2px solid black;
+            padding-bottom: 10px;
+          }
+          .header h1 {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 5px;
+          }
+          .header p {
+            font-size: 12px;
+            margin: 2px 0;
+          }
+          .section {
+            margin: 10px 0;
+          }
+          .section h3 {
+            font-size: 14px;
+            font-weight: bold;
+            margin: 5px 0;
+            border-bottom: 1px dashed black;
+            padding-bottom: 2px;
+          }
+          .line {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 3px;
+            align-items: flex-start;
+          }
+          .line .label {
+            flex-shrink: 0;
+            margin-right: 10px;
+          }
+          .line .value {
+            text-align: right;
+            flex-grow: 1;
+            word-wrap: break-word;
+          }
+          .total-line {
+            font-weight: bold;
+            font-size: 14px;
+            border-top: 1px solid black;
+            padding-top: 3px;
+            margin-top: 5px;
+          }
+          .divider {
+            border-top: 1px dashed black;
+            margin: 8px 0;
+            height: 1px;
+          }
+          .footer {
+            text-align: center;
+            margin-top: 15px;
+            font-size: 12px;
+            border-top: 2px solid black;
+            padding-top: 10px;
+          }
+          .notes {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            margin: 5px 0;
+            text-align: left;
+          }
+          @media print {
+            body { margin: 0; padding: 5mm; }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <h1>${t.shopName}</h1>
+          <p>${displayTransactionType(order.transactionType)} ${effectiveLang === 'ar' ? 'فاتورة' : 'Invoice'}</p>
+          ${order.branchName ? `<p>${t.branchLabel}: ${order.branchName}</p>` : ''}
+        </div>
+
+        <div class="section">
+          <div class="line">
+            <span class="label">${effectiveLang === 'ar' ? 'رقم الطلب:' : 'Order ID:'}</span>
+            <span class="value">${order.id}</span>
+          </div>
+          ${order.orderCode ? `
+          <div class="line">
+            <span class="label">${t.orderCodeLabel}:</span>
+            <span class="value">${order.orderCode}</span>
+          </div>` : ''}
+          <div class="line">
+            <span class="label">${t.orderDateLabel}:</span>
+            <span class="value">${formatReceiptDate(order.orderDate)}</span>
+          </div>
+          <div class="line">
+            <span class="label">${t.customerLabel}:</span>
+            <span class="value">${customerFullName}</span>
+          </div>
+          ${customer?.phoneNumber ? `
+          <div class="line">
+            <span class="label">${effectiveLang === 'ar' ? 'الهاتف:' : 'Phone:'}</span>
+            <span class="value">${customer.phoneNumber}</span>
+          </div>` : ''}
+          ${sellerFullName !== t.unknownSeller ? `
+          <div class="line">
+            <span class="label">${t.sellerLabel}:</span>
+            <span class="value">${sellerFullName}</span>
+          </div>` : ''}
+          ${processorFullName !== t.unknownProcessor ? `
+          <div class="line">
+            <span class="label">${t.processorLabel}:</span>
+            <span class="value">${processorFullName}</span>
+          </div>` : ''}
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="section">
+          <h3>${t.itemsLabel}</h3>
+          ${order.items.map(item => `
+          <div class="line">
+            <span class="label">
+              ${item.productName} (x${item.quantity})
+              ${item.productCode ? ` (${item.productCode})` : ''}
+            </span>
+            <span class="value">${t.currencySymbol} ${(item.priceAtTimeOfOrder * item.quantity).toFixed(2)}</span>
+          </div>`).join('')}
+        </div>
+
+        ${order.transactionType === 'Rental' ? `
+        <div class="divider"></div>
+        <div class="section">
+          <div class="line">
+            <span class="label">${t.deliveryDateLabel}:</span>
+            <span class="value">${formatReceiptDate(order.deliveryDate)}</span>
+          </div>
+          ${order.returnDate ? `
+          <div class="line">
+            <span class="label">${t.returnDateLabel}:</span>
+            <span class="value">${formatReceiptDate(order.returnDate)}</span>
+          </div>` : ''}
+        </div>` : ''}
+
+        <div class="divider"></div>
+
+        <div class="section">
+          <div class="line total-line">
+            <span class="label">${t.totalLabel}:</span>
+            <span class="value">${t.currencySymbol} ${order.totalPrice.toFixed(2)}</span>
+          </div>
+          <div class="line">
+            <span class="label">${t.paidLabel}:</span>
+            <span class="value">${t.currencySymbol} ${order.paidAmount.toFixed(2)}</span>
+          </div>
+          <div class="line">
+            <span class="label">${t.remainingLabel}:</span>
+            <span class="value">${t.currencySymbol} ${order.remainingAmount.toFixed(2)}</span>
+          </div>
+        </div>
+
+        ${order.notes ? `
+        <div class="divider"></div>
+        <div class="section">
+          <h3>${t.notesLabel}</h3>
+          <div class="notes">${order.notes}</div>
+        </div>` : ''}
+
+        <div class="footer">
+          <p>${t.thankYou}</p>
+        </div>
+      </body>
+      </html>
+    `;
+
+    printWindow.document.write(invoiceHTML);
+    printWindow.document.close();
+
+    // Wait for content to load then print
+    printWindow.onload = () => {
+      setTimeout(() => {
+        printWindow.print();
+        printWindow.close();
+      }, 500);
+    };
   };
   
   const customerFullName = customer?.fullName || order.customerName || t.unknownCustomer;
@@ -400,113 +621,10 @@ export function OrderDetailClientPage({ initialOrderDetails, lang, orderId }: Or
         </CardFooter>
       </Card>
 
-      <div className="printable-receipt-area">
-        <header className="receipt-header">
-          <h2>{t.shopName}</h2>
-          <p>{displayTransactionType(order.transactionType)} {effectiveLang === 'ar' ? 'فاتورة' : 'Invoice'}</p>
-          {order.branchName && <p className="text-xs">{t.branchLabel}: {order.branchName}</p>}
-        </header>
-        <hr className="receipt-divider" />
-        <div className="receipt-info">
-          <div className="receipt-line">
-            <span className="receipt-label">{effectiveLang === 'ar' ? 'رقم الطلب:' : 'Order ID:'}</span>
-            <span className="receipt-value">{order.id}</span>
-          </div>
-           {order.orderCode && (
-            <div className="receipt-line">
-                <span className="receipt-label">{t.orderCodeLabel}:</span>
-                <span className="receipt-value">{order.orderCode}</span>
-            </div>
-           )}
-          <div className="receipt-line">
-            <span className="receipt-label">{t.orderDateLabel}:</span>
-            <span className="receipt-value">{formatReceiptDate(order.orderDate)}</span>
-          </div>
-          <div className="receipt-line">
-            <span className="receipt-label">{t.customerLabel}:</span>
-            <span className="receipt-value">{customerFullName}</span>
-          </div>
-          {customer?.phoneNumber && (
-            <div className="receipt-line">
-              <span className="receipt-label">{effectiveLang === 'ar' ? 'الهاتف:' : 'Phone:'}</span>
-              <span className="receipt-value">{customerPhoneNumber}</span>
-            </div>
-          )}
-           {sellerFullName !== t.unknownSeller && (
-            <div className="receipt-line">
-                <span className="receipt-label">{t.sellerLabel}:</span>
-                <span className="receipt-value">{sellerFullName}</span>
-            </div>
-           )}
-            {processorFullName !== t.unknownProcessor && (
-            <div className="receipt-line">
-                <span className="receipt-label">{t.processorLabel}:</span>
-                <span className="receipt-value">{processorFullName}</span>
-            </div>
-           )}
-        </div>
-        <hr className="receipt-divider" />
-        <div className="receipt-items">
-            <h3>{t.itemsLabel}</h3>
-             {order.items.map((item, index) => (
-                <div key={index} className="receipt-line">
-                    <span className="receipt-label receipt-item-name">
-                        {item.productName} (x{item.quantity})
-                        {item.productCode && <span className="text-xs text-muted-foreground ml-1">({item.productCode})</span>}
-                    </span>
-                    <span className="receipt-value receipt-item-price">{t.currencySymbol} {(item.priceAtTimeOfOrder * item.quantity).toFixed(2)}</span>
-                </div>
-            ))}
-        </div>
-        {order.transactionType === 'Rental' && (
-          <>
-            <hr className="receipt-divider" />
-            <div className="receipt-info">
-              <div className="receipt-line">
-                <span className="receipt-label">{t.deliveryDateLabel}:</span>
-                <span className="receipt-value">{formatReceiptDate(order.deliveryDate)}</span>
-              </div>
-              {order.returnDate && (
-                <div className="receipt-line">
-                  <span className="receipt-label">{t.returnDateLabel}:</span>
-                  <span className="receipt-value">{formatReceiptDate(order.returnDate)}</span>
-                </div>
-              )}
-            </div>
-          </>
-        )}
-        <hr className="receipt-divider" />
-        <div className="receipt-summary">
-          <div className="receipt-line receipt-total">
-            <span className="receipt-label">{t.totalLabel}:</span>
-            <span className="receipt-value">{t.currencySymbol} {order.totalPrice.toFixed(2)}</span>
-          </div>
-          <div className="receipt-line">
-            <span className="receipt-label">{t.paidLabel}:</span>
-            <span className="receipt-value">{t.currencySymbol} {order.paidAmount.toFixed(2)}</span>
-          </div>
-          <div className="receipt-line">
-            <span className="receipt-label">{t.remainingLabel}:</span>
-            <span className="receipt-value">{t.currencySymbol} {order.remainingAmount.toFixed(2)}</span>
-          </div>
-        </div>
-        {order.notes && (
-          <>
-            <hr className="receipt-divider" />
-            <div className="receipt-info">
-              <p className="receipt-section-title">{t.notesLabel}</p>
-              <p className="receipt-value wrap">{order.notes}</p>
-            </div>
-          </>
-        )}
-        <hr className="receipt-divider" />
-        <footer className="receipt-footer">
-          <p>{t.thankYou}</p>
-        </footer>
-      </div>
 
-      <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm} dir={effectiveLang === 'ar' ? 'rtl' : 'ltr'} className="no-print">
-        <AlertDialogContent>
+
+      <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <AlertDialogContent dir={effectiveLang === 'ar' ? 'rtl' : 'ltr'}>
           <AlertDialogHeader>
             <AlertDialogTitle>{t.confirmDeleteTitle}</AlertDialogTitle>
             <AlertDialogDescription>
@@ -521,6 +639,8 @@ export function OrderDetailClientPage({ initialOrderDetails, lang, orderId }: Or
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+
     </div>
   );
 }

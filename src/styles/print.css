@@ -1,20 +1,4 @@
-
-@import "../styles/theme.css";
-@import "../styles/print.css";
-
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-@layer base {
-  * {
-    @apply border-border;
-  }
-  body {
-    @apply bg-background text-foreground;
-  }
-}
-
+/* Print-specific styles for invoices */
 @media print {
   /* Hide all non-printable elements */
   .no-print, .no-print * {
@@ -25,14 +9,14 @@
   body > *:not(.printable-receipt-area):not(.printable-dialog-content) {
     display: none !important;
   }
-
+  
   /* Main printable area styling */
   .printable-receipt-area, .printable-dialog-content {
     display: block !important;
     position: static !important;
     left: auto !important;
     top: auto !important;
-    width: 100% !important;
+    width: 100% !important; 
     max-width: 80mm !important; /* Thermal printer width */
     margin: 0 !important;
     padding: 10px !important;
@@ -42,7 +26,7 @@
     font-family: 'Courier New', Courier, monospace !important;
     font-size: 12px !important;
     line-height: 1.4 !important;
-    -webkit-print-color-adjust: exact !important;
+    -webkit-print-color-adjust: exact !important; 
     print-color-adjust: exact !important;
     box-shadow: none !important;
     border: none !important;
@@ -57,14 +41,14 @@
     box-shadow: none !important;
     border-color: black !important;
   }
-
+  
   /* Hide dialog-specific non-printable elements */
   .printable-dialog-content .no-print-in-dialog,
-  .printable-dialog-content .dialog-footer-no-print,
+  .printable-dialog-content .dialog-footer-no-print, 
   .printable-dialog-content .dialog-close-no-print {
     display: none !important;
   }
-
+  
   /* Show print-only elements */
   .printable-dialog-content .no-screen,
   .printable-receipt-area .no-screen {
@@ -76,14 +60,14 @@
     text-align: center !important;
     margin-bottom: 15px !important;
   }
-
+  
   .receipt-header h2 {
     font-size: 16px !important;
     font-weight: bold !important;
     margin: 0 0 5px 0 !important;
     display: block !important;
   }
-
+  
   .receipt-header p {
     font-size: 12px !important;
     margin: 2px 0 !important;
@@ -103,7 +87,7 @@
     padding-bottom: 2px !important;
     display: block !important;
   }
-
+  
   /* Receipt lines (label-value pairs) */
   .receipt-line {
     display: flex !important;
@@ -112,7 +96,7 @@
     margin-bottom: 3px !important;
     align-items: flex-start !important;
   }
-
+  
   .receipt-label {
     display: inline-block !important;
     text-align: left !important;
@@ -120,14 +104,14 @@
     flex-shrink: 0 !important;
     margin-right: 10px !important;
   }
-
+  
   .receipt-value {
     display: inline-block !important;
     text-align: right !important;
     flex-grow: 1 !important;
     word-wrap: break-word !important;
   }
-
+  
   .receipt-value.wrap {
     text-align: left !important;
     white-space: pre-wrap !important;
@@ -155,7 +139,7 @@
     margin-top: 15px !important;
     font-size: 12px !important;
   }
-
+  
   .receipt-footer p {
     margin: 5px 0 !important;
     display: block !important;
@@ -165,7 +149,7 @@
   .receipt-item-name {
     font-weight: normal !important;
   }
-
+  
   .receipt-item-price {
     font-weight: normal !important;
   }
@@ -174,11 +158,9 @@
   [data-radix-portal] {
     display: none !important;
   }
-
+  
   [data-radix-portal] .printable-dialog-content {
     display: block !important;
     position: static !important;
   }
 }
-
-    
