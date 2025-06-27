@@ -1,0 +1,176 @@
+
+@import "../styles/theme.css";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+@media print {
+  .no-print, .no-print * {
+    display: none !important;
+  }
+
+  body > *:not(.printable-dialog-content):not(.printable-receipt-area) {
+    display: none !important;
+  }
+  
+  .printable-receipt-area, .printable-dialog-content {
+    display: block !important;
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important; 
+    margin: 0 auto !important;
+    padding: 5mm 3mm !important; /* Minimal padding */
+    box-sizing: border-box !important;
+    page-break-after: always !important; /* Ensure single receipt per page */
+    background-color: #fff !important;
+    color: #000 !important;
+    font-family: 'Courier New', Courier, monospace !important; /* Monospaced font for receipts */
+    font-size: 9pt !important; /* Adjusted for thermal printer */
+    line-height: 1.3 !important;
+    -webkit-print-color-adjust: exact !important; 
+    print-color-adjust: exact !important;
+    box-shadow: none !important;
+    border: none !important;
+  }
+
+  .printable-receipt-area *, .printable-dialog-content * {
+    display: block !important; /* Default to block, can be overridden by specific styles below */
+    visibility: visible !important;
+    font-family: inherit !important;
+    font-size: inherit !important;
+    line-height: inherit !important;
+    color: #000 !important;
+    background-color: transparent !important;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    text-align: start; /* Default to start, can be overridden */
+    box-shadow: none !important;
+    border: none !important;
+  }
+  
+  .printable-dialog-content .no-print-in-dialog,
+  .printable-dialog-content .dialog-footer-no-print, 
+  .printable-dialog-content .dialog-close-no-print {
+      display: none !important;
+  }
+  
+  .printable-dialog-content .no-screen,
+  .printable-receipt-area .no-screen { /* Elements only for print */
+    display: block !important;
+  }
+
+  .receipt-header {
+    text-align: center !important;
+    margin-bottom: 4mm !important;
+  }
+  .receipt-header h2 {
+    font-size: 12pt !important;
+    font-weight: bold !important;
+    margin-bottom: 1mm !important;
+  }
+  .receipt-header p {
+    font-size: 8pt !important;
+    margin-bottom: 0.5mm !important;
+  }
+
+  .receipt-info h3, .printable-dialog-content h3 {
+    font-weight: bold !important;
+    font-size: 10pt !important;
+    margin-top: 3mm !important;
+    margin-bottom: 1.5mm !important;
+    border-bottom: 1px dashed #555 !important;
+    padding-bottom: 0.5mm !important;
+  }
+  
+  .receipt-info p,
+  .printable-dialog-content .receipt-info p, /* Target p inside receipt-info specifically */
+  .printable-dialog-content .receipt-summary p {
+    margin-bottom: 1mm !important;
+    display: flex !important; /* Use flex for label-value pairs */
+    justify-content: space-between !important;
+    width: 100% !important;
+  }
+  
+  .receipt-line { /* This class itself might not be needed if p acts as receipt-line */
+    display: flex !important;
+    justify-content: space-between !important;
+    width: 100% !important;
+    margin-bottom: 0.5mm !important; 
+  }
+  
+  .receipt-label {
+    display: inline !important;
+    text-align: start !important;
+    margin-right: 5px !important; 
+    font-weight: normal !important; /* Ensure labels are not bold unless specified */
+  }
+  
+  .receipt-value {
+    display: inline !important;
+    text-align: end !important;
+    flex-grow: 1; 
+    white-space: nowrap; 
+  }
+  .receipt-value.wrap {
+    white-space: normal !important; 
+    text-align: start !important; /* For multi-line notes */
+  }
+
+
+  .receipt-summary h3 { /* Ensure summary h3 is also styled */
+    font-weight: bold !important;
+    font-size: 10pt !important;
+    margin-top: 3mm !important;
+    margin-bottom: 1.5mm !important;
+    border-bottom: 1px dashed #555 !important;
+    padding-bottom: 0.5mm !important;
+  }
+  
+  .receipt-total .receipt-label,
+  .receipt-total .receipt-value {
+    font-weight: bold !important;
+    font-size: 10pt !important;
+  }
+
+  .receipt-divider {
+    border: none !important;
+    border-top: 1px dashed #555 !important;
+    margin: 2mm 0 !important;
+    height: 0 !important;
+    overflow: hidden !important;
+  }
+
+  .receipt-footer {
+    text-align: center !important;
+    margin-top: 4mm !important;
+    font-size: 8pt !important;
+  }
+
+  /* Hide shadcn dialog overlay and portal wrappers during print for dialog content */
+  body > [data-radix-portal][role="dialog"] > div[data-overlay_alert_dialog-overlay],
+  body > [data-radix-portal][role="dialog"] {
+    display: none !important;
+  }
+   body > [data-radix-portal][role="dialog"] .printable-dialog-content {
+    display: block !important; /* Ensure the content itself is visible */
+    position: static !important; /* Override fixed positioning for printing */
+    transform: none !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    max-height: none !important;
+  }
+}
+
+    

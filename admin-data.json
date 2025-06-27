@@ -1,0 +1,77 @@
+{
+  "users": {
+    "admin-001": {
+      "username": "admin",
+      "password": "admin123",
+      "fullName": "System Administrator",
+      "isSeller": false,
+      "permissions": [
+        "users_view",
+        "users_manage",
+        "products_view",
+        "products_manage",
+        "products_delete",
+        "customers_view",
+        "customers_manage",
+        "orders_view",
+        "orders_manage",
+        "financials_view",
+        "financials_manage",
+        "reports_view",
+        "view_all_branches",
+        "branches_manage"
+      ],
+      "branchId": null,
+      "branchName": null,
+      "createdAt": "2025-06-21T09:00:00.000Z",
+      "createdByUserId": "SYSTEM_INIT"
+    }
+  },
+  "branches": {
+    "B001": {
+      "name": "الفرع الرئيسي",
+      "address": "العنوان الرئيسي",
+      "phoneNumber": "01234567890",
+      "notes": "الفرع الرئيسي للشركة",
+      "createdAt": "2025-06-21T09:00:00.000Z",
+      "createdByUserId": "SYSTEM_INIT"
+    }
+  },
+  "system_settings": {
+    "productCodeConfig": {
+      "nextProductCode": 90000001
+    },
+    "orderCodeConfig": {
+      "nextOrderCode": 70000001
+    },
+    "productTypesConfig": {
+      "types": [
+        {
+          "id": "suit",
+          "name": "Suit",
+          "name_ar": "بدلة"
+        },
+        {
+          "id": "dress",
+          "name": "Dress",
+          "name_ar": "فستان"
+        },
+        {
+          "id": "tuxedo",
+          "name": "Tuxedo",
+          "name_ar": "سموكينغ"
+        },
+        {
+          "id": "gown",
+          "name": "Gown",
+          "name_ar": "ثوب سهرة"
+        },
+        {
+          "id": "accessories",
+          "name": "Accessories",
+          "name_ar": "إكسسوارات"
+        }
+      ]
+    }
+  }
+}
