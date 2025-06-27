@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { createContext, useContext, useState, ReactNode, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect, useCallback, useMemo } from 'react';
 import type { User, UserPermissionsArray, PermissionString, Branch } from '@/types';
 import { useRouter, useParams, usePathname } from 'next/navigation';
 import { ref, get, query, orderByChild, equalTo } from 'firebase/database';
@@ -26,16 +26,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const lang = params.lang as string || 'ar';
   const pathname = usePathname(); 
 
-  const updateUserSession = async (userData: User) => {
+  // Cache for branch names to avoid repeated Firebase calls
+  const branchNameCache = useMemo(() => new Map<string, string>(), []);
+
+  const updateUserSession = useCallback(async (userData: User) => {
     let effectiveUser = { ...userData };
+
+    // Only fetch branch name if needed and not cached
     if (effectiveUser.branchId && !effectiveUser.branchName && !effectiveUser.permissions.includes('view_all_branches')) {
+      // Check cache first
+      const cachedBranchName = branchNameCache.get(effectiveUser.branchId);
+      if (cachedBranchName) {
+        effectiveUser.branchName = cachedBranchName;
+      } else {
         try {
-            const branchRef = ref(database, `branches/${effectiveUser.branchId}`);
-            const branchSnap = await get(branchRef);
-            if (branchSnap.exists()) {
-                effectiveUser.branchName = branchSnap.val()?.name;
-            }
-        } catch (e) {console.error("AuthContext - Error fetching branch name during session update:", e);}
+          const branchRef = ref(database, `branches/${effectiveUser.branchId}`);
+          const branchSnap = await get(branchRef);
+          if (branchSnap.exists()) {
+            const branchName = branchSnap.val()?.name;
+            effectiveUser.branchName = branchName;
+            // Cache the result
+            branchNameCache.set(effectiveUser.branchId, branchName);
+          }
+        } catch (e) {
+          console.error("AuthContext - Error fetching branch name during session update:", e);
+        }
+      }
     }
 
     setCurrentUser(effectiveUser);
@@ -45,7 +61,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         branchId: effectiveUser.branchId,
         branchName: effectiveUser.branchName
     }));
-  };
+  }, [branchNameCache]);
 
 
   useEffect(() => {
@@ -171,18 +187,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const permissions = currentUser ? currentUser.permissions : null;
 
+  // Memoize permissions for better performance
+  const memoizedPermissions = useMemo(() => permissions, [permissions]);
+
   const hasPermission = useCallback((permissionToCheck: PermissionString): boolean => {
-    if (isLoading || !currentUser || !permissions) {
+    if (isLoading || !currentUser || !memoizedPermissions) {
       return false;
     }
-    return permissions.includes(permissionToCheck);
-  }, [isLoading, currentUser, permissions]);
+    return memoizedPermissions.includes(permissionToCheck);
+  }, [isLoading, currentUser, memoizedPermissions]);
+
+  // Memoize context value to prevent unnecessary re-renders
+  const contextValue = useMemo(() => ({
+    currentUser,
+    login,
+    logout,
+    isLoading,
+    permissions,
+    hasPermission
+  }), [currentUser, login, logout, isLoading, permissions, hasPermission]);
 
   if (isLoading) {
     const isPublicPage = pathname === `/${lang}` || pathname === `/${lang}/login`;
     if (isPublicPage) {
         return (
-            <AuthContext.Provider value={{ currentUser, login, logout, isLoading, permissions, hasPermission }}>
+            <AuthContext.Provider value={contextValue}>
                 {children}
             </AuthContext.Provider>
         );
@@ -199,7 +228,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ currentUser, login, logout, isLoading, permissions, hasPermission }}>
+    <AuthContext.Provider value={contextValue}>
       {children}
     </AuthContext.Provider>
   );

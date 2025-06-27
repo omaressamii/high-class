@@ -14,24 +14,32 @@
  */
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useParams } from 'next/navigation';
 import '../globals.css';
 import { SiteHeader } from '@/components/layout/SiteHeader';
 import { Toaster } from "@/components/ui/toaster";
 import { AuthProvider } from '@/context/AuthContext';
-import { ThemeProvider } from "next-themes"; // Import ThemeProvider
+import { ThemeProvider } from "next-themes";
+import { TopProgressBar } from '@/components/shared/TopProgressBar';
+import React from 'react';
 
-export default function RootLayout({
+const RootLayoutComponent = ({
   children,
-  params: routeParamsProp // Renamed to avoid confusion with hook's params
+  params: routeParamsProp
 }: Readonly<{
   children: React.ReactNode;
   params: { lang: string };
-}>) {
+}>) => {
   const paramsFromHook = useParams();
   const lang = paramsFromHook.lang as string;
-  const effectiveLang = lang === 'en' ? 'en' : 'ar';
+  const effectiveLang = useMemo(() => lang === 'en' ? 'en' : 'ar', [lang]);
+
+  // Memoize body className to prevent recalculation
+  const bodyClassName = useMemo(() =>
+    `font-body antialiased min-h-screen flex flex-col ${effectiveLang === 'ar' ? 'font-arabic' : ''}`,
+    [effectiveLang]
+  );
 
   return (
     <html lang={effectiveLang} dir={effectiveLang === 'ar' ? 'rtl' : 'ltr'} suppressHydrationWarning>
@@ -44,7 +52,7 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=PT+Sans:wght@400;700&display=swap" rel="stylesheet" />
         <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@400;700&display=swap" rel="stylesheet" />
       </head>
-      <body className={`font-body antialiased min-h-screen flex flex-col ${effectiveLang === 'ar' ? 'font-arabic' : ''}`}>
+      <body className={bodyClassName}>
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
@@ -52,6 +60,7 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <AuthProvider>
+            <TopProgressBar />
             <SiteHeader lang={effectiveLang} />
             <main className="flex-grow px-4 py-8">
               {children}
@@ -62,4 +71,7 @@ export default function RootLayout({
       </body>
     </html>
   );
-}
+};
+
+RootLayoutComponent.displayName = 'RootLayout';
+export default React.memo(RootLayoutComponent);

@@ -3,12 +3,14 @@
 
 import Link from 'next/link';
 import { NavLink } from './NavLink';
-import { ThemeToggleButton } from './ThemeToggleButton'; 
-import { LogIn, LogOut, Users as UsersIcon, BarChartHorizontalBig, Banknote, LayoutDashboard, ShoppingBag, Users, ListOrdered, Shirt, Feather, Undo2, UserCircle, Store, PackageSearch, CalendarCheck } from 'lucide-react'; 
+import { ThemeToggleButton } from './ThemeToggleButton';
+import { LogIn, LogOut, Users as UsersIcon, BarChartHorizontalBig, Banknote, LayoutDashboard, ShoppingBag, Users, ListOrdered, Shirt, Feather, Undo2, UserCircle, Store, PackageSearch, CalendarCheck } from 'lucide-react';
 import type { PermissionString } from '@/types';
 import { useAuth } from '@/context/AuthContext';
+import { useOptimizedAuth } from '@/hooks/use-optimized-auth';
+import { useNavigationPrefetch } from '@/hooks/use-navigation-prefetch';
 import { Button } from '@/components/ui/button';
-import React from 'react'; 
+import React from 'react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -32,47 +34,78 @@ interface SiteHeaderProps {
 }
 
 const SiteHeaderComponent = ({ lang }: SiteHeaderProps) => {
-  const { currentUser, logout, permissions, isLoading, hasPermission } = useAuth();
-  const effectiveLang = lang as 'ar' | 'en'; 
+  const { logout } = useAuth(); // Keep original for logout function
+  const { isAuthenticated, isLoading, user: currentUser, checkPermission, commonPermissions } = useOptimizedAuth();
+  const { prefetchCommonRoutes } = useNavigationPrefetch();
+  const effectiveLang = lang as 'ar' | 'en';
 
-  const navLinks: NavLinkItem[] = [
-    { href: "/dashboard", en: "Dashboard", ar: "لوحة التحكم", icon: LayoutDashboard, requiredPermission: "dashboard_view" }, // Updated href and added permission
+  // Prefetch common routes when user is authenticated
+  React.useEffect(() => {
+    if (isAuthenticated && !isLoading) {
+      prefetchCommonRoutes(effectiveLang);
+    }
+  }, [isAuthenticated, isLoading, effectiveLang, prefetchCommonRoutes]);
+
+  // Memoize navigation links to avoid recreation on every render
+  const navLinks: NavLinkItem[] = React.useMemo(() => [
+    { href: "/dashboard", en: "Dashboard", ar: "لوحة التحكم", icon: LayoutDashboard, requiredPermission: "dashboard_view" },
     { href: "/products", en: "Products", ar: "المنتجات", icon: ShoppingBag, requiredPermission: 'products_view' },
     { href: "/products/availability", en: "Availability", ar: "توفر المنتج", icon: CalendarCheck, requiredPermission: 'products_availability_view' },
     { href: "/customers", en: "Customers", ar: "العملاء", icon: Users, requiredPermission: 'customers_view' },
     { href: "/orders", en: "Orders", ar: "الطلبات", icon: ListOrdered, requiredPermission: 'orders_view' },
-    { href: "/orders/prepare", en: "Prepare Orders", ar: "تجهيز الطلبات", icon: PackageSearch, requiredPermission: 'orders_prepare' }, 
+    { href: "/orders/prepare", en: "Prepare Orders", ar: "تجهيز الطلبات", icon: PackageSearch, requiredPermission: 'orders_prepare' },
     { href: "/returns/receive", en: "Returns", ar: "المرتجعات", icon: Undo2, requiredPermission: 'returns_receive' },
     { href: "/financials", en: "Financials", ar: "المالية", icon: Banknote, requiredPermission: 'financials_view' },
     { href: "/reports", en: "Reports", ar: "التقارير", icon: BarChartHorizontalBig, requiredPermission: 'reports_view' },
     { href: "/users", en: "Users", ar: "المستخدمين", icon: UsersIcon, requiredPermission: 'users_view' },
     { href: "/branches", en: "Branches", ar: "الفروع", icon: Store, requiredPermission: 'branches_manage' },
-  ];
+  ], []);
 
-  const siteName = "هاى كلاس"; // Updated to Arabic
-  const homeAriaLabel = lang === 'ar' ? `${siteName} - الصفحة الرئيسية` : `${siteName} - Home`;
-  const dashboardAriaLabel = currentUser?.branchName 
-    ? `${siteName} (${currentUser.branchName}) - ${lang === 'ar' ? 'لوحة التحكم' : 'Dashboard'}` 
-    : homeAriaLabel;
+  // Memoize static values
+  const siteName = React.useMemo(() => "هاى كلاس", []);
+  const homeAriaLabel = React.useMemo(() =>
+    lang === 'ar' ? `${siteName} - الصفحة الرئيسية` : `${siteName} - Home`,
+    [lang, siteName]
+  );
+  const dashboardAriaLabel = React.useMemo(() =>
+    currentUser?.branchName
+      ? `${siteName} (${currentUser.branchName}) - ${lang === 'ar' ? 'لوحة التحكم' : 'Dashboard'}`
+      : homeAriaLabel,
+    [currentUser?.branchName, siteName, lang, homeAriaLabel]
+  );
 
 
-  const userHasPermissionForLink = (link: NavLinkItem): boolean => {
-    if (!link.requiredPermission) return true; 
+  // Memoize permission check function using optimized auth
+  const userHasPermissionForLink = React.useCallback((link: NavLinkItem): boolean => {
+    if (!link.requiredPermission) return true;
     if (Array.isArray(link.requiredPermission)) {
-      return link.requiredPermission.every(p => hasPermission(p));
+      return checkPermission.hasAll(link.requiredPermission);
     }
-    return hasPermission(link.requiredPermission);
-  };
+    return checkPermission.has(link.requiredPermission);
+  }, [checkPermission]);
 
-  const filteredNavLinks = navLinks.filter(link => {
-    if (isLoading) return false;
-    if (!currentUser) return false; // No nav links if not logged in (except potentially login link itself)
-    
-    if (link.href === "/orders/prepare" && currentUser) {
-        return hasPermission('orders_prepare'); 
-    }
-    return userHasPermissionForLink(link);
-  });
+  // Memoize filtered navigation links with optimized permissions
+  const filteredNavLinks = React.useMemo(() => {
+    if (isLoading || !isAuthenticated) return [];
+
+    return navLinks.filter(link => {
+      // Use pre-computed common permissions for better performance
+      switch (link.href) {
+        case "/dashboard": return commonPermissions.canViewDashboard;
+        case "/products": return commonPermissions.canViewProducts;
+        case "/products/availability": return commonPermissions.canViewProductAvailability;
+        case "/customers": return commonPermissions.canViewCustomers;
+        case "/orders": return commonPermissions.canViewOrders;
+        case "/orders/prepare": return commonPermissions.canPrepareOrders;
+        case "/returns/receive": return commonPermissions.canReceiveReturns;
+        case "/financials": return commonPermissions.canViewFinancials;
+        case "/reports": return commonPermissions.canViewReports;
+        case "/users": return commonPermissions.canViewUsers;
+        case "/branches": return commonPermissions.canManageBranches;
+        default: return userHasPermissionForLink(link);
+      }
+    });
+  }, [navLinks, isLoading, isAuthenticated, commonPermissions, userHasPermissionForLink]);
 
 
   return (

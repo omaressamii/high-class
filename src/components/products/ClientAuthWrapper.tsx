@@ -5,21 +5,22 @@ import React from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { PlusCircle } from 'lucide-react';
-import { useAuth } from '@/context/AuthContext';
+import { useOptimizedAuth } from '@/hooks/use-optimized-auth';
+import { OptimizedLoader } from '@/components/shared/OptimizedLoader';
 
 interface ClientAuthWrapperProps {
   lang: string;
   addProductText: string;
 }
 
-export function ClientAuthWrapper({ lang, addProductText }: ClientAuthWrapperProps) {
-  const { isLoading: authIsLoading, hasPermission } = useAuth();
+const ClientAuthWrapperComponent = ({ lang, addProductText }: ClientAuthWrapperProps) => {
+  const { isLoading, commonPermissions } = useOptimizedAuth();
 
-  if (authIsLoading) {
-    return <div className="h-10 w-32 animate-pulse rounded-md bg-muted"></div>;
+  if (isLoading) {
+    return <OptimizedLoader size="sm" className="h-10 w-32" showText={false} />;
   }
 
-  if (!hasPermission('products_add')) {
+  if (!commonPermissions.canAddProducts) {
     return null;
   }
 
@@ -31,4 +32,7 @@ export function ClientAuthWrapper({ lang, addProductText }: ClientAuthWrapperPro
       </Link>
     </Button>
   );
-}
+};
+
+ClientAuthWrapperComponent.displayName = 'ClientAuthWrapper';
+export const ClientAuthWrapper = React.memo(ClientAuthWrapperComponent);

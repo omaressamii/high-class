@@ -25,25 +25,25 @@ const defaultLocale = 'ar';
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // التحقق مما إذا كان المسار يبدأ بالفعل ببادئة لغة مدعومة
-  const pathnameHasLocale = locales.some(
-    (locale) => pathname.startsWith(`/${locale}/`) || pathname === `/${locale}`
-  );
-
-  if (pathnameHasLocale) {
-    // إذا كان المسار يحتوي على لغة، اسمح للطلب بالمرور كالمعتاد
-    return NextResponse.next();
+  // Quick check for root path - most common case
+  if (pathname === '/') {
+    const newUrl = request.nextUrl.clone();
+    newUrl.pathname = `/${defaultLocale}`;
+    return NextResponse.redirect(newUrl);
   }
 
-  // إذا لم يتم العثور على بادئة لغة، قم بإعادة التوجيه إلى نفس المسار تحت اللغة الافتراضية
-  // تأكد من أن المسار يبدأ بشرطة مائلة (/) لبناء عنوان URL صحيح
-  const newPathname = `/${defaultLocale}${pathname.startsWith('/') ? pathname : `/${pathname}`}`;
-  
-  // استنساخ عنوان URL لتعديل مساره
+  // Optimized locale check - check exact matches first for better performance
+  for (const locale of locales) {
+    if (pathname === `/${locale}` || pathname.startsWith(`/${locale}/`)) {
+      return NextResponse.next();
+    }
+  }
+
+  // If no locale found, redirect with default locale
+  const newPathname = `/${defaultLocale}${pathname}`;
   const newUrl = request.nextUrl.clone();
   newUrl.pathname = newPathname;
-  
-  // إعادة توجيه المستخدم إلى المسار الجديد مع بادئة اللغة
+
   return NextResponse.redirect(newUrl);
 }
 
