@@ -53,17 +53,17 @@ const PrepareOrdersTableComponent = ({ orders, onMarkAsPrepared, onViewDetails, 
   };
   
   return (
-    <div className="rounded-lg border overflow-hidden shadow-md bg-card">
-      <Table>
+    <div className="rounded-lg border overflow-hidden shadow-lg bg-card">
+      <Table className="table-enhanced">
         <TableHeader>
           <TableRow>
-            <TableHead>{t.orderCode}</TableHead>
-            <TableHead>{t.customer}</TableHead>
-            <TableHead>{t.product}</TableHead>
-            <TableHead>{t.branch}</TableHead>
-            <TableHead>{t.deliveryDate}</TableHead>
-            <TableHead>{t.status}</TableHead>
-            <TableHead className="text-center" colSpan={2}>{t.actions}</TableHead>
+            <TableHead className="min-w-[120px]">{t.orderCode}</TableHead>
+            <TableHead className="min-w-[150px]">{t.customer}</TableHead>
+            <TableHead className="min-w-[150px]">{t.product}</TableHead>
+            <TableHead className="min-w-[120px]">{t.branch}</TableHead>
+            <TableHead className="min-w-[130px]">{t.deliveryDate}</TableHead>
+            <TableHead className="min-w-[100px]">{t.status}</TableHead>
+            <TableHead className="text-center min-w-[150px]" colSpan={2}>{t.actions}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>

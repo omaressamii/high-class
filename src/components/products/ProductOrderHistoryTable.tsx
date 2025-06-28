@@ -150,17 +150,17 @@ const ProductOrderHistoryTableComponent = ({ orders, lang }: ProductOrderHistory
   }
 
   return (
-    <div className="rounded-lg border overflow-hidden shadow-sm bg-card">
-      <Table>
+    <div className="rounded-lg border overflow-hidden shadow-lg bg-card">
+      <Table className="table-enhanced">
         <TableHeader>
           <TableRow>
-            <TableHead>{t.orderCodeColumn}</TableHead>
-            <TableHead>{t.customerNameColumn}</TableHead>
-            <TableHead>{t.orderDateColumn}</TableHead>
-            <TableHead>{t.typeColumn}</TableHead>
-            <TableHead>{t.statusColumn}</TableHead>
-            <TableHead className="text-right">{t.totalPriceColumn}</TableHead>
-            <TableHead className="text-center">{lang === 'ar' ? 'عرض' : 'View'}</TableHead>
+            <TableHead className="min-w-[120px]">{t.orderCodeColumn}</TableHead>
+            <TableHead className="min-w-[150px]">{t.customerNameColumn}</TableHead>
+            <TableHead className="min-w-[130px]">{t.orderDateColumn}</TableHead>
+            <TableHead className="min-w-[100px]">{t.typeColumn}</TableHead>
+            <TableHead className="min-w-[100px]">{t.statusColumn}</TableHead>
+            <TableHead className="text-right min-w-[120px]">{t.totalPriceColumn}</TableHead>
+            <TableHead className="text-center min-w-[80px]">{lang === 'ar' ? 'عرض' : 'View'}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>

@@ -106,11 +106,21 @@ const OrderTableComponent = ({ orders, lang }: OrderTableProps) => {
   }
 
   return (
-    <div className="rounded-lg border overflow-hidden shadow-md bg-card">
-      <Table>
+    <div className="rounded-lg border overflow-hidden shadow-lg bg-card">
+      <Table className="table-enhanced">
         <TableHeader>
           <TableRow>
-            <TableHead>{t.orderCode}</TableHead><TableHead>{t.items}</TableHead><TableHead>{t.customer}</TableHead><TableHead>{t.seller}</TableHead><TableHead>{t.branch}</TableHead><TableHead>{t.orderDate}</TableHead><TableHead>{t.deliveryDate}</TableHead><TableHead>{t.returnDate}</TableHead><TableHead className="text-right">{t.total}</TableHead><TableHead>{t.status}</TableHead><TableHead className="text-center">{t.actions}</TableHead>
+            <TableHead className="min-w-[120px]">{t.orderCode}</TableHead>
+            <TableHead className="min-w-[100px]">{t.items}</TableHead>
+            <TableHead className="min-w-[150px]">{t.customer}</TableHead>
+            <TableHead className="min-w-[120px]">{t.seller}</TableHead>
+            <TableHead className="min-w-[120px]">{t.branch}</TableHead>
+            <TableHead className="min-w-[130px]">{t.orderDate}</TableHead>
+            <TableHead className="min-w-[130px]">{t.deliveryDate}</TableHead>
+            <TableHead className="min-w-[130px]">{t.returnDate}</TableHead>
+            <TableHead className="text-right min-w-[120px]">{t.total}</TableHead>
+            <TableHead className="min-w-[100px]">{t.status}</TableHead>
+            <TableHead className="text-center min-w-[80px]">{t.actions}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>

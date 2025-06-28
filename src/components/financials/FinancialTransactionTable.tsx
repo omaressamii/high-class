@@ -82,11 +82,20 @@ const FinancialTransactionTableComponent = ({ transactions, lang }: FinancialTra
   };
 
   return (
-    <div className="rounded-lg border overflow-hidden shadow-md bg-card">
-      <Table>
+    <div className="rounded-lg border overflow-hidden shadow-lg bg-card">
+      <Table className="table-enhanced">
         <TableHeader>
           <TableRow>
-            <TableHead>{t.date}</TableHead><TableHead>{t.type}</TableHead><TableHead>{t.transactionCategory}</TableHead><TableHead>{t.description}</TableHead><TableHead>{t.customer}</TableHead><TableHead>{t.processedBy}</TableHead><TableHead>{t.orderId}</TableHead><TableHead className="text-right">{t.amount}</TableHead><TableHead>{t.paymentMethod}</TableHead><TableHead>{t.notes}</TableHead>
+            <TableHead className="min-w-[120px]">{t.date}</TableHead>
+            <TableHead className="min-w-[120px]">{t.type}</TableHead>
+            <TableHead className="min-w-[130px]">{t.transactionCategory}</TableHead>
+            <TableHead className="min-w-[150px]">{t.description}</TableHead>
+            <TableHead className="min-w-[120px]">{t.customer}</TableHead>
+            <TableHead className="min-w-[120px]">{t.processedBy}</TableHead>
+            <TableHead className="min-w-[100px]">{t.orderId}</TableHead>
+            <TableHead className="text-right min-w-[120px]">{t.amount}</TableHead>
+            <TableHead className="min-w-[120px]">{t.paymentMethod}</TableHead>
+            <TableHead className="min-w-[150px]">{t.notes}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>

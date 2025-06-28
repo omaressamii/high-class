@@ -79,6 +79,127 @@
   }
 }
 
+/* Enhanced Table Styling */
+@layer components {
+  .table-enhanced {
+    @apply border-separate border-spacing-0 rounded-lg overflow-hidden shadow-sm;
+  }
+
+  .table-enhanced thead tr {
+    @apply bg-gradient-to-r from-muted/40 to-muted/20;
+  }
+
+  .table-enhanced thead th {
+    @apply font-semibold text-foreground border-r border-border/60 last:border-r-0 relative text-center;
+  }
+
+  .table-enhanced thead th:first-child {
+    @apply rounded-tl-lg;
+  }
+
+  .table-enhanced thead th:last-child {
+    @apply rounded-tr-lg;
+  }
+
+  .table-enhanced tbody tr {
+    @apply transition-all duration-200 hover:bg-muted/20 hover:shadow-sm;
+  }
+
+  .table-enhanced tbody tr:nth-child(even) {
+    @apply bg-muted/5;
+  }
+
+  .table-enhanced tbody tr:hover {
+    @apply bg-muted/25 transform scale-[1.001];
+  }
+
+  .table-enhanced tbody td {
+    @apply border-r border-border/40 last:border-r-0 transition-colors duration-200 text-center;
+  }
+
+  .table-enhanced tbody tr:last-child td:first-child {
+    @apply rounded-bl-lg;
+  }
+
+  .table-enhanced tbody tr:last-child td:last-child {
+    @apply rounded-br-lg;
+  }
+
+  /* RTL Support for Arabic */
+  [dir="rtl"] .table-enhanced thead th,
+  [dir="rtl"] .table-enhanced tbody td {
+    @apply border-r-0 border-l border-border/40 last:border-l-0;
+  }
+
+  [dir="rtl"] .table-enhanced thead th:first-child {
+    @apply rounded-tl-none rounded-tr-lg;
+  }
+
+  [dir="rtl"] .table-enhanced thead th:last-child {
+    @apply rounded-tr-none rounded-tl-lg;
+  }
+
+  [dir="rtl"] .table-enhanced tbody tr:last-child td:first-child {
+    @apply rounded-bl-none rounded-br-lg;
+  }
+
+  [dir="rtl"] .table-enhanced tbody tr:last-child td:last-child {
+    @apply rounded-br-none rounded-bl-lg;
+  }
+
+  /* Enhanced table responsiveness */
+  .table-enhanced {
+    @apply min-w-full;
+  }
+
+  .table-enhanced th,
+  .table-enhanced td {
+    @apply whitespace-nowrap;
+  }
+
+  /* Better spacing for table content */
+  .table-enhanced th {
+    @apply py-3 px-4 text-center;
+  }
+
+  .table-enhanced td {
+    @apply py-3 px-4 text-center;
+  }
+
+  /* Enhanced hover effects */
+  .table-enhanced tbody tr:hover th,
+  .table-enhanced tbody tr:hover td {
+    @apply bg-muted/25;
+  }
+
+  /* Better text alignment for numbers */
+  .table-enhanced .text-right {
+    @apply font-mono;
+    text-align: right !important;
+  }
+
+  /* Override center alignment for specific cases */
+  .table-enhanced th.text-right,
+  .table-enhanced td.text-right {
+    text-align: right !important;
+  }
+
+  .table-enhanced th.text-left,
+  .table-enhanced td.text-left {
+    text-align: left !important;
+  }
+
+  /* Status badges in tables */
+  .table-enhanced .badge {
+    @apply shadow-sm;
+  }
+
+  /* Action buttons in tables */
+  .table-enhanced .table-actions {
+    @apply flex items-center justify-center gap-2;
+  }
+}
+
 @media print {
   /* Hide all non-printable elements */
   .no-print, .no-print * {

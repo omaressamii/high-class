@@ -114,17 +114,17 @@ export default async function UpcomingReturnsPage({
         <CardContent>
           {upcomingReturns.length > 0 ? (
             <div className="overflow-x-auto">
-              <Table>
+              <Table className="table-enhanced">
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="font-semibold">{t.orderId}</TableHead>
-                    <TableHead className="font-semibold">{t.productName}</TableHead>
-                    <TableHead className="font-semibold">{t.customerName}</TableHead>
-                    <TableHead className="font-semibold">{t.sellerName}</TableHead>
-                    <TableHead className="font-semibold">{t.returnDate}</TableHead>
-                    <TableHead className="font-semibold">{t.daysUntilReturn}</TableHead>
-                    <TableHead className="font-semibold">{t.totalPrice}</TableHead>
-                    <TableHead className="text-center font-semibold">Actions</TableHead>
+                    <TableHead className="font-semibold min-w-[120px]">{t.orderId}</TableHead>
+                    <TableHead className="font-semibold min-w-[150px]">{t.productName}</TableHead>
+                    <TableHead className="font-semibold min-w-[150px]">{t.customerName}</TableHead>
+                    <TableHead className="font-semibold min-w-[120px]">{t.sellerName}</TableHead>
+                    <TableHead className="font-semibold min-w-[130px]">{t.returnDate}</TableHead>
+                    <TableHead className="font-semibold min-w-[120px]">{t.daysUntilReturn}</TableHead>
+                    <TableHead className="font-semibold min-w-[120px]">{t.totalPrice}</TableHead>
+                    <TableHead className="text-center font-semibold min-w-[100px]">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
