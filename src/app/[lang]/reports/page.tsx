@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { PageTitle } from '@/components/shared/PageTitle';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import type { Order, Product, User as AppUser, Branch } from '@/types';
-import { ShoppingCart, ListChecks, Undo2, AlertTriangle } from 'lucide-react';
+import { ShoppingCart, ListChecks, Undo2, AlertTriangle, Package } from 'lucide-react';
 import { ref, get, query, orderByChild } from "firebase/database";
 import { database } from "@/lib/firebase";
 import { ReportChartsClient, type ReportDataItem, type OverallSalesSummary } from '@/components/reports/ReportChartsClient';
@@ -16,6 +16,7 @@ interface ReportsData {
   mostRentedProductsData: ReportDataItem[];
   mostProfitableRentalsData: ReportDataItem[];
   mostActiveSalespersonsData: ReportDataItem[];
+  productTypesData: ReportDataItem[];
   overallSalesSummary: OverallSalesSummary;
 }
 
@@ -68,11 +69,13 @@ async function getReportsData(lang: 'ar' | 'en', selectedBranchId?: string): Pro
   const ordersRef = ref(database, "orders");
   const productsRef = ref(database, "products");
   const usersRef = ref(database, "users");
+  const typesConfigRef = ref(database, 'system_settings/productTypesConfig');
 
-  const [ordersSnapshot, productsSnapshot, usersSnapshot] = await Promise.all([
+  const [ordersSnapshot, productsSnapshot, usersSnapshot, typesSnapshot] = await Promise.all([
     get(ordersRef),
     get(productsRef),
-    get(usersRef)
+    get(usersRef),
+    get(typesConfigRef)
   ]);
 
   let orders: Order[] = [];
@@ -103,6 +106,12 @@ async function getReportsData(lang: 'ar' | 'en', selectedBranchId?: string): Pro
     Object.entries(usersData).forEach(([id, data]) => {
       usersMap.set(id, data as AppUser);
     });
+  }
+
+  // Get product types
+  let productTypes: any[] = [];
+  if (typesSnapshot.exists()) {
+    productTypes = typesSnapshot.val().types || [];
   }
 
   // --- Process Most Sold Products ---
@@ -212,12 +221,49 @@ async function getReportsData(lang: 'ar' | 'en', selectedBranchId?: string): Pro
     averageSaleValue: parseFloat(averageSaleValue.toFixed(2)),
   };
 
+  // --- Process Product Types Data ---
+  const typeStats: Record<string, { totalRevenue: number; displayName: string }> = {};
+
+  // Initialize stats for each product type
+  productTypes.forEach(type => {
+    typeStats[type.id] = {
+      totalRevenue: 0,
+      displayName: lang === 'ar' ? type.name_ar : type.name,
+    };
+  });
+
+  // Calculate revenue by product type
+  orders.forEach(order => {
+    if (order.items && order.items.length > 0) {
+      order.items.forEach(item => {
+        const product = productsMap.get(item.productId);
+        if (product && typeStats[product.type]) {
+          const revenue = item.priceAtTimeOfOrder * item.quantity;
+          typeStats[product.type].totalRevenue += revenue;
+        }
+      });
+    } else if (order.productId) {
+      const product = productsMap.get(order.productId);
+      if (product && typeStats[product.type]) {
+        typeStats[product.type].totalRevenue += (order.totalPrice || 0);
+      }
+    }
+  });
+
+  const productTypesData = Object.values(typeStats)
+    .map(stat => ({
+      name: stat.displayName,
+      value: parseFloat(stat.totalRevenue.toFixed(2))
+    }))
+    .sort((a, b) => b.value - a.value)
+    .slice(0, 10);
 
   return {
     mostSoldProductsData,
     mostRentedProductsData,
     mostProfitableRentalsData,
     mostActiveSalespersonsData,
+    productTypesData,
     overallSalesSummary,
   };
 }
@@ -247,6 +293,7 @@ export default async function ReportsPage({
           mostRentedProductsData: [],
           mostProfitableRentalsData: [],
           mostActiveSalespersonsData: [],
+          productTypesData: [],
           overallSalesSummary: { totalSalesValue: 0, numberOfSales: 0, averageSaleValue: 0 },
       };
   }
@@ -259,6 +306,7 @@ export default async function ReportsPage({
     mostRentedProducts: effectiveLang === 'ar' ? 'المنتجات الأكثر إيجارًا' : 'Most Rented Products',
     mostProfitableRentals: effectiveLang === 'ar' ? 'المنتجات الأكثر ربحية (إيجار)' : 'Most Profitable Rentals',
     mostActiveSalespersons: effectiveLang === 'ar' ? 'البائعون الأكثر نشاطًا' : 'Most Active Salespersons',
+    productTypesRevenue: effectiveLang === 'ar' ? 'إيراد أنواع المنتجات' : 'Product Types Revenue',
     overallSalesSummaryTitle: effectiveLang === 'ar' ? 'ملخص المبيعات الإجمالي' : 'Overall Sales Summary',
     totalSalesValueLabel: effectiveLang === 'ar' ? 'إجمالي قيمة المبيعات' : 'Total Sales Value',
     numberOfSalesLabel: effectiveLang === 'ar' ? 'عدد المبيعات' : 'Number of Sales',
@@ -326,7 +374,7 @@ export default async function ReportsPage({
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
             <Link
               href={`/${effectiveLang}/reports/sales`}
               className="p-4 border rounded-lg hover:bg-muted/50 transition-colors group"
@@ -339,6 +387,23 @@ export default async function ReportsPage({
                   <h3 className="font-semibold">{effectiveLang === 'ar' ? 'تفاصيل المبيعات' : 'Sales Details'}</h3>
                   <p className="text-sm text-muted-foreground">
                     {effectiveLang === 'ar' ? 'عرض جميع المبيعات' : 'View all sales'}
+                  </p>
+                </div>
+              </div>
+            </Link>
+
+            <Link
+              href={`/${effectiveLang}/reports/product-types`}
+              className="p-4 border rounded-lg hover:bg-muted/50 transition-colors group"
+            >
+              <div className="flex items-center space-x-3 rtl:space-x-reverse">
+                <div className="p-2 bg-purple-100 rounded-lg group-hover:bg-purple-200 transition-colors">
+                  <Package className="h-5 w-5 text-purple-600" />
+                </div>
+                <div>
+                  <h3 className="font-semibold">{effectiveLang === 'ar' ? 'أنواع المنتجات' : 'Product Types'}</h3>
+                  <p className="text-sm text-muted-foreground">
+                    {effectiveLang === 'ar' ? 'إحصائيات الأنواع' : 'Types statistics'}
                   </p>
                 </div>
               </div>
