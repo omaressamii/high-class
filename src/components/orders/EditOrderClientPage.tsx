@@ -545,7 +545,12 @@ export function EditOrderClientPage({ initialEditOrderData, lang, orderId }: Edi
                           <FormControl>
                             <ProductSelector
                               products={editOrderData.allProducts}
-                              selectedProductId={field.value}
+                              value={field.value}
+                              onValueChange={(productId) => {
+                                field.onChange(productId);
+                                const selectedProduct = editOrderData.allProducts.find(p => p.id === productId);
+                                handleProductSelect(index, selectedProduct || null);
+                              }}
                               onProductSelect={(product) => handleProductSelect(index, product)}
                               lang={effectiveLang}
                             />
