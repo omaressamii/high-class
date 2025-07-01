@@ -236,9 +236,7 @@ export function OrderDetailClientPage({ initialOrderDetails, lang, orderId }: Or
 
   const handleNavigateToEditPage = () => {
     if (order) {
-      // Edit page needs to be adapted for multi-item orders
-      // router.push(`/${effectiveLang}/orders/${order.id}/edit`);
-      toast({ title: "Edit Order (Multi-item)", description: "Editing multi-item orders is under development.", variant: "default"});
+      router.push(`/${effectiveLang}/orders/${order.id}/edit`);
     }
   };
 
