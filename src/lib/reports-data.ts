@@ -231,8 +231,14 @@ export async function getProductTypesData(
       };
     });
 
+    // Filter products by branch if specified
+    let filteredProducts = products;
+    if (filters?.branchId && filters.branchId !== 'all') {
+      filteredProducts = products.filter(product => product.branchId === filters.branchId);
+    }
+
     // Count products by type and status
-    products.forEach(product => {
+    filteredProducts.forEach(product => {
       if (typeStats[product.type]) {
         typeStats[product.type].totalProducts++;
 
@@ -306,13 +312,22 @@ export async function getProductTypesData(
     });
 
     // Convert to array and sort by total revenue (sales + rental)
-    const typeStatsArray = Object.values(typeStats)
+    let typeStatsArray = Object.values(typeStats)
       .map(stat => ({
         ...stat,
         totalRevenue: stat.salesRevenue + stat.rentalRevenue,
         displayName: lang === 'ar' ? stat.name_ar : stat.name,
-      }))
-      .sort((a, b) => b.totalRevenue - a.totalRevenue);
+      }));
+
+    // If a specific branch is selected, filter out product types with no activity
+    if (filters?.branchId && filters.branchId !== 'all') {
+      typeStatsArray = typeStatsArray.filter(stat =>
+        stat.totalProducts > 0 || stat.totalSales > 0 || stat.totalRentals > 0
+      );
+    }
+
+    // Sort by total revenue (sales + rental)
+    typeStatsArray.sort((a, b) => b.totalRevenue - a.totalRevenue);
 
     return typeStatsArray;
   } catch (error) {
