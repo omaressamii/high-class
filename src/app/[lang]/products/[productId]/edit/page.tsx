@@ -310,11 +310,25 @@ export default function EditProductPage() {
   };
 
   const deleteOldImage = async (imageUrlToDelete: string) => {
-    // For local storage, we could implement file deletion via API route if needed
-    // For now, we'll just log that the old image should be cleaned up
-    if (imageUrlToDelete && imageUrlToDelete.startsWith('/uploads/')) {
+    // For GitHub storage, we can delete the old image
+    if (imageUrlToDelete && imageUrlToDelete.includes('raw.githubusercontent.com')) {
+      try {
+        const response = await fetch('/api/delete-image', {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ imageUrl: imageUrlToDelete }),
+        });
+
+        if (!response.ok) {
+          console.warn("Failed to delete old image from GitHub:", imageUrlToDelete);
+        }
+      } catch (error) {
+        console.warn("Error deleting old image:", error);
+      }
+    } else if (imageUrlToDelete && imageUrlToDelete.startsWith('/uploads/')) {
       console.log("Old local image should be cleaned up:", imageUrlToDelete);
-      // TODO: Implement API route for deleting local files if needed
     }
   };
 

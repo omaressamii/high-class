@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { writeFile, mkdir } from 'fs/promises';
-import { existsSync } from 'fs';
-import path from 'path';
+import { githubStorage } from '@/lib/githubStorage';
 
 export async function POST(request: NextRequest) {
   try {
@@ -35,25 +33,25 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
-    // Create uploads directory if it doesn't exist
-    const uploadsDir = path.join(process.cwd(), 'public', 'uploads', 'products');
-    if (!existsSync(uploadsDir)) {
-      await mkdir(uploadsDir, { recursive: true });
-    }
-
-    // Generate unique filename
-    const timestamp = Date.now();
-    const fileExtension = path.extname(file.name);
-    const fileName = `${productId}_${timestamp}${fileExtension}`;
-    const filePath = path.join(uploadsDir, fileName);
-
-    // Convert file to buffer and save
+    // Convert file to buffer
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
-    await writeFile(filePath, buffer);
 
-    // Return the public URL
-    const imageUrl = `/uploads/products/${fileName}`;
+    // Generate unique filename
+    const fileName = githubStorage.generateFileName(file.name, productId);
+
+    // Upload to GitHub
+    const uploadResult = await githubStorage.uploadFile(buffer, fileName);
+
+    if (!uploadResult.success) {
+      return NextResponse.json({
+        success: false,
+        error: uploadResult.error || 'Failed to upload to GitHub'
+      }, { status: 500 });
+    }
+
+    // Return the GitHub raw URL
+    const imageUrl = uploadResult.url;
 
     return NextResponse.json({ 
       success: true, 
