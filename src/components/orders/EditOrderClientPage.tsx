@@ -221,10 +221,10 @@ export function EditOrderClientPage({ initialEditOrderData, lang, orderId }: Edi
       );
 
       // Validate order data before saving
-      const validationResult = await validateOrder({ 
-        ...editOrderData.order, 
-        ...cleanOrderData 
-      } as Order, effectiveLang);
+      const validationResult = await validateOrder({
+        ...editOrderData.order,
+        ...cleanOrderData
+      } as Order, effectiveLang, orderId);
       
       if (!validationResult.isValid) {
         throw new Error(`${effectiveLang === 'ar' ? 'بيانات الطلب غير صحيحة' : 'Invalid order data'}: ${validationResult.errors.join(', ')}`);

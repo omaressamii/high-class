@@ -16,8 +16,9 @@ export interface OrderValidationResult {
  * Validates an order before saving to database
  */
 export async function validateOrder(
-  orderData: Partial<Order>, 
-  lang: 'ar' | 'en' = 'en'
+  orderData: Partial<Order>,
+  lang: 'ar' | 'en' = 'en',
+  excludeOrderId?: string
 ): Promise<OrderValidationResult> {
   const errors: string[] = [];
   const warnings: string[] = [];
@@ -49,7 +50,7 @@ export async function validateOrder(
 
     // Validate order code uniqueness
     if (orderData.orderCode) {
-      const isDuplicate = await checkOrderCodeExists(orderData.orderCode);
+      const isDuplicate = await checkOrderCodeExists(orderData.orderCode, excludeOrderId);
       if (isDuplicate) {
         errors.push(t.orderCodeExists);
       }
@@ -149,17 +150,22 @@ function validateOrderItem(item: OrderItem, index: number, lang: 'ar' | 'en'): s
 /**
  * Checks if an order code already exists in the database
  */
-export async function checkOrderCodeExists(orderCode: string): Promise<boolean> {
+export async function checkOrderCodeExists(orderCode: string, excludeOrderId?: string): Promise<boolean> {
   try {
     const ordersRef = ref(database, 'orders');
     const snapshot = await get(ordersRef);
-    
+
     if (!snapshot.exists()) {
       return false;
     }
 
     const orders = snapshot.val();
     for (const [orderId, orderData] of Object.entries(orders)) {
+      // Skip the order being edited (if excludeOrderId is provided)
+      if (excludeOrderId && orderId === excludeOrderId) {
+        continue;
+      }
+
       if ((orderData as any).orderCode === orderCode) {
         return true;
       }
