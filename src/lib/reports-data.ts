@@ -179,7 +179,14 @@ export async function getOverdueReturnsData(lang: 'ar' | 'en') {
 /**
  * Get product types data with sales and rental statistics
  */
-export async function getProductTypesData(lang: 'ar' | 'en') {
+export async function getProductTypesData(
+  lang: 'ar' | 'en',
+  filters?: {
+    startDate?: string;
+    endDate?: string;
+    branchId?: string;
+  }
+) {
   try {
     const { orders, products } = await fetchAllData();
 
@@ -243,8 +250,30 @@ export async function getProductTypesData(lang: 'ar' | 'en') {
       }
     });
 
+    // Filter orders based on date range and branch
+    let filteredOrders = orders;
+
+    if (filters?.startDate || filters?.endDate || filters?.branchId) {
+      filteredOrders = orders.filter(order => {
+        // Date filtering
+        if (filters.startDate && order.orderDate < filters.startDate) {
+          return false;
+        }
+        if (filters.endDate && order.orderDate > filters.endDate) {
+          return false;
+        }
+
+        // Branch filtering
+        if (filters.branchId && filters.branchId !== 'all' && order.branchId !== filters.branchId) {
+          return false;
+        }
+
+        return true;
+      });
+    }
+
     // Count orders by product type
-    orders.forEach(order => {
+    filteredOrders.forEach(order => {
       if (order.items && order.items.length > 0) {
         order.items.forEach(item => {
           // Find product to get its type

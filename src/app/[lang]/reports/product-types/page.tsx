@@ -6,14 +6,53 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft, Package, AlertCircle, TrendingUp, ShoppingCart, Repeat } from 'lucide-react';
 import { getProductTypesData } from '@/lib/reports-data';
+import { ProductTypesFilters } from '@/components/reports/ProductTypesFilters';
+import { ref, get } from "firebase/database";
+import { database } from "@/lib/firebase";
+import type { Branch } from '@/types';
+
+async function getAllBranches(): Promise<Branch[]> {
+  const branchesRef = ref(database, "branches");
+  const branchSnapshot = await get(branchesRef);
+
+  if (!branchSnapshot.exists()) {
+    return [];
+  }
+
+  const branchesData = branchSnapshot.val();
+  const branchList = Object.entries(branchesData).map(([id, data]: [string, any]) => {
+    return {
+      id: id,
+      name: data.name,
+      address: data.address,
+      phoneNumber: data.phoneNumber,
+      notes: data.notes,
+      createdByUserId: data.createdByUserId,
+      createdAt: data.createdAt,
+      updatedAt: data.updatedAt,
+    } as Branch;
+  });
+
+  // Sort by name
+  branchList.sort((a, b) => a.name.localeCompare(b.name));
+  return branchList;
+}
 
 export default async function ProductTypesReportPage({
-  params: routeParams
+  params: routeParams,
+  searchParams: searchParamsPromise
 }: {
-  params: Promise<{ lang: string }>
+  params: Promise<{ lang: string }>;
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
   const { lang } = await routeParams;
+  const searchParams = await searchParamsPromise;
   const effectiveLang = lang as 'ar' | 'en';
+
+  // Extract filter parameters from URL
+  const startDate = typeof searchParams.startDate === 'string' ? searchParams.startDate : undefined;
+  const endDate = typeof searchParams.endDate === 'string' ? searchParams.endDate : undefined;
+  const branchId = typeof searchParams.branch === 'string' ? searchParams.branch : undefined;
 
   const t = {
     pageTitle: effectiveLang === 'ar' ? 'تقرير أنواع المنتجات' : 'Product Types Report',
@@ -40,10 +79,22 @@ export default async function ProductTypesReportPage({
   };
 
   let productTypesData: any[] = [];
+  let branches: Branch[] = [];
   let error = false;
 
   try {
-    productTypesData = await getProductTypesData(effectiveLang);
+    // Fetch branches and product types data in parallel
+    const [branchesResult, productTypesResult] = await Promise.all([
+      getAllBranches(),
+      getProductTypesData(effectiveLang, {
+        startDate,
+        endDate,
+        branchId,
+      })
+    ]);
+
+    branches = branchesResult;
+    productTypesData = productTypesResult;
   } catch (err) {
     console.error("Error in ProductTypesReportPage:", err);
     error = true;
@@ -106,7 +157,26 @@ export default async function ProductTypesReportPage({
           </Link>
         </Button>
       </div>
-      <p className="text-sm text-muted-foreground">{t.allTimeDataNote}</p>
+
+      {/* Filters */}
+      <ProductTypesFilters
+        branches={branches}
+        lang={effectiveLang}
+        currentFilters={{
+          startDate,
+          endDate,
+          branchId,
+        }}
+      />
+
+      <p className="text-sm text-muted-foreground">
+        {startDate || endDate || branchId
+          ? (effectiveLang === 'ar'
+              ? 'البيانات المعروضة مفلترة حسب المعايير المحددة أعلاه.'
+              : 'Data shown is filtered based on the criteria specified above.')
+          : t.allTimeDataNote
+        }
+      </p>
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
