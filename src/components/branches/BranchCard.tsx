@@ -1,10 +1,13 @@
 
+'use client';
+
 import React from 'react'; // Import React
 import type { Branch } from '@/types';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Store, MapPin, Phone, Info, Settings } from 'lucide-react';
 import Link from 'next/link';
+import { useAuth } from '@/context/AuthContext';
 
 interface BranchCardProps {
   branch: Branch;
@@ -16,6 +19,7 @@ const BranchCard = React.memo(function BranchCard({ branch, lang: propLang }: Br
   const lang = propLang === 'en' ? 'en' : 'ar';
   const editText = lang === 'ar' ? 'تعديل الفرع' : 'Edit Branch';
   const branchIdText = lang === 'ar' ? 'معرف الفرع' : 'Branch ID';
+  const { hasPermission } = useAuth();
 
   return (
     <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300 rounded-lg">
@@ -47,16 +51,18 @@ const BranchCard = React.memo(function BranchCard({ branch, lang: propLang }: Br
         )}
       </CardContent>
       <CardFooter className="border-t pt-4">
-        {/* Edit functionality can be added later if needed */}
-        {/* <Button asChild variant="outline" className="w-full hover:bg-accent hover:text-accent-foreground">
-          <Link href={`/${lang}/branches/${branch.id}/edit`}>
-            <Settings className="mr-2 h-4 w-4" />
-            {editText}
-          </Link>
-        </Button> */}
-        <p className="text-xs text-muted-foreground w-full text-center">
+        {hasPermission('branches_manage') ? (
+          <Button asChild variant="outline" className="w-full hover:bg-accent hover:text-accent-foreground">
+            <Link href={`/${lang}/branches/${branch.id}/edit`}>
+              <Settings className="mr-2 h-4 w-4 rtl:ml-2 rtl:mr-0" />
+              {editText}
+            </Link>
+          </Button>
+        ) : (
+          <p className="text-xs text-muted-foreground w-full text-center">
             {lang === 'ar' ? 'إدارة الفروع ستتوفر قريباً.' : 'Branch management features coming soon.'}
-        </p>
+          </p>
+        )}
       </CardFooter>
     </Card>
   );
