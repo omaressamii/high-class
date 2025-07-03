@@ -66,8 +66,8 @@ export const PERMISSION_STRINGS = [
   'customers_manage',
   'orders_view',
   'orders_add',
-  'orders_edit',
   'orders_edit_price',
+  'orders_apply_discount',
   'orders_delete',
   'orders_prepare',
   'returns_receive',
@@ -151,6 +151,7 @@ export interface Order {
   returnDate?: string;
   totalPrice: number;
   paidAmount: number;
+  discountAmount?: number;
   remainingAmount: number;
   status: OrderStatus;
   notes?: string;
@@ -246,7 +247,7 @@ export const PERMISSION_GROUPS: PermissionGroup[] = [
   {
     id: 'orders_group',
     nameKey: 'group_orders_management',
-    permissions: ['orders_view', 'orders_add', 'orders_edit', 'orders_edit_price', 'orders_delete', 'orders_prepare'],
+    permissions: ['orders_view', 'orders_add', 'orders_edit_price', 'orders_apply_discount', 'orders_delete', 'orders_prepare'],
   },
   {
     id: 'returns_group',

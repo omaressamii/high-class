@@ -4,7 +4,7 @@ import type { Order, OrderStatus } from '@/types';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { CalendarDays, ShoppingBag, User, DollarSign, CornerDownLeft, ListChecks, Info, Briefcase, Store, PlayCircle, CheckCircle2, Clock, AlertTriangle, XCircle, Fingerprint, Send } from 'lucide-react';
+import { CalendarDays, ShoppingBag, User, DollarSign, CornerDownLeft, ListChecks, Info, Briefcase, Store, PlayCircle, CheckCircle2, Clock, AlertTriangle, XCircle, Fingerprint, Send, Percent } from 'lucide-react';
 import { format } from 'date-fns';
 import { arSA, enUS } from 'date-fns/locale';
 import Link from 'next/link';
@@ -61,6 +61,7 @@ const OrderCard = React.memo(function OrderCard({ order, lang: propLang }: Order
     returnDateLabel: lang === 'ar' ? 'تاريخ الإرجاع' : 'Return Date',
     totalLabel: lang === 'ar' ? 'الإجمالي' : 'Total',
     paidLabel: lang === 'ar' ? 'المدفوع' : 'Paid',
+    discountLabel: lang === 'ar' ? 'الخصم' : 'Discount',
     manageOrder: lang === 'ar' ? 'إدارة الطلب' : 'Manage Order',
     currencySymbol: lang === 'ar' ? 'ج.م' : 'EGP',
     notApplicable: lang === 'ar' ? 'غير محدد' : 'N/A',
@@ -155,7 +156,12 @@ const OrderCard = React.memo(function OrderCard({ order, lang: propLang }: Order
             )}
             <div className="flex items-center md:col-span-2">
             <DollarSign className="h-4 w-4 mr-2 rtl:ml-2 rtl:mr-0 text-primary" />
-            <span>{t.totalLabel}: {t.currencySymbol} {order.totalPrice.toFixed(2)} ({t.paidLabel}: {t.currencySymbol} {order.paidAmount.toFixed(2)})</span>
+            <span>
+              {t.totalLabel}: {t.currencySymbol} {order.totalPrice.toFixed(2)} | {t.paidLabel}: {t.currencySymbol} {order.paidAmount.toFixed(2)}
+              {order.discountAmount && order.discountAmount > 0 && (
+                <> | {t.discountLabel}: {t.currencySymbol} {order.discountAmount.toFixed(2)}</>
+              )}
+            </span>
             </div>
         </div>
         {order.notes && (

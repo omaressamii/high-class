@@ -614,6 +614,7 @@ export default function AddNewOrderPage() {
           : (formData.returnDate ? format(formData.returnDate, 'yyyy-MM-dd') : null),
         totalPrice: calculatedTotalPrice,
         paidAmount: formData.paidAmount || 0,
+        discountAmount: 0,
         remainingAmount: calculatedTotalPrice - (formData.paidAmount || 0),
         status: 'Ongoing',
         notes: orderNotes || null,

@@ -7,7 +7,7 @@ import { PageTitle } from '@/components/shared/PageTitle';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { CalendarDays, ShoppingBag, User, DollarSign, ArrowLeft, Edit3, Trash2, Printer, Save, XCircle, Briefcase, Loader, AlertCircle, Store, PlayCircle, CheckCircle2, Clock, AlertTriangle, Fingerprint, Send, Package, List } from 'lucide-react';
+import { CalendarDays, ShoppingBag, User, DollarSign, ArrowLeft, Edit3, Trash2, Printer, Save, XCircle, Briefcase, Loader, AlertCircle, Store, PlayCircle, CheckCircle2, Clock, AlertTriangle, Fingerprint, Send, Package, List, Percent } from 'lucide-react';
 import { format, startOfDay } from 'date-fns'; 
 import { arSA, enUS } from 'date-fns/locale'; 
 import Link from 'next/link';
@@ -27,6 +27,7 @@ import { ref, remove } from 'firebase/database';
 import { database } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { ApplyDiscountDialog } from './ApplyDiscountDialog';
 
 
 export type OrderDetailsData = {
@@ -51,6 +52,7 @@ export function OrderDetailClientPage({ initialOrderDetails, lang, orderId }: Or
 
   const [orderDetails, setOrderDetails] = useState<OrderDetailsData | null>(initialOrderDetails);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showDiscountDialog, setShowDiscountDialog] = useState(false);
   
   useEffect(() => {
     setOrderDetails(initialOrderDetails);
@@ -88,6 +90,7 @@ export function OrderDetailClientPage({ initialOrderDetails, lang, orderId }: Or
     returnDateLabel: effectiveLang === 'ar' ? 'تاريخ الإرجاع' : 'Return Date',
     totalLabel: effectiveLang === 'ar' ? 'الإجمالي' : 'Total',
     paidLabel: effectiveLang === 'ar' ? 'المدفوع' : 'Paid',
+    discountLabel: effectiveLang === 'ar' ? 'الخصم' : 'Discount',
     remainingLabel: effectiveLang === 'ar' ? 'المتبقي' : 'Remaining',
     statusLabel: effectiveLang === 'ar' ? 'الحالة' : 'Status',
     notesLabel: effectiveLang === 'ar' ? 'ملاحظات' : 'Notes',
@@ -101,7 +104,7 @@ export function OrderDetailClientPage({ initialOrderDetails, lang, orderId }: Or
     statusCompleted: effectiveLang === 'ar' ? 'مكتمل' : 'Completed',
     statusOverdue: effectiveLang === 'ar' ? 'متأخر' : 'Overdue',
     statusCancelled: effectiveLang === 'ar' ? 'ملغى' : 'Cancelled',
-    editOrder: effectiveLang === 'ar' ? 'تعديل الطلب' : 'Edit Order',
+    applyDiscount: effectiveLang === 'ar' ? 'تطبيق خصم' : 'Apply Discount',
     deleteOrder: effectiveLang === 'ar' ? 'حذف الطلب' : 'Delete Order',
     orderDeletedSuccess: effectiveLang === 'ar' ? 'تم حذف الطلب بنجاح.' : 'Order deleted successfully.',
     orderDeleteError: effectiveLang === 'ar' ? 'فشل حذف الطلب.' : 'Failed to delete order.',
@@ -234,10 +237,9 @@ export function OrderDetailClientPage({ initialOrderDetails, lang, orderId }: Or
     }
   };
 
-  const handleNavigateToEditPage = () => {
-    if (order) {
-      router.push(`/${effectiveLang}/orders/${order.id}/edit`);
-    }
+  const handleDiscountApplied = () => {
+    // Refresh the page to show updated order data
+    window.location.reload();
   };
 
   const handleDelete = async () => {
@@ -455,6 +457,12 @@ export function OrderDetailClientPage({ initialOrderDetails, lang, orderId }: Or
             <span class="label">${t.paidLabel}:</span>
             <span class="value">${t.currencySymbol} ${order.paidAmount.toFixed(2)}</span>
           </div>
+          ${order.discountAmount && order.discountAmount > 0 ? `
+          <div class="line">
+            <span class="label">${t.discountLabel}:</span>
+            <span class="value">-${t.currencySymbol} ${order.discountAmount.toFixed(2)}</span>
+          </div>
+          ` : ''}
           <div class="line">
             <span class="label">${t.remainingLabel}:</span>
             <span class="value">${t.currencySymbol} ${order.remainingAmount.toFixed(2)}</span>
@@ -586,6 +594,9 @@ export function OrderDetailClientPage({ initialOrderDetails, lang, orderId }: Or
               )}
               <p><DollarSign className="inline h-5 w-5 mr-2 text-muted-foreground rtl:ml-2 rtl:mr-0" /> {t.totalLabel}: {t.currencySymbol} {order.totalPrice.toFixed(2)}</p>
               <p><DollarSign className="inline h-5 w-5 mr-2 text-muted-foreground rtl:ml-2 rtl:mr-0" /> {t.paidLabel}: {t.currencySymbol} {order.paidAmount.toFixed(2)}</p>
+              {order.discountAmount && order.discountAmount > 0 && (
+                <p><Percent className="inline h-5 w-5 mr-2 text-green-600 rtl:ml-2 rtl:mr-0" /> {t.discountLabel}: {t.currencySymbol} {order.discountAmount.toFixed(2)}</p>
+              )}
               <p><DollarSign className="inline h-5 w-5 mr-2 text-muted-foreground rtl:ml-2 rtl:mr-0" /> {t.remainingLabel}: {t.currencySymbol} {order.remainingAmount.toFixed(2)}</p>
             </div>
           </div>
@@ -602,9 +613,9 @@ export function OrderDetailClientPage({ initialOrderDetails, lang, orderId }: Or
         <CardFooter className="border-t pt-6 flex flex-col sm:flex-row justify-start items-start sm:items-center gap-4 no-print">
             <h3 className="font-semibold text-lg text-primary sm:mb-0">{t.actions}:</h3>
             <div className="flex flex-wrap gap-2">
-                {hasPermission('orders_edit') && (
-                  <Button variant="outline" onClick={handleNavigateToEditPage}> 
-                      <Edit3 className="mr-2 h-4 w-4 rtl:ml-2 rtl:mr-0" /> {t.editOrder}
+                {hasPermission('orders_apply_discount') && order.status !== 'Delivered to Customer' && order.status !== 'Completed' && (
+                  <Button variant="outline" onClick={() => setShowDiscountDialog(true)}>
+                    <Percent className="mr-2 h-4 w-4 rtl:ml-2 rtl:mr-0" /> {t.applyDiscount}
                   </Button>
                 )}
                 {hasPermission('orders_delete') && (
@@ -638,6 +649,17 @@ export function OrderDetailClientPage({ initialOrderDetails, lang, orderId }: Or
         </AlertDialogContent>
       </AlertDialog>
 
+      {/* Apply Discount Dialog */}
+      {showDiscountDialog && (
+        <ApplyDiscountDialog
+          isOpen={showDiscountDialog}
+          setIsOpen={setShowDiscountDialog}
+          order={order}
+          lang={effectiveLang}
+          currentUserName={currentUser?.fullName || currentUser?.username || 'Unknown User'}
+          onDiscountApplied={handleDiscountApplied}
+        />
+      )}
 
     </div>
   );
