@@ -30,6 +30,7 @@ export default async function OverdueReturnsPage({
     noOverdueReturns: effectiveLang === 'ar' ? 'لا توجد مرتجعات متأخرة حالياً.' : 'No overdue returns currently.',
     viewOrder: effectiveLang === 'ar' ? 'عرض الطلب' : 'View Order',
     totalPrice: effectiveLang === 'ar' ? 'السعر الإجمالي' : 'Total Price',
+    effectivePrice: effectiveLang === 'ar' ? 'السعر بعد الخصم' : 'Price After Discount',
     currencySymbol: effectiveLang === 'ar' ? 'ج.م' : 'EGP',
     errorLoadingData: effectiveLang === 'ar' ? 'خطأ في تحميل البيانات' : 'Error loading data',
     tryAgain: effectiveLang === 'ar' ? 'حاول مرة أخرى' : 'Try Again',
@@ -121,7 +122,7 @@ export default async function OverdueReturnsPage({
                     <TableHead className="font-semibold">{t.sellerName}</TableHead>
                     <TableHead className="font-semibold">{t.returnDate}</TableHead>
                     <TableHead className="font-semibold">{t.daysOverdue}</TableHead>
-                    <TableHead className="font-semibold">{t.totalPrice}</TableHead>
+                    <TableHead className="font-semibold">{t.effectivePrice}</TableHead>
                     <TableHead className="text-center font-semibold">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -140,7 +141,14 @@ export default async function OverdueReturnsPage({
                             {daysOverdue} {effectiveLang === 'ar' ? 'يوم' : 'days'}
                           </span>
                         </TableCell>
-                        <TableCell className="font-semibold">{t.currencySymbol} {order.totalPrice?.toLocaleString() || 0}</TableCell>
+                        <TableCell className="font-semibold">
+                          {t.currencySymbol} {((order.totalPrice || 0) - (order.discountAmount || 0)).toLocaleString()}
+                          {order.discountAmount && order.discountAmount > 0 && (
+                            <div className="text-xs text-muted-foreground">
+                              {effectiveLang === 'ar' ? 'قبل الخصم:' : 'Before discount:'} {t.currencySymbol} {order.totalPrice?.toLocaleString() || 0}
+                            </div>
+                          )}
+                        </TableCell>
                         <TableCell className="text-center">
                           <div className="flex gap-2 justify-center">
                             <Button asChild variant="ghost" size="sm">

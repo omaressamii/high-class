@@ -154,11 +154,15 @@ async function getDashboardStats(
 
       const orderCreationDate = safeParseDate(order.orderDate);
       if (orderCreationDate && isSameDay(orderCreationDate, selectedDate)) {
+        // Calculate effective value after discount
+        const discountAmount = order.discountAmount || 0;
+        const effectiveValue = (order.totalPrice || 0) - discountAmount;
+
         if (order.transactionType === 'Sale' && order.status === 'Completed') {
-          stats.salesForSelectedDateValue += order.totalPrice || 0;
+          stats.salesForSelectedDateValue += effectiveValue;
         }
         if (order.transactionType === 'Rental') {
-          stats.rentalsForSelectedDateValue += order.totalPrice || 0;
+          stats.rentalsForSelectedDateValue += effectiveValue;
         }
       }
 

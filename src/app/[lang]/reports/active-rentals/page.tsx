@@ -34,6 +34,7 @@ export default async function ActiveRentalsPage({
     noActiveRentals: effectiveLang === 'ar' ? 'لا توجد إيجارات نشطة حاليًا.' : 'No active rentals currently.',
     viewOrder: effectiveLang === 'ar' ? 'عرض الطلب' : 'View Order',
     totalPrice: effectiveLang === 'ar' ? 'السعر الإجمالي' : 'Total Price',
+    effectivePrice: effectiveLang === 'ar' ? 'السعر بعد الخصم' : 'Price After Discount',
     currencySymbol: effectiveLang === 'ar' ? 'ج.م' : 'EGP',
     errorLoadingData: effectiveLang === 'ar' ? 'خطأ في تحميل البيانات' : 'Error loading data',
     tryAgain: effectiveLang === 'ar' ? 'حاول مرة أخرى' : 'Try Again',
@@ -115,7 +116,7 @@ export default async function ActiveRentalsPage({
                     <TableHead className="font-semibold min-w-[120px]">{t.sellerName}</TableHead>
                     <TableHead className="font-semibold min-w-[130px]">{t.deliveryDate}</TableHead>
                     <TableHead className="font-semibold min-w-[130px]">{t.returnDate}</TableHead>
-                    <TableHead className="font-semibold min-w-[120px]">{t.totalPrice}</TableHead>
+                    <TableHead className="font-semibold min-w-[120px]">{t.effectivePrice}</TableHead>
                     <TableHead className="text-center font-semibold min-w-[100px]">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -128,7 +129,14 @@ export default async function ActiveRentalsPage({
                       <TableCell>{order.sellerName}</TableCell>
                       <TableCell>{formatDate(order.deliveryDate)}</TableCell>
                       <TableCell>{formatDate(order.returnDate)}</TableCell>
-                      <TableCell className="font-semibold">{t.currencySymbol} {order.totalPrice?.toLocaleString() || 0}</TableCell>
+                      <TableCell className="font-semibold">
+                        {t.currencySymbol} {((order.totalPrice || 0) - (order.discountAmount || 0)).toLocaleString()}
+                        {order.discountAmount && order.discountAmount > 0 && (
+                          <div className="text-xs text-muted-foreground">
+                            {effectiveLang === 'ar' ? 'قبل الخصم:' : 'Before discount:'} {t.currencySymbol} {order.totalPrice?.toLocaleString() || 0}
+                          </div>
+                        )}
+                      </TableCell>
                       <TableCell className="text-center">
                         <Button asChild variant="ghost" size="sm">
                           <Link href={`/${effectiveLang}/orders/${order.id}`}>

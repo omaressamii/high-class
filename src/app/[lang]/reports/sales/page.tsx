@@ -31,6 +31,7 @@ export default async function SalesDetailsPage({
     sellerName: effectiveLang === 'ar' ? 'اسم البائع' : 'Seller Name',
     orderDate: effectiveLang === 'ar' ? 'تاريخ الطلب' : 'Order Date',
     totalPrice: effectiveLang === 'ar' ? 'السعر الإجمالي' : 'Total Price',
+    effectivePrice: effectiveLang === 'ar' ? 'السعر بعد الخصم' : 'Price After Discount',
     noSalesFound: effectiveLang === 'ar' ? 'لا توجد مبيعات مسجلة حاليًا.' : 'No sales recorded currently.',
     currencySymbol: effectiveLang === 'ar' ? 'ج.م' : 'EGP',
     viewOrder: effectiveLang === 'ar' ? 'عرض الطلب' : 'View Order',
@@ -114,7 +115,7 @@ export default async function SalesDetailsPage({
                     <TableHead className="font-semibold">{t.customerName}</TableHead>
                     <TableHead className="font-semibold">{t.sellerName}</TableHead>
                     <TableHead className="font-semibold">{t.status}</TableHead>
-                    <TableHead className="text-right font-semibold">{t.totalPrice}</TableHead>
+                    <TableHead className="text-right font-semibold">{t.effectivePrice}</TableHead>
                     <TableHead className="text-center font-semibold">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -137,7 +138,14 @@ export default async function SalesDetailsPage({
                           {order.status}
                         </span>
                       </TableCell>
-                      <TableCell className="text-right font-semibold">{t.currencySymbol} {order.totalPrice?.toLocaleString() || 0}</TableCell>
+                      <TableCell className="text-right font-semibold">
+                        {t.currencySymbol} {((order.totalPrice || 0) - (order.discountAmount || 0)).toLocaleString()}
+                        {order.discountAmount && order.discountAmount > 0 && (
+                          <div className="text-xs text-muted-foreground">
+                            {effectiveLang === 'ar' ? 'قبل الخصم:' : 'Before discount:'} {t.currencySymbol} {order.totalPrice?.toLocaleString() || 0}
+                          </div>
+                        )}
+                      </TableCell>
                       <TableCell className="text-center">
                         <Button asChild variant="ghost" size="sm">
                           <Link href={`/${effectiveLang}/orders/${order.id}`}>

@@ -280,19 +280,27 @@ export async function getProductTypesData(
 
     // Count orders by product type
     filteredOrders.forEach(order => {
+      // Calculate effective revenue after discount
+      const discountAmount = order.discountAmount || 0;
+      const totalOrderRevenue = (order.totalPrice || 0) - discountAmount;
+
       if (order.items && order.items.length > 0) {
+        const totalItemsValue = order.items.reduce((sum, item) => sum + (item.priceAtTimeOfOrder * item.quantity), 0);
+
         order.items.forEach(item => {
           // Find product to get its type
           const product = products.find(p => p.id === item.productId);
           if (product && typeStats[product.type]) {
-            const revenue = item.priceAtTimeOfOrder * item.quantity;
+            const itemRevenue = item.priceAtTimeOfOrder * item.quantity;
+            // Apply proportional discount to this item
+            const itemRevenueAfterDiscount = totalItemsValue > 0 ? itemRevenue * (totalOrderRevenue / totalItemsValue) : itemRevenue;
 
             if (order.transactionType === 'Sale') {
               typeStats[product.type].totalSales += item.quantity;
-              typeStats[product.type].salesRevenue += revenue;
+              typeStats[product.type].salesRevenue += itemRevenueAfterDiscount;
             } else if (order.transactionType === 'Rental') {
               typeStats[product.type].totalRentals += item.quantity;
-              typeStats[product.type].rentalRevenue += revenue;
+              typeStats[product.type].rentalRevenue += itemRevenueAfterDiscount;
             }
           }
         });
@@ -302,10 +310,10 @@ export async function getProductTypesData(
         if (product && typeStats[product.type]) {
           if (order.transactionType === 'Sale') {
             typeStats[product.type].totalSales++;
-            typeStats[product.type].salesRevenue += (order.totalPrice || 0);
+            typeStats[product.type].salesRevenue += totalOrderRevenue;
           } else if (order.transactionType === 'Rental') {
             typeStats[product.type].totalRentals++;
-            typeStats[product.type].rentalRevenue += (order.totalPrice || 0);
+            typeStats[product.type].rentalRevenue += totalOrderRevenue;
           }
         }
       }

@@ -168,18 +168,26 @@ async function getReportsData(lang: 'ar' | 'en', selectedBranchId?: string): Pro
   const rentalRevenueByProduct: Record<string, number> = {};
   orders.forEach(order => {
     if (order.transactionType === 'Rental') {
+      // Calculate effective revenue after discount
+      const discountAmount = order.discountAmount || 0;
+      const totalOrderRevenue = (order.totalPrice || 0) - discountAmount;
+
       // Handle both new format (items array) and old format (productId)
       if (order.items && order.items.length > 0) {
+        const totalItemsValue = order.items.reduce((sum, item) => sum + (item.priceAtTimeOfOrder * item.quantity), 0);
+
         order.items.forEach(item => {
           const productKey = item.productName || item.productId || 'Unknown Product';
           const itemRevenue = item.priceAtTimeOfOrder * item.quantity;
-          rentalRevenueByProduct[productKey] = (rentalRevenueByProduct[productKey] || 0) + itemRevenue;
+          // Apply proportional discount to this item
+          const itemRevenueAfterDiscount = totalItemsValue > 0 ? itemRevenue * (totalOrderRevenue / totalItemsValue) : itemRevenue;
+          rentalRevenueByProduct[productKey] = (rentalRevenueByProduct[productKey] || 0) + itemRevenueAfterDiscount;
         });
       } else if (order.productId) {
         // Fallback for old format
         const product = productsMap.get(order.productId);
         const productKey = product?.name || order.productId;
-        rentalRevenueByProduct[productKey] = (rentalRevenueByProduct[productKey] || 0) + (order.totalPrice || 0);
+        rentalRevenueByProduct[productKey] = (rentalRevenueByProduct[productKey] || 0) + totalOrderRevenue;
       }
     }
   });
@@ -210,7 +218,10 @@ async function getReportsData(lang: 'ar' | 'en', selectedBranchId?: string): Pro
   let numberOfSales = 0;
   orders.forEach(order => {
     if (order.transactionType === 'Sale') {
-      totalSalesValue += (order.totalPrice || 0);
+      // Calculate effective sales value after discount
+      const discountAmount = order.discountAmount || 0;
+      const effectiveSalesValue = (order.totalPrice || 0) - discountAmount;
+      totalSalesValue += effectiveSalesValue;
       numberOfSales += 1;
     }
   });
@@ -234,18 +245,26 @@ async function getReportsData(lang: 'ar' | 'en', selectedBranchId?: string): Pro
 
   // Calculate revenue by product type
   orders.forEach(order => {
+    // Calculate effective revenue after discount
+    const discountAmount = order.discountAmount || 0;
+    const totalOrderRevenue = (order.totalPrice || 0) - discountAmount;
+
     if (order.items && order.items.length > 0) {
+      const totalItemsValue = order.items.reduce((sum, item) => sum + (item.priceAtTimeOfOrder * item.quantity), 0);
+
       order.items.forEach(item => {
         const product = productsMap.get(item.productId);
         if (product && typeStats[product.type]) {
-          const revenue = item.priceAtTimeOfOrder * item.quantity;
-          typeStats[product.type].totalRevenue += revenue;
+          const itemRevenue = item.priceAtTimeOfOrder * item.quantity;
+          // Apply proportional discount to this item
+          const itemRevenueAfterDiscount = totalItemsValue > 0 ? itemRevenue * (totalOrderRevenue / totalItemsValue) : itemRevenue;
+          typeStats[product.type].totalRevenue += itemRevenueAfterDiscount;
         }
       });
     } else if (order.productId) {
       const product = productsMap.get(order.productId);
       if (product && typeStats[product.type]) {
-        typeStats[product.type].totalRevenue += (order.totalPrice || 0);
+        typeStats[product.type].totalRevenue += totalOrderRevenue;
       }
     }
   });
