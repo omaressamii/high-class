@@ -152,6 +152,8 @@ export interface Order {
   totalPrice: number;
   paidAmount: number;
   discountAmount?: number;
+  discountApplied?: boolean;
+  discountAppliedDate?: string;
   remainingAmount: number;
   status: OrderStatus;
   notes?: string;
@@ -183,12 +185,14 @@ export type FinancialTransactionType =
   | 'Initial Rental Value'
   | 'Payment Received'
   | 'Refund Issued'
-  | 'Expense';
+  | 'Expense'
+  | 'Discount Applied';
 
 export const financialTransactionTypeValues: FinancialTransactionType[] = [
   'Initial Sale Value',
   'Initial Rental Value',
   'Payment Received',
+  'Discount Applied',
 ];
 
 export interface FinancialTransaction {

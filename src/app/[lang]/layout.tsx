@@ -62,7 +62,7 @@ const RootLayoutComponent = ({
           <AuthProvider>
             <TopProgressBar />
             <SiteHeader lang={effectiveLang} />
-            <main className="flex-grow px-4 py-8">
+            <main className="flex-grow px-2 py-4 sm:px-4 sm:py-6 md:px-6 md:py-8">
               {children}
             </main>
             <Toaster />

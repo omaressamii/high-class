@@ -8,10 +8,10 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
-import { ref, update, get } from 'firebase/database';
+import { ref, update, get, push, set } from 'firebase/database';
 import { database } from '@/lib/firebase';
 import { Percent, DollarSign, AlertTriangle, Save, Loader } from 'lucide-react';
-import type { Order } from '@/types';
+import type { Order, FinancialTransaction } from '@/types';
 import { format } from 'date-fns';
 
 interface ApplyDiscountDialogProps {
@@ -55,7 +55,7 @@ export function ApplyDiscountDialog({
     discountTooHigh: lang === 'ar' ? 'مبلغ الخصم لا يمكن أن يتجاوز المبلغ المتبقي' : 'Discount amount cannot exceed remaining amount',
     discountAppliedSuccess: lang === 'ar' ? 'تم تطبيق الخصم بنجاح' : 'Discount applied successfully',
     discountApplyError: lang === 'ar' ? 'فشل في تطبيق الخصم' : 'Failed to apply discount',
-    orderStatusRestriction: lang === 'ar' ? 'لا يمكن تطبيق خصم على طلب تم تسليمه للعميل' : 'Cannot apply discount to order that has been delivered to customer',
+    orderStatusRestriction: lang === 'ar' ? 'لا يمكن تطبيق خصم على طلب تم تسليمه للعميل أو تم تطبيق خصم عليه مسبقاً' : 'Cannot apply discount to order that has been delivered to customer or already has discount applied',
     invalidDiscountAmount: lang === 'ar' ? 'مبلغ الخصم يجب أن يكون أكبر من صفر' : 'Discount amount must be greater than zero',
   };
 
@@ -112,6 +112,16 @@ export function ApplyDiscountDialog({
       const currentOrderData = orderSnap.val();
       const currentRemainingAmount = currentOrderData.remainingAmount || 0;
 
+      // Check if discount has already been applied
+      if (currentOrderData.discountApplied) {
+        toast({
+          title: lang === 'ar' ? 'تم تطبيق خصم مسبقاً' : 'Discount Already Applied',
+          description: lang === 'ar' ? 'لا يمكن تطبيق خصم أكثر من مرة على نفس الطلب' : 'Cannot apply discount more than once on the same order',
+          variant: 'destructive',
+        });
+        return;
+      }
+
       // Double-check that discount doesn't exceed remaining amount
       if (discountAmount > currentRemainingAmount) {
         throw new Error(t.discountTooHigh);
@@ -123,17 +133,52 @@ export function ApplyDiscountDialog({
       // Create discount note
       const timestamp = format(new Date(), 'yyyy-MM-dd HH:mm:ss');
       const discountNote = `[${timestamp}] - ${lang === 'ar' ? 'تم تطبيق خصم بقيمة' : 'Discount applied:'} ${discountAmount} ${t.currencySymbol} ${lang === 'ar' ? 'بواسطة' : 'by'} ${currentUserName}. ${lang === 'ar' ? 'السبب:' : 'Reason:'} ${discountReason}`;
-      
+
       const existingNotes = currentOrderData.notes || '';
       const updatedNotes = existingNotes ? `${existingNotes}\n${discountNote}` : discountNote;
 
       // Update order with discount
       await update(orderRef, {
         discountAmount: newDiscountAmount,
+        discountApplied: true,
+        discountAppliedDate: format(new Date(), 'yyyy-MM-dd'),
         remainingAmount: newRemainingAmount,
         notes: updatedNotes,
         updatedAt: new Date().toISOString()
       });
+
+      // Create financial transaction for the discount
+      const financialTransactionBase = {
+        orderId: order.id,
+        orderCode: order.orderCode || '',
+        date: format(new Date(), 'yyyy-MM-dd'),
+        processedByUserId: currentUserName || 'UNKNOWN',
+        processedByUserName: currentUserName,
+        customerId: order.customerId,
+        customerName: order.customerName || '',
+        productName: order.items.length > 0 ? (order.items[0]?.productName || "Multiple Items") : "N/A",
+        productId: order.items.length > 0 ? (order.items[0]?.productId || null) : null,
+        notes: `Discount applied to Order ID: ${order.id}, Reason: ${discountReason}`,
+        branchId: order.branchId || null,
+        branchName: order.branchName || null,
+        createdAt: new Date().toISOString(),
+      };
+
+      const discountTransaction: Omit<FinancialTransaction, 'id'> = {
+        ...financialTransactionBase,
+        type: 'Discount Applied',
+        transactionCategory: 'Discount',
+        description: `${lang === 'ar' ? 'خصم مطبق على الطلب' : 'Discount applied to order'}: ${order.orderCode || order.id} - ${discountReason}`,
+        amount: discountAmount,
+      };
+
+      // Save financial transaction
+      const financialTransactionsRef = ref(database, 'financial_transactions');
+      const cleanDiscountTransaction = Object.fromEntries(
+        Object.entries(discountTransaction).filter(([, value]) => value !== undefined)
+      );
+      const ftRef = push(financialTransactionsRef);
+      await set(ftRef, cleanDiscountTransaction);
 
       toast({
         title: t.discountAppliedSuccess,
@@ -158,7 +203,9 @@ export function ApplyDiscountDialog({
     }
   };
 
-  const canApplyDiscount = order.status !== 'Delivered to Customer' && order.status !== 'Completed';
+  const canApplyDiscount = order.status !== 'Delivered to Customer' &&
+                          order.status !== 'Completed' &&
+                          !order.discountApplied;
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen} dir={lang === 'ar' ? 'rtl' : 'ltr'}>

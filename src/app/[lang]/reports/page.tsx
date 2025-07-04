@@ -432,7 +432,7 @@ export default async function ReportsPage({
               href={`/${effectiveLang}/reports/active-rentals`}
               className="p-4 border rounded-lg hover:bg-muted/50 transition-colors group"
             >
-              <div className="flex items-center space-x-3 rtl:space-x-reverse">
+              <div className={`flex items-center space-x-3 ${effectiveLang === 'ar' ? 'space-x-reverse' : ''}`}>
                 <div className="p-2 bg-green-100 rounded-lg group-hover:bg-green-200 transition-colors">
                   <ListChecks className="h-5 w-5 text-green-600" />
                 </div>
@@ -449,7 +449,7 @@ export default async function ReportsPage({
               href={`/${effectiveLang}/reports/upcoming-returns`}
               className="p-4 border rounded-lg hover:bg-muted/50 transition-colors group"
             >
-              <div className="flex items-center space-x-3 rtl:space-x-reverse">
+              <div className={`flex items-center space-x-3 ${effectiveLang === 'ar' ? 'space-x-reverse' : ''}`}>
                 <div className="p-2 bg-yellow-100 rounded-lg group-hover:bg-yellow-200 transition-colors">
                   <Undo2 className="h-5 w-5 text-yellow-600" />
                 </div>
@@ -466,7 +466,7 @@ export default async function ReportsPage({
               href={`/${effectiveLang}/reports/overdue-returns`}
               className="p-4 border rounded-lg hover:bg-muted/50 transition-colors group"
             >
-              <div className="flex items-center space-x-3 rtl:space-x-reverse">
+              <div className={`flex items-center space-x-3 ${effectiveLang === 'ar' ? 'space-x-reverse' : ''}`}>
                 <div className="p-2 bg-red-100 rounded-lg group-hover:bg-red-200 transition-colors">
                   <AlertTriangle className="h-5 w-5 text-red-600" />
                 </div>

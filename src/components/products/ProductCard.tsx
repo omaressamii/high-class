@@ -78,27 +78,27 @@ const ProductCard = React.memo(function ProductCard({ product, allProductTypes, 
   return (
     <Card className="flex flex-col overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 rounded-lg">
       <CardHeader className="p-0">
-        <div className="relative w-full h-48 md:h-56">
+        <div className="relative w-full h-40 sm:h-48 md:h-56">
           <Image
             src={product.imageUrl}
             alt={product.name}
             fill
-            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
             style={{ objectFit: 'cover' }}
             data-ai-hint={product['data-ai-hint'] || "fashion item"}
           />
            {product.productCode && (
-            <Badge variant="secondary" className="absolute top-2 right-2 rtl:right-auto rtl:left-2 text-xs">
+            <Badge variant="secondary" className="absolute top-1 right-1 sm:top-2 sm:right-2 rtl:right-auto rtl:left-1 sm:rtl:left-2 text-xs">
               {t.productCode}: {product.productCode}
             </Badge>
           )}
         </div>
       </CardHeader>
-      <CardContent className="p-4 flex-grow">
-        <CardTitle className="font-headline text-xl mb-1">{product.name}</CardTitle>
+      <CardContent className="p-3 sm:p-4 flex-grow">
+        <CardTitle className="font-headline text-lg sm:text-xl mb-1 line-clamp-2">{product.name}</CardTitle>
         <CardDescription className="text-xs text-muted-foreground mb-2">{typeText} - {categoryText}</CardDescription>
 
-        <div className="space-y-2 text-sm mb-3">
+        <div className="space-y-1 sm:space-y-2 text-xs sm:text-sm mb-3">
           <div className="flex items-center">
             <DollarSign className="h-4 w-4 mr-2 rtl:ml-2 rtl:mr-0 text-primary" />
             <span>{t.price}: {t.currencySymbol} {product.price.toFixed(2)}</span>

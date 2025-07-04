@@ -109,9 +109,9 @@ export default async function CustomersPage({ params: routeParams }: { params: P
   // console.log("[SERVER CustomersPage] Customers data passed to Client Wrapper:", customers ? customers.length : 'null');
 
   return (
-    <div className="space-y-8">
-      <div className="flex justify-between items-center">
-        <PageTitle>{t.pageTitle}</PageTitle>
+    <div className="space-y-6 sm:space-y-8">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <PageTitle className="mb-0">{t.pageTitle}</PageTitle>
         <ClientAuthWrapperForCustomersPage lang={effectiveLang} addCustomerText={t.addCustomer} />
       </div>
       

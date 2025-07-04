@@ -141,10 +141,10 @@ export default async function ProductsPage({ params: routeParams }: { params: Pr
   };
 
   return (
-    <div className="space-y-8">
-      <div className="flex justify-between items-center">
-        <PageTitle>{t.pageTitle}</PageTitle>
-        <div className="flex items-center gap-2">
+    <div className="space-y-6 sm:space-y-8">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <PageTitle className="mb-0">{t.pageTitle}</PageTitle>
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
             <ClientAuthWrapper lang={effectiveLang} addProductText={t.addProduct} />
             <DeleteAllProductsButton lang={effectiveLang} />
         </div>

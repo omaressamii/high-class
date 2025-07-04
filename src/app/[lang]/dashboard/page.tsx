@@ -74,13 +74,13 @@ interface StatCardServerProps {
 function StatCard({ title, value, icon: Icon, description, lang, href, dateQuery }: StatCardServerProps) {
   const cardContent = (
     <Card className="shadow-md hover:shadow-lg transition-shadow duration-200 bg-card h-full">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium text-muted-foreground">{title}</CardTitle>
-        <Icon className={`h-5 w-5 ${lang === 'ar' ? 'ml-2' : 'mr-2'} text-primary`} />
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-3 sm:px-6 pt-3 sm:pt-6">
+        <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground leading-tight">{title}</CardTitle>
+        <Icon className={`h-4 w-4 sm:h-5 sm:w-5 ${lang === 'ar' ? 'ml-1 sm:ml-2' : 'mr-1 sm:mr-2'} text-primary flex-shrink-0`} />
       </CardHeader>
-      <CardContent>
-        <div className="text-2xl font-bold text-foreground">{value}</div>
-        {description && <p className="text-xs text-muted-foreground pt-1">{description}</p>}
+      <CardContent className="px-3 sm:px-6 pb-3 sm:pb-6">
+        <div className="text-lg sm:text-2xl font-bold text-foreground">{value}</div>
+        {description && <p className="text-xs text-muted-foreground pt-1 leading-tight">{description}</p>}
       </CardContent>
     </Card>
   );
@@ -379,7 +379,7 @@ export default function DashboardPage() {
               <p className="text-muted-foreground mb-6">
                 {t.manageWedding}
               </p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                 <StatCard
                   title={t.activeRentals}
                   value={dashboardStats.activeRentalsCount}

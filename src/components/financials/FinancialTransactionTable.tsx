@@ -55,15 +55,17 @@ const FinancialTransactionTableComponent = ({ transactions, lang }: FinancialTra
       case 'Initial Sale Value': return t.typeSale;
       case 'Initial Rental Value': return t.typeRental;
       case 'Payment Received': return t.typePaymentReceived;
+      case 'Discount Applied': return lang === 'ar' ? 'خصم مطبق' : 'Discount Applied';
       default: return type;
     }
   };
   
   const getTypeVariant = (type: FinancialTransaction['type']): "default" | "secondary" | "outline" | "destructive" | null | undefined => {
     switch (type) {
-      case 'Initial Sale Value': return 'default'; 
-      case 'Initial Rental Value': return 'secondary'; 
-      case 'Payment Received': return 'outline'; 
+      case 'Initial Sale Value': return 'default';
+      case 'Initial Rental Value': return 'secondary';
+      case 'Payment Received': return 'outline';
+      case 'Discount Applied': return 'destructive';
       default: return 'secondary';
     }
   };

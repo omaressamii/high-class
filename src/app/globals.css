@@ -77,6 +77,23 @@
   body {
     @apply bg-background text-foreground;
   }
+
+  /* Mobile-first responsive utilities */
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /* Ensure proper touch targets on mobile */
+  button, a, [role="button"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Better mobile scrolling */
+  .mobile-scroll {
+    -webkit-overflow-scrolling: touch;
+    overflow-x: auto;
+  }
 }
 
 /* Enhanced Table Styling */
@@ -126,24 +143,24 @@
   }
 
   /* RTL Support for Arabic */
-  [dir="rtl"] .table-enhanced thead th,
-  [dir="rtl"] .table-enhanced tbody td {
+  .table-enhanced[dir="rtl"] thead th,
+  .table-enhanced[dir="rtl"] tbody td {
     @apply border-r-0 border-l border-border/40 last:border-l-0;
   }
 
-  [dir="rtl"] .table-enhanced thead th:first-child {
+  .table-enhanced[dir="rtl"] thead th:first-child {
     @apply rounded-tl-none rounded-tr-lg;
   }
 
-  [dir="rtl"] .table-enhanced thead th:last-child {
+  .table-enhanced[dir="rtl"] thead th:last-child {
     @apply rounded-tr-none rounded-tl-lg;
   }
 
-  [dir="rtl"] .table-enhanced tbody tr:last-child td:first-child {
+  .table-enhanced[dir="rtl"] tbody tr:last-child td:first-child {
     @apply rounded-bl-none rounded-br-lg;
   }
 
-  [dir="rtl"] .table-enhanced tbody tr:last-child td:last-child {
+  .table-enhanced[dir="rtl"] tbody tr:last-child td:last-child {
     @apply rounded-br-none rounded-bl-lg;
   }
 
@@ -197,6 +214,142 @@
   /* Action buttons in tables */
   .table-enhanced .table-actions {
     @apply flex items-center justify-center gap-2;
+  }
+
+  /* Mobile-responsive table utilities */
+  .table-mobile-card {
+    @apply block md:hidden bg-card border rounded-lg p-4 shadow-sm space-y-3;
+  }
+
+  .table-mobile-row {
+    @apply flex justify-between items-center py-1;
+  }
+
+  .table-mobile-label {
+    @apply text-sm font-medium text-muted-foreground;
+  }
+
+  .table-mobile-value {
+    @apply text-sm font-medium text-right;
+  }
+
+  /* Mobile-optimized forms */
+  .form-mobile {
+    @apply space-y-4;
+  }
+
+  .form-mobile .form-group {
+    @apply space-y-2;
+  }
+
+  .form-mobile .form-row {
+    @apply flex flex-col space-y-4 md:flex-row md:space-y-0 md:space-x-4;
+  }
+
+  .form-mobile .form-row.rtl {
+    @apply md:space-x-reverse;
+  }
+
+  /* Mobile-friendly buttons */
+  .btn-mobile {
+    @apply w-full sm:w-auto min-h-[44px] px-6 py-3 text-base;
+  }
+
+  .btn-group-mobile {
+    @apply flex flex-col space-y-2 sm:flex-row sm:space-y-0 sm:space-x-2;
+  }
+
+  .btn-group-mobile.rtl {
+    @apply sm:space-x-reverse;
+  }
+
+  /* Mobile-specific layout utilities */
+  .mobile-container {
+    @apply px-2 sm:px-4 md:px-6 lg:px-8;
+  }
+
+  .mobile-section {
+    @apply space-y-4 sm:space-y-6 lg:space-y-8;
+  }
+
+  .mobile-grid {
+    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 lg:gap-6;
+  }
+
+  .mobile-flex-header {
+    @apply flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4;
+  }
+
+  /* Mobile-optimized text utilities */
+  .mobile-text-sm {
+    @apply text-xs sm:text-sm;
+  }
+
+  .mobile-text-base {
+    @apply text-sm sm:text-base;
+  }
+
+  .mobile-text-lg {
+    @apply text-base sm:text-lg;
+  }
+
+  .mobile-text-xl {
+    @apply text-lg sm:text-xl;
+  }
+
+  /* Mobile-safe touch targets */
+  .touch-target {
+    @apply min-h-[44px] min-w-[44px];
+  }
+
+  /* Mobile-optimized spacing */
+  .mobile-p {
+    @apply p-3 sm:p-4 lg:p-6;
+  }
+
+  .mobile-px {
+    @apply px-3 sm:px-4 lg:px-6;
+  }
+
+  .mobile-py {
+    @apply py-3 sm:py-4 lg:py-6;
+  }
+
+  /* Mobile-responsive images */
+  .mobile-img {
+    @apply w-full h-auto object-cover;
+  }
+
+  /* Mobile-optimized cards */
+  .mobile-card {
+    @apply rounded-lg border bg-card text-card-foreground shadow-sm p-3 sm:p-4 lg:p-6;
+  }
+
+  /* Mobile-friendly overflow handling */
+  .mobile-overflow {
+    @apply overflow-x-auto mobile-scroll;
+  }
+
+  /* Mobile-responsive flex utilities */
+  .mobile-flex-col {
+    @apply flex flex-col sm:flex-row;
+  }
+
+  .mobile-flex-row {
+    @apply flex flex-row;
+  }
+
+  /* Mobile-optimized gap utilities */
+  .mobile-gap {
+    @apply gap-2 sm:gap-3 lg:gap-4;
+  }
+
+  .mobile-gap-x {
+    @apply gap-x-2 sm:gap-x-3 lg:gap-x-4;
+  }
+
+  .mobile-gap-y {
+    @apply gap-y-2 sm:gap-y-3 lg:gap-y-4;
   }
 }
 

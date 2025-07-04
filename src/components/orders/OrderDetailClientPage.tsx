@@ -23,7 +23,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useAuth } from '@/context/AuthContext';
-import { ref, remove } from 'firebase/database';
+import { ref, remove, get, query, orderByChild, equalTo } from 'firebase/database';
 import { database } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -248,8 +248,34 @@ export function OrderDetailClientPage({ initialOrderDetails, lang, orderId }: Or
         setShowDeleteConfirm(false);
         return;
     }
+
+    // Check if order has been delivered to customer
+    if (order.status === 'Delivered to Customer' || order.status === 'Completed') {
+        toast({
+            title: effectiveLang === 'ar' ? 'لا يمكن حذف الطلب' : 'Cannot Delete Order',
+            description: effectiveLang === 'ar' ? 'لا يمكن حذف طلب تم تسليمه للعميل' : 'Cannot delete an order that has been delivered to customer',
+            variant: "destructive"
+        });
+        setShowDeleteConfirm(false);
+        return;
+    }
+
     console.log('Deleting order...', order.id);
     try {
+        // Delete related financial transactions first
+        const financialTransactionsRef = ref(database, 'financial_transactions');
+        const transactionsQuery = query(financialTransactionsRef, orderByChild('orderId'), equalTo(order.id));
+        const transactionsSnapshot = await get(transactionsQuery);
+
+        if (transactionsSnapshot.exists()) {
+            const transactions = transactionsSnapshot.val();
+            const deletePromises = Object.keys(transactions).map(transactionId => {
+                const transactionRef = ref(database, `financial_transactions/${transactionId}`);
+                return remove(transactionRef);
+            });
+            await Promise.all(deletePromises);
+        }
+
         // TODO: Add logic to revert stock quantities if order is deleted.
         // This requires knowing if items were rentals (decrement quantityRented) or sales (increment quantityInStock).
         // This should ideally be done in a transaction.
@@ -597,6 +623,9 @@ export function OrderDetailClientPage({ initialOrderDetails, lang, orderId }: Or
               {order.discountAmount && order.discountAmount > 0 && (
                 <p><Percent className="inline h-5 w-5 mr-2 text-green-600 rtl:ml-2 rtl:mr-0" /> {t.discountLabel}: {t.currencySymbol} {order.discountAmount.toFixed(2)}</p>
               )}
+              {order.discountAppliedDate && (
+                <p><CalendarDays className="inline h-5 w-5 mr-2 text-green-600 rtl:ml-2 rtl:mr-0" /> {effectiveLang === 'ar' ? 'تاريخ تطبيق الخصم' : 'Discount Applied Date'}: {formatDate(order.discountAppliedDate)}</p>
+              )}
               <p><DollarSign className="inline h-5 w-5 mr-2 text-muted-foreground rtl:ml-2 rtl:mr-0" /> {t.remainingLabel}: {t.currencySymbol} {order.remainingAmount.toFixed(2)}</p>
             </div>
           </div>
@@ -618,7 +647,7 @@ export function OrderDetailClientPage({ initialOrderDetails, lang, orderId }: Or
                     <Percent className="mr-2 h-4 w-4 rtl:ml-2 rtl:mr-0" /> {t.applyDiscount}
                   </Button>
                 )}
-                {hasPermission('orders_delete') && (
+                {hasPermission('orders_delete') && order.status !== 'Delivered to Customer' && order.status !== 'Completed' && (
                     <Button variant="destructive" onClick={() => setShowDeleteConfirm(true)}>
                         <Trash2 className="mr-2 h-4 w-4 rtl:ml-2 rtl:mr-0" /> {t.deleteOrder}
                     </Button>

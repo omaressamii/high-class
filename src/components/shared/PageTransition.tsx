@@ -84,7 +84,7 @@ const PageTransitionComponent = ({ children, className }: PageTransitionProps) =
             </div>
 
             {/* Animated Dots */}
-            <div className="flex space-x-1 rtl:space-x-reverse">
+            <div className="flex space-x-1">
               <div className="w-2 h-2 bg-primary rounded-full animate-bounce" />
               <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0.1s' }} />
               <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />

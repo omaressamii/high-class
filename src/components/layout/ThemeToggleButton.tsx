@@ -38,15 +38,15 @@ export function ThemeToggleButton({ lang }: ThemeToggleButtonProps) {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuItem onClick={() => setTheme('light')} className={resolvedTheme === 'light' ? 'bg-accent' : ''}>
-          <Sun className="mr-2 h-4 w-4 rtl:ml-2 rtl:mr-0" />
+          <Sun className={`h-4 w-4 ${lang === 'ar' ? 'ml-2' : 'mr-2'}`} />
           {t.light}
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => setTheme('dark')} className={resolvedTheme === 'dark' ? 'bg-accent' : ''}>
-          <Moon className="mr-2 h-4 w-4 rtl:ml-2 rtl:mr-0" />
+          <Moon className={`h-4 w-4 ${lang === 'ar' ? 'ml-2' : 'mr-2'}`} />
           {t.dark}
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => setTheme('system')} className={resolvedTheme === 'system' ? 'bg-accent' : ''}>
-          <Laptop className="mr-2 h-4 w-4 rtl:ml-2 rtl:mr-0" />
+          <Laptop className={`h-4 w-4 ${lang === 'ar' ? 'ml-2' : 'mr-2'}`} />
           {t.system}
         </DropdownMenuItem>
       </DropdownMenuContent>

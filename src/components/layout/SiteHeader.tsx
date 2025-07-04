@@ -4,11 +4,12 @@
 import Link from 'next/link';
 import { NavLink } from './NavLink';
 import { ThemeToggleButton } from './ThemeToggleButton';
-import { LogIn, LogOut, Users as UsersIcon, BarChartHorizontalBig, Banknote, LayoutDashboard, ShoppingBag, Users, ListOrdered, Shirt, Feather, Undo2, UserCircle, Store, PackageSearch, CalendarCheck } from 'lucide-react';
+import { LogIn, LogOut, Users as UsersIcon, BarChartHorizontalBig, Banknote, LayoutDashboard, ShoppingBag, Users, ListOrdered, Shirt, Feather, Undo2, UserCircle, Store, PackageSearch, CalendarCheck, Menu, X } from 'lucide-react';
 import type { PermissionString } from '@/types';
 import { useAuth } from '@/context/AuthContext';
 import { useOptimizedAuth } from '@/hooks/use-optimized-auth';
 import { useNavigationPrefetch } from '@/hooks/use-navigation-prefetch';
+import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { Button } from '@/components/ui/button';
 import React from 'react';
 import {
@@ -19,6 +20,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet"
 
 
 interface NavLinkItem {
@@ -37,6 +45,8 @@ const SiteHeaderComponent = ({ lang }: SiteHeaderProps) => {
   const { logout } = useAuth(); // Keep original for logout function
   const { isAuthenticated, isLoading, user: currentUser, checkPermission, commonPermissions } = useOptimizedAuth();
   const { prefetchCommonRoutes } = useNavigationPrefetch();
+  const isMobile = useMediaQuery('(max-width: 768px)');
+  const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
   const effectiveLang = lang as 'ar' | 'en';
 
   // Prefetch common routes when user is authenticated
@@ -110,61 +120,100 @@ const SiteHeaderComponent = ({ lang }: SiteHeaderProps) => {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 no-print">
-      <div className="container flex h-16 items-center justify-between">
-        <Link href={lang === 'ar' ? '/ar' : '/en'} className="flex items-center gap-2" aria-label={homeAriaLabel}>
-          <Shirt className="h-6 w-6 text-primary" />
-          <Feather className="h-6 w-6 text-primary" />
-          <span className="font-headline text-xl font-bold text-primary">
-            {siteName}
-            {currentUser && currentUser.branchName && !currentUser.permissions?.includes('view_all_branches') && (
-              <span className="text-base font-medium text-muted-foreground ml-1 rtl:mr-1 rtl:ml-0">
-                ({currentUser.branchName})
-              </span>
-            )}
-             {currentUser && currentUser.permissions?.includes('view_all_branches') && (
-              <span className="text-base font-medium text-muted-foreground ml-1 rtl:mr-1 rtl:ml-0">
-                ({lang === 'ar' ? 'جميع الفروع' : 'All Branches'})
-              </span>
-            )}
-          </span>
-        </Link>
-        <nav className="hidden md:flex items-center gap-3 md:gap-5">
+      <div className="container flex h-14 sm:h-16 items-center justify-between px-2 sm:px-4">
+        <div className="flex items-center gap-2 sm:gap-4">
+          {/* Mobile Menu Button */}
+          {isMobile && currentUser && (
+            <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-9 w-9">
+                  <Menu className="h-5 w-5" />
+                  <span className="sr-only">{lang === 'ar' ? 'فتح القائمة' : 'Open menu'}</span>
+                </Button>
+              </SheetTrigger>
+              <SheetContent side={lang === 'ar' ? 'right' : 'left'} className="w-[280px] sm:w-[350px]">
+                <SheetHeader>
+                  <SheetTitle className={lang === 'ar' ? 'text-left' : 'text-right'}>
+                    {lang === 'ar' ? 'القائمة الرئيسية' : 'Main Menu'}
+                  </SheetTitle>
+                </SheetHeader>
+                <nav className="flex flex-col space-y-3 mt-6">
+                  {filteredNavLinks.map(link => (
+                    <NavLink
+                      key={link.href}
+                      href={link.href}
+                      className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-accent transition-colors"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      {link.icon && <link.icon className="h-5 w-5" />}
+                      <span className="text-base">{lang === 'ar' ? link.ar : link.en}</span>
+                    </NavLink>
+                  ))}
+                </nav>
+              </SheetContent>
+            </Sheet>
+          )}
+
+          {/* Logo */}
+          <Link href={lang === 'ar' ? '/ar' : '/en'} className="flex items-center gap-1 sm:gap-2" aria-label={homeAriaLabel}>
+            <Shirt className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
+            <Feather className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
+            <span className="font-headline text-lg sm:text-xl font-bold text-primary">
+              {siteName}
+              {currentUser && currentUser.branchName && !currentUser.permissions?.includes('view_all_branches') && (
+                <span className={`hidden sm:inline text-sm sm:text-base font-medium text-muted-foreground ${lang === 'ar' ? 'mr-1' : 'ml-1'}`}>
+                  ({currentUser.branchName})
+                </span>
+              )}
+               {currentUser && currentUser.permissions?.includes('view_all_branches') && (
+                <span className={`hidden sm:inline text-sm sm:text-base font-medium text-muted-foreground ${lang === 'ar' ? 'mr-1' : 'ml-1'}`}>
+                  ({lang === 'ar' ? 'جميع الفروع' : 'All Branches'})
+                </span>
+              )}
+            </span>
+          </Link>
+        </div>
+        {/* Desktop Navigation */}
+        <nav className="hidden lg:flex items-center gap-3 lg:gap-5">
           {currentUser && filteredNavLinks.map(link => (
             <NavLink key={link.href} href={link.href} className="flex items-center gap-1">
               {link.icon && <link.icon className="h-4 w-4" />}
-              <span className={link.icon ? '' : ''}>{lang === 'ar' ? link.ar : link.en}</span>
+              <span className="text-sm">{lang === 'ar' ? link.ar : link.en}</span>
             </NavLink>
           ))}
         </nav>
-        <div className="flex items-center gap-2">
-          <ThemeToggleButton lang={effectiveLang} /> 
+
+        {/* Right side actions */}
+        <div className="flex items-center gap-1 sm:gap-2">
+          <ThemeToggleButton lang={effectiveLang} />
           {isLoading ? (
-            <div className="h-8 w-20 animate-pulse rounded-md bg-muted"></div>
+            <div className="h-8 w-16 sm:w-20 animate-pulse rounded-md bg-muted"></div>
           ) : currentUser ? (
             <DropdownMenu dir={lang === 'ar' ? 'rtl' : 'ltr'}>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="flex items-center gap-2 px-2 md:px-3">
-                  <UserCircle className="h-5 w-5" />
-                  <span className="hidden md:inline">{currentUser.fullName}</span>
+                <Button variant="ghost" className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 h-9 sm:h-10">
+                  <UserCircle className="h-4 w-4 sm:h-5 sm:w-5" />
+                  <span className="hidden sm:inline text-sm truncate max-w-[120px]">
+                    {currentUser.fullName}
+                  </span>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
                 <DropdownMenuLabel>{lang === 'ar' ? 'حسابي' : 'My Account'}</DropdownMenuLabel>
-                <DropdownMenuLabel className="text-xs font-normal text-muted-foreground -mt-2">{currentUser.username}</DropdownMenuLabel>
-                {currentUser.branchName && !currentUser.permissions?.includes('view_all_branches') && <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">{lang === 'ar' ? 'الفرع:' : 'Branch:'} {currentUser.branchName}</DropdownMenuLabel>}
-                {currentUser.permissions?.includes('view_all_branches') && <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">{lang === 'ar' ? 'الوصول:' : 'Access:'} {lang === 'ar' ? 'جميع الفروع' : 'All Branches'}</DropdownMenuLabel>}
+                <DropdownMenuLabel className="text-xs font-normal text-muted-foreground -mt-2">
+                  {currentUser.username}
+                </DropdownMenuLabel>
+                {currentUser.branchName && !currentUser.permissions?.includes('view_all_branches') && (
+                  <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">
+                    {lang === 'ar' ? 'الفرع:' : 'Branch:'} {currentUser.branchName}
+                  </DropdownMenuLabel>
+                )}
+                {currentUser.permissions?.includes('view_all_branches') && (
+                  <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">
+                    {lang === 'ar' ? 'الوصول:' : 'Access:'} {lang === 'ar' ? 'جميع الفروع' : 'All Branches'}
+                  </DropdownMenuLabel>
+                )}
                 <DropdownMenuSeparator />
-                <div className="md:hidden">
-                  {filteredNavLinks.map(link => (
-                    <DropdownMenuItem key={`mobile-${link.href}`} asChild>
-                      <NavLink href={link.href} className="w-full justify-start">
-                        {link.icon && <link.icon className="h-4 w-4 mr-2 rtl:ml-2 rtl:mr-0" />}
-                        {lang === 'ar' ? link.ar : link.en}
-                      </NavLink>
-                    </DropdownMenuItem>
-                  ))}
-                  <DropdownMenuSeparator />
-                </div>
                 <DropdownMenuItem onClick={logout} className="cursor-pointer text-destructive focus:bg-destructive/10 focus:text-destructive">
                   <LogOut className="mr-2 h-4 w-4 rtl:ml-2 rtl:mr-0" />
                   {lang === 'ar' ? 'تسجيل الخروج' : 'Logout'}
@@ -172,9 +221,9 @@ const SiteHeaderComponent = ({ lang }: SiteHeaderProps) => {
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-             <NavLink href="/login" className="flex items-center gap-1">
+             <NavLink href="/login" className="flex items-center gap-1 px-2 py-1">
                 <LogIn className="h-4 w-4" />
-                <span>{lang === 'ar' ? 'تسجيل الدخول' : 'Login'}</span>
+                <span className="text-sm">{lang === 'ar' ? 'تسجيل الدخول' : 'Login'}</span>
             </NavLink>
           )}
         </div>

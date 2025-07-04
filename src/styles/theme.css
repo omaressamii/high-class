@@ -1,16 +1,5 @@
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
 
-@layer base {
-  * {
-    @apply border-border;
-  }
-  body {
-    @apply bg-background text-foreground;
-  }
-}
 
 /* :root will now primarily use the HSL component variables defined in theme-vars.css
    and overridden by JS. The direct HSL strings are removed from here if they are

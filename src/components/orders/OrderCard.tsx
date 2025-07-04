@@ -102,80 +102,88 @@ const OrderCard = React.memo(function OrderCard({ order, lang: propLang }: Order
 
   return (
     <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300 rounded-lg">
-      <CardHeader>
-        <div className="flex justify-between items-start">
-            <div>
-                <CardTitle className="font-headline text-xl">{t.orderId}</CardTitle>
+      <CardHeader className="pb-3 sm:pb-6">
+        <div className="flex justify-between items-start gap-2">
+            <div className="min-w-0 flex-1">
+                <CardTitle className="font-headline text-lg sm:text-xl truncate">{t.orderId}</CardTitle>
                 {order.orderCode && (
-                    <CardDescription className="text-xs text-muted-foreground flex items-center">
-                         <Fingerprint className="h-3 w-3 mr-1 rtl:ml-1 rtl:mr-0"/>
-                         {t.orderCodeLabel} {order.orderCode}
+                    <CardDescription className="text-xs text-muted-foreground flex items-center mt-1">
+                         <Fingerprint className="h-3 w-3 mr-1 rtl:ml-1 rtl:mr-0 flex-shrink-0"/>
+                         <span className="truncate">{t.orderCodeLabel} {order.orderCode}</span>
                     </CardDescription>
                 )}
-                <CardDescription className="mt-1">{displayTransactionType}</CardDescription>
+                <CardDescription className="mt-1 text-sm">{displayTransactionType}</CardDescription>
             </div>
-            <Badge variant={getStatusVariant(order.status)} className="text-sm flex items-center">
+            <Badge variant={getStatusVariant(order.status)} className="text-xs sm:text-sm flex items-center flex-shrink-0">
               {getStatusIcon(order.status)}
-              {displayStatus()}
+              <span className="hidden sm:inline">{displayStatus()}</span>
+              <span className="sm:hidden">{displayStatus().substring(0, 8)}</span>
             </Badge>
         </div>
       </CardHeader>
-      <CardContent className="space-y-3 text-sm">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-2">
-            <div className="flex items-center">
-              <Store className="h-4 w-4 mr-2 rtl:ml-2 rtl:mr-0 text-primary" />
-              <span>{t.branchLabel}: {order.branchName || t.notApplicable}</span>
+      <CardContent className="space-y-2 sm:space-y-3 text-xs sm:text-sm px-3 sm:px-6">
+        <div className="grid grid-cols-1 gap-y-2">
+            <div className="flex items-center min-w-0">
+              <Store className="h-3 w-3 sm:h-4 sm:w-4 mr-2 rtl:ml-2 rtl:mr-0 text-primary flex-shrink-0" />
+              <span className="truncate">{t.branchLabel}: {order.branchName || t.notApplicable}</span>
             </div>
-            <div className="flex items-center">
-            <ShoppingBag className="h-4 w-4 mr-2 rtl:ml-2 rtl:mr-0 text-primary" />
-            <span>{t.itemsLabel}: {displayItemName}</span>
+            <div className="flex items-center min-w-0">
+            <ShoppingBag className="h-3 w-3 sm:h-4 sm:w-4 mr-2 rtl:ml-2 rtl:mr-0 text-primary flex-shrink-0" />
+            <span className="truncate">{t.itemsLabel}: {displayItemName}</span>
             </div>
-            <div className="flex items-center">
-            <User className="h-4 w-4 mr-2 rtl:ml-2 rtl:mr-0 text-primary" />
-            <span>{t.customerLabel}: {order.customerName || order.customerId}</span>
+            <div className="flex items-center min-w-0">
+            <User className="h-3 w-3 sm:h-4 sm:w-4 mr-2 rtl:ml-2 rtl:mr-0 text-primary flex-shrink-0" />
+            <span className="truncate">{t.customerLabel}: {order.customerName || order.customerId}</span>
             </div>
             {order.sellerName && (
-              <div className="flex items-center">
-                <Briefcase className="h-4 w-4 mr-2 rtl:ml-2 rtl:mr-0 text-primary" />
-                <span>{t.sellerLabel}: {order.sellerName}</span>
+              <div className="flex items-center min-w-0">
+                <Briefcase className="h-3 w-3 sm:h-4 sm:w-4 mr-2 rtl:ml-2 rtl:mr-0 text-primary flex-shrink-0" />
+                <span className="truncate">{t.sellerLabel}: {order.sellerName}</span>
               </div>
             )}
-            <div className="flex items-center">
-            <CalendarDays className="h-4 w-4 mr-2 rtl:ml-2 rtl:mr-0 text-primary" />
-            <span>{t.orderDateLabel}: {formatDate(order.orderDate)}</span>
+            <div className="flex items-center min-w-0">
+            <CalendarDays className="h-3 w-3 sm:h-4 sm:w-4 mr-2 rtl:ml-2 rtl:mr-0 text-primary flex-shrink-0" />
+            <span className="truncate">{t.orderDateLabel}: {formatDate(order.orderDate)}</span>
             </div>
-            <div className="flex items-center">
-            <CalendarDays className="h-4 w-4 mr-2 rtl:ml-2 rtl:mr-0 text-primary" />
-            <span>{t.deliveryDateLabel}: {formatDate(order.deliveryDate)}</span>
+            <div className="flex items-center min-w-0">
+            <CalendarDays className="h-3 w-3 sm:h-4 sm:w-4 mr-2 rtl:ml-2 rtl:mr-0 text-primary flex-shrink-0" />
+            <span className="truncate">{t.deliveryDateLabel}: {formatDate(order.deliveryDate)}</span>
             </div>
             {order.transactionType === 'Rental' && order.returnDate && (
-            <div className="flex items-center">
-                <CornerDownLeft className="h-4 w-4 mr-2 rtl:ml-2 rtl:mr-0 text-primary" />
-                <span>{t.returnDateLabel}: {formatDate(order.returnDate)}</span>
+            <div className="flex items-center min-w-0">
+                <CornerDownLeft className="h-3 w-3 sm:h-4 sm:w-4 mr-2 rtl:ml-2 rtl:mr-0 text-primary flex-shrink-0" />
+                <span className="truncate">{t.returnDateLabel}: {formatDate(order.returnDate)}</span>
             </div>
             )}
-            <div className="flex items-center md:col-span-2">
-            <DollarSign className="h-4 w-4 mr-2 rtl:ml-2 rtl:mr-0 text-primary" />
-            <span>
-              {t.totalLabel}: {t.currencySymbol} {order.totalPrice.toFixed(2)} | {t.paidLabel}: {t.currencySymbol} {order.paidAmount.toFixed(2)}
+            <div className="flex items-start min-w-0">
+            <DollarSign className="h-3 w-3 sm:h-4 sm:w-4 mr-2 rtl:ml-2 rtl:mr-0 text-primary flex-shrink-0 mt-0.5" />
+            <div className="min-w-0 flex-1">
+              <div className="text-xs sm:text-sm">
+                {t.totalLabel}: {t.currencySymbol} {order.totalPrice.toFixed(2)}
+              </div>
+              <div className="text-xs sm:text-sm">
+                {t.paidLabel}: {t.currencySymbol} {order.paidAmount.toFixed(2)}
+              </div>
               {order.discountAmount && order.discountAmount > 0 && (
-                <> | {t.discountLabel}: {t.currencySymbol} {order.discountAmount.toFixed(2)}</>
+                <div className="text-xs sm:text-sm">
+                  {t.discountLabel}: {t.currencySymbol} {order.discountAmount.toFixed(2)}
+                </div>
               )}
-            </span>
+            </div>
             </div>
         </div>
         {order.notes && (
-          <div className="flex items-start pt-2">
-            <Info className="h-4 w-4 mr-2 rtl:ml-2 rtl:mr-0 mt-0.5 text-primary shrink-0" />
-            <p className="text-xs text-muted-foreground">{order.notes}</p>
+          <div className="flex items-start pt-2 min-w-0">
+            <Info className="h-3 w-3 sm:h-4 sm:w-4 mr-2 rtl:ml-2 rtl:mr-0 mt-0.5 text-primary flex-shrink-0" />
+            <p className="text-xs text-muted-foreground break-words">{order.notes}</p>
           </div>
         )}
       </CardContent>
-      <CardFooter className="border-t pt-4">
-        <Button asChild variant="outline" className="w-full hover:bg-accent hover:text-accent-foreground">
+      <CardFooter className="border-t pt-3 sm:pt-4 px-3 sm:px-6 pb-3 sm:pb-6">
+        <Button asChild variant="outline" className="w-full hover:bg-accent hover:text-accent-foreground min-h-[44px]">
           <Link href={`/${lang}/orders/${order.id}`}>
-            <ListChecks className="mr-2 h-4 w-4" />
-            {t.manageOrder}
+            <ListChecks className="mr-2 h-4 w-4 rtl:ml-2 rtl:mr-0" />
+            <span className="text-sm">{t.manageOrder}</span>
           </Link>
         </Button>
       </CardFooter>
