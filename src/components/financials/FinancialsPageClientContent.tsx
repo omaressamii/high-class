@@ -62,10 +62,8 @@ export function FinancialsPageClientContent({ initialTransactions, allBranches, 
   });
   const [showDetailedFinancials, setShowDetailedFinancials] = useState(false);
   
-  // Effect to sync transactions if prop changes (e.g. after server-side refresh)
-  useEffect(() => {
-    setAllTransactions(initialTransactions);
-  }, [initialTransactions]);
+  // Note: We now use real-time data directly, so no need to sync with initialTransactions
+  // The allTransactions variable is computed from real-time data above
 
   useEffect(() => {
     if (!authIsLoading && !hasPermission('financials_view')) {
