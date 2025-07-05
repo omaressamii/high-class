@@ -4,6 +4,7 @@
 import Link from 'next/link';
 import { NavLink } from './NavLink';
 import { ThemeToggleButton } from './ThemeToggleButton';
+import { HeaderRealtimeStatus } from '@/components/shared/RealtimeStatus';
 import { LogIn, LogOut, Users as UsersIcon, BarChartHorizontalBig, Banknote, LayoutDashboard, ShoppingBag, Users, ListOrdered, Shirt, Feather, Undo2, UserCircle, Store, PackageSearch, CalendarCheck, Menu, X } from 'lucide-react';
 import type { PermissionString } from '@/types';
 import { useAuth } from '@/context/AuthContext';
@@ -185,6 +186,7 @@ const SiteHeaderComponent = ({ lang }: SiteHeaderProps) => {
 
         {/* Right side actions */}
         <div className="flex items-center gap-1 sm:gap-2">
+          {currentUser && <HeaderRealtimeStatus lang={effectiveLang} />}
           <ThemeToggleButton lang={effectiveLang} />
           {isLoading ? (
             <div className="h-8 w-16 sm:w-20 animate-pulse rounded-md bg-muted"></div>

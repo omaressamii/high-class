@@ -6,20 +6,26 @@ import type { Product, ProductTypeDefinition, ProductCategory, ProductStatus, Pr
 import { ProductFilters } from '@/components/products/ProductFilters';
 import { ProductList } from '@/components/products/ProductList';
 import { useAuth } from '@/context/AuthContext';
+import { useRealtimeProducts } from '@/context/RealtimeDataContext';
+import { RealtimeStatus } from '@/components/shared/RealtimeStatus';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
-import { Loader } from 'lucide-react';
+import { Loader, RefreshCw } from 'lucide-react';
 
 interface ProductFiltersClientWrapperProps {
-  allProducts: Product[];
+  allProducts: Product[]; // Fallback data from server
   allProductTypes: ProductTypeDefinition[]; // Added prop for dynamic types
   lang: string;
 }
 
-export function ProductFiltersClientWrapper({ allProducts, allProductTypes, lang }: ProductFiltersClientWrapperProps) {
+export function ProductFiltersClientWrapper({ allProducts: fallbackProducts, allProductTypes, lang }: ProductFiltersClientWrapperProps) {
   const { isLoading: authIsLoading, hasPermission, currentUser } = useAuth();
+  const { products: realtimeProducts, isLoading: realtimeLoading, connectionStatus } = useRealtimeProducts();
   const { toast } = useToast();
   const router = useRouter();
+
+  // Use real-time data if available, otherwise fallback to server data
+  const allProducts = realtimeProducts.length > 0 ? realtimeProducts : fallbackProducts;
 
   const [filters, setFilters] = React.useState<{
     searchTerm: string;
@@ -61,11 +67,13 @@ export function ProductFiltersClientWrapper({ allProducts, allProductTypes, lang
 
   const t_wrapper = {
     loadingProducts: lang === 'ar' ? 'جاري تحميل المنتجات...' : 'Loading products...',
+    loadingRealtime: lang === 'ar' ? 'جاري تحميل تحديث البيانات...' : 'Loading real-time data...',
     accessDeniedTitle: lang === 'ar' ? 'وصول مرفوض' : 'Access Denied',
     accessDeniedDescription: lang === 'ar' ? 'ليس لديك الصلاحية لعرض المنتجات.' : 'You do not have permission to view products.',
     noProductsMatch: lang === 'ar' ? 'لا توجد منتجات تطابق الفلاتر الحالية.' : 'No products match your current filters.',
     tryAdjustingFilters: lang === 'ar' ? 'حاول تعديل معايير البحث أو الفلترة.' : 'Try adjusting your search or filter criteria.',
     noProductsYet: lang === 'ar' ? 'لا توجد منتجات حاليًا. قم بإضافة بعض المنتجات!' : 'No products found. Add some products!',
+    realtimeData: lang === 'ar' ? 'تحديث البيانات' : 'Real-time Data',
   };
 
   React.useEffect(() => {
@@ -83,12 +91,30 @@ export function ProductFiltersClientWrapper({ allProducts, allProductTypes, lang
     );
   }
 
+  // Show loading state for real-time data if no fallback data
+  if (realtimeLoading && fallbackProducts.length === 0) {
+    return (
+      <div className="flex justify-center items-center min-h-[calc(100vh-20rem)]">
+        <RefreshCw className="h-10 w-10 animate-spin text-primary" />
+        <p className="ml-4 rtl:mr-4">{t_wrapper.loadingRealtime}</p>
+      </div>
+    );
+  }
+
   if (!hasPermission('products_view')) {
     return null;
   }
 
   return (
     <>
+      {/* Real-time status indicator */}
+      <div className="mb-4 flex justify-between items-center">
+        <div className="flex items-center gap-2">
+          <h3 className="text-sm font-medium">{t_wrapper.realtimeData}</h3>
+          <RealtimeStatus lang={lang as 'ar' | 'en'} compact showLastUpdated />
+        </div>
+      </div>
+
       <ProductFilters
         filters={filters}
         setFilters={setFilters}

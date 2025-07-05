@@ -13,7 +13,9 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Banknote, TrendingUp, Users as UsersIconLucide, FilterX, PlusCircle, Loader, AlertCircle, Eye, EyeOff, Store } from 'lucide-react';
+import { RealtimeStatus } from '@/components/shared/RealtimeStatus';
+import { useRealtimeFinancials } from '@/context/RealtimeDataContext';
+import { Banknote, TrendingUp, Users as UsersIconLucide, FilterX, PlusCircle, Loader, AlertCircle, Eye, EyeOff, Store, RefreshCw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/AuthContext';
 // Firestore imports might not be needed here if all data comes via props
@@ -30,11 +32,12 @@ export function FinancialsPageClientContent({ initialTransactions, allBranches, 
   const router = useRouter(); // useRouter might still be needed for navigation
   const { toast } = useToast();
   const { isLoading: authIsLoading, currentUser, hasPermission } = useAuth();
+  const { financialTransactions: realtimeTransactions, isLoading: realtimeLoading, connectionStatus } = useRealtimeFinancials();
   const effectiveLang = lang;
   const isMobile = useMediaQuery('(max-width: 768px)');
 
-  // State for transactions is now initialized by prop
-  const [allTransactions, setAllTransactions] = useState<FinancialTransaction[]>(initialTransactions);
+  // Use real-time data if available, otherwise fallback to server data
+  const allTransactions = realtimeTransactions.length > 0 ? realtimeTransactions : initialTransactions;
   // isLoadingTransactions and errorFetchingTransactions are handled by the server component for initial load
   // However, you might want client-side loading/error states for subsequent actions or re-filtering if it involves new fetches.
   // For now, we assume initial load handles loading/error.
@@ -295,6 +298,14 @@ export function FinancialsPageClientContent({ initialTransactions, allBranches, 
         )}
       </div>
       <p className="text-muted-foreground">{t.pageDescription}</p>
+
+      {/* Real-time status indicator */}
+      <div className="mb-4 flex justify-between items-center">
+        <div className="flex items-center gap-2">
+          <h3 className="text-sm font-medium">{effectiveLang === 'ar' ? 'تحديث البيانات' : 'Real-time Data'}</h3>
+          <RealtimeStatus lang={effectiveLang} compact showLastUpdated />
+        </div>
+      </div>
 
       <div className="flex flex-wrap items-center gap-4 mb-4">
         <Button

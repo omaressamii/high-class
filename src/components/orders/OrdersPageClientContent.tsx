@@ -2,15 +2,17 @@
 'use client'; 
 
 import { useState, useMemo, useEffect } from 'react';
-import Link from 'next/link'; 
+import Link from 'next/link';
 import { PageTitle } from '@/components/shared/PageTitle';
 import { OrderList } from '@/components/orders/OrderList';
 import { OrderFilters } from '@/components/orders/OrderFilters';
 import { Button } from '@/components/ui/button';
+import { RealtimeStatus } from '@/components/shared/RealtimeStatus';
+import { useRealtimeOrders } from '@/context/RealtimeDataContext';
 import type { Order, TransactionType, OrderStatus, Product, Customer, User as AppUser, Branch } from '@/types';
-import { PlusCircle, Loader, AlertCircle, ListChecks } from 'lucide-react';
+import { PlusCircle, Loader, AlertCircle, ListChecks, RefreshCw } from 'lucide-react';
 import React from 'react';
-import { useAuth } from '@/context/AuthContext'; 
+import { useAuth } from '@/context/AuthContext';
 
 type OrderWithDetails = Order & {
   // productName is now part of order.items, but we might want a primary display name
@@ -26,24 +28,22 @@ interface OrdersPageClientContentProps {
   lang: 'ar' | 'en';
   addOrderText: string;
   noOrdersYetText: string;
-  pageTitleText: string; 
+  pageTitleText: string;
 }
 
-export function OrdersPageClientContent({ 
-  initialOrders, 
-  allBranches, 
-  lang, 
+export function OrdersPageClientContent({
+  initialOrders,
+  allBranches,
+  lang,
   addOrderText,
   noOrdersYetText,
-  pageTitleText 
+  pageTitleText
 }: OrdersPageClientContentProps) {
   const { isLoading: authIsLoading, hasPermission, currentUser } = useAuth();
+  const { orders: realtimeOrders, isLoading: realtimeLoading, connectionStatus } = useRealtimeOrders();
 
-  const [allOrdersState, setAllOrdersState] = useState<OrderWithDetails[]>(initialOrders);
-  
-  useEffect(() => {
-    setAllOrdersState(initialOrders); 
-  }, [initialOrders]);
+  // Use real-time data if available, otherwise fallback to server data
+  const allOrdersState = realtimeOrders.length > 0 ? realtimeOrders as OrderWithDetails[] : initialOrders;
 
   const [filters, setFilters] = useState<{
     searchTerm: string;
@@ -95,6 +95,16 @@ export function OrdersPageClientContent({
     );
   }
 
+  // Show loading state for real-time data if no fallback data
+  if (realtimeLoading && initialOrders.length === 0) {
+    return (
+      <div className="flex justify-center items-center min-h-[20rem]">
+        <RefreshCw className="h-8 w-8 animate-spin text-primary" />
+        <p className="ml-4 rtl:mr-4">{lang === 'ar' ? 'جاري تحميل تحديث البيانات...' : 'Loading real-time data...'}</p>
+      </div>
+    );
+  }
+
   return (
     <>
       <div className="flex justify-between items-center mb-8">
@@ -107,6 +117,14 @@ export function OrdersPageClientContent({
             </Link>
           </Button>
         )}
+      </div>
+
+      {/* Real-time status indicator */}
+      <div className="mb-4 flex justify-between items-center">
+        <div className="flex items-center gap-2">
+          <h3 className="text-sm font-medium">{lang === 'ar' ? 'تحديث البيانات' : 'Real-time Data'}</h3>
+          <RealtimeStatus lang={lang} compact showLastUpdated />
+        </div>
       </div>
 
       <OrderFilters 

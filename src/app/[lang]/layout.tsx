@@ -20,6 +20,8 @@ import '../globals.css';
 import { SiteHeader } from '@/components/layout/SiteHeader';
 import { Toaster } from "@/components/ui/toaster";
 import { AuthProvider } from '@/context/AuthContext';
+import { RealtimeDataProvider } from '@/context/RealtimeDataContext';
+import { RealtimeNotifications } from '@/components/shared/RealtimeNotifications';
 import { ThemeProvider } from "next-themes";
 import { TopProgressBar } from '@/components/shared/TopProgressBar';
 import React from 'react';
@@ -60,12 +62,15 @@ const RootLayoutComponent = ({
           disableTransitionOnChange
         >
           <AuthProvider>
-            <TopProgressBar />
-            <SiteHeader lang={effectiveLang} />
-            <main className="flex-grow px-2 py-4 sm:px-4 sm:py-6 md:px-6 md:py-8">
-              {children}
-            </main>
-            <Toaster />
+            <RealtimeDataProvider>
+              <RealtimeNotifications lang={effectiveLang} enableVisualNotifications enableSoundNotifications={false} />
+              <TopProgressBar />
+              <SiteHeader lang={effectiveLang} />
+              <main className="flex-grow px-2 py-4 sm:px-4 sm:py-6 md:px-6 md:py-8">
+                {children}
+              </main>
+              <Toaster />
+            </RealtimeDataProvider>
           </AuthProvider>
         </ThemeProvider>
       </body>

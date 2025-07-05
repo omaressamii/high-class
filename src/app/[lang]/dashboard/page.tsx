@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { PageTitle } from '@/components/shared/PageTitle';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { RealtimeMetrics } from '@/components/dashboard/RealtimeMetrics';
 import { LayoutDashboard, DollarSign, ClipboardList, Undo2, PackageCheck, AlertTriangle, Loader, Calendar } from 'lucide-react';
 import type { Order, User, OrderStatus } from '@/types';
 import { DatePickerClient } from '@/components/dashboard/DatePickerClient';
@@ -354,7 +355,10 @@ export default function DashboardPage() {
   return (
     <div className="space-y-8">
       <PageTitle>{t.welcome}</PageTitle>
-      
+
+      {/* Real-time Metrics Section */}
+      <RealtimeMetrics lang={effectiveLang} />
+
       <Suspense fallback={<div className="h-10 w-full animate-pulse rounded-md bg-muted mb-6"></div>}>
         <DatePickerClient lang={effectiveLang} currentSelectedDate={selectedDate} />
       </Suspense>
