@@ -7,7 +7,7 @@ import { PageTitle } from '@/components/shared/PageTitle';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { CalendarDays, ShoppingBag, User, DollarSign, ArrowLeft, Edit3, Trash2, Printer, Save, XCircle, Briefcase, Loader, AlertCircle, Store, PlayCircle, CheckCircle2, Clock, AlertTriangle, Fingerprint, Send, Package, List, Percent } from 'lucide-react';
+import { CalendarDays, ShoppingBag, User, DollarSign, ArrowLeft, Edit3, Trash2, Printer, Save, XCircle, Briefcase, Loader, AlertCircle, Store, PlayCircle, CheckCircle2, Clock, AlertTriangle, Fingerprint, Send, Package, List, Percent, CreditCard } from 'lucide-react';
 import { format, startOfDay } from 'date-fns'; 
 import { arSA, enUS } from 'date-fns/locale'; 
 import Link from 'next/link';
@@ -28,6 +28,7 @@ import { database } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ApplyDiscountDialog } from './ApplyDiscountDialog';
+import { AddPaymentDialog } from './AddPaymentDialog';
 
 
 export type OrderDetailsData = {
@@ -53,6 +54,7 @@ export function OrderDetailClientPage({ initialOrderDetails, lang, orderId }: Or
   const [orderDetails, setOrderDetails] = useState<OrderDetailsData | null>(initialOrderDetails);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showDiscountDialog, setShowDiscountDialog] = useState(false);
+  const [showPaymentDialog, setShowPaymentDialog] = useState(false);
   
   useEffect(() => {
     setOrderDetails(initialOrderDetails);
@@ -105,6 +107,7 @@ export function OrderDetailClientPage({ initialOrderDetails, lang, orderId }: Or
     statusOverdue: effectiveLang === 'ar' ? 'متأخر' : 'Overdue',
     statusCancelled: effectiveLang === 'ar' ? 'ملغى' : 'Cancelled',
     applyDiscount: effectiveLang === 'ar' ? 'تطبيق خصم' : 'Apply Discount',
+    addPayment: effectiveLang === 'ar' ? 'إضافة دفعة' : 'Add Payment',
     deleteOrder: effectiveLang === 'ar' ? 'حذف الطلب' : 'Delete Order',
     orderDeletedSuccess: effectiveLang === 'ar' ? 'تم حذف الطلب بنجاح.' : 'Order deleted successfully.',
     orderDeleteError: effectiveLang === 'ar' ? 'فشل حذف الطلب.' : 'Failed to delete order.',
@@ -238,6 +241,11 @@ export function OrderDetailClientPage({ initialOrderDetails, lang, orderId }: Or
   };
 
   const handleDiscountApplied = () => {
+    // Refresh the page to show updated order data
+    window.location.reload();
+  };
+
+  const handlePaymentAdded = () => {
     // Refresh the page to show updated order data
     window.location.reload();
   };
@@ -647,6 +655,9 @@ export function OrderDetailClientPage({ initialOrderDetails, lang, orderId }: Or
                     <Percent className="mr-2 h-4 w-4 rtl:ml-2 rtl:mr-0" /> {t.applyDiscount}
                   </Button>
                 )}
+                <Button variant="outline" onClick={() => setShowPaymentDialog(true)} className="text-blue-600 border-blue-600 hover:bg-blue-50">
+                  <CreditCard className="mr-2 h-4 w-4 rtl:ml-2 rtl:mr-0" /> {t.addPayment}
+                </Button>
                 {hasPermission('orders_delete') && order.status !== 'Delivered to Customer' && order.status !== 'Completed' && (
                     <Button variant="destructive" onClick={() => setShowDeleteConfirm(true)}>
                         <Trash2 className="mr-2 h-4 w-4 rtl:ml-2 rtl:mr-0" /> {t.deleteOrder}
@@ -687,6 +698,18 @@ export function OrderDetailClientPage({ initialOrderDetails, lang, orderId }: Or
           lang={effectiveLang}
           currentUserName={currentUser?.fullName || currentUser?.username || 'Unknown User'}
           onDiscountApplied={handleDiscountApplied}
+        />
+      )}
+
+      {/* Add Payment Dialog */}
+      {showPaymentDialog && (
+        <AddPaymentDialog
+          isOpen={showPaymentDialog}
+          setIsOpen={setShowPaymentDialog}
+          order={order}
+          lang={effectiveLang}
+          currentUserName={currentUser?.fullName || currentUser?.username || 'Unknown User'}
+          onPaymentAdded={handlePaymentAdded}
         />
       )}
 

@@ -111,7 +111,7 @@ export const mockOrders: Order[] = [
     paidAmount: 1200,
     remainingAmount: 0,
     status: 'Completed',
-    notes: 'تم بيع المنتج مع طقم إكسسوارات إضافي بقيمة 150 ريال. العميل سعيد جدًا.',
+    notes: 'تم بيع المنتج مع طقم إكسسوارات إضافي بقيمة 150 جنيه. العميل سعيد جدًا.',
   },
 ];
 

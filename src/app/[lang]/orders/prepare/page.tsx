@@ -305,7 +305,7 @@ export default function PrepareOrdersPage() {
         toast({
           title: effectiveLang === 'ar' ? 'لا يمكن التسليم' : 'Cannot Deliver',
           description: effectiveLang === 'ar'
-            ? `يجب سداد المبلغ المتبقي (${remainingAmount.toFixed(2)} ${effectiveLang === 'ar' ? 'ريال' : 'SAR'}) قبل التسليم`
+            ? `يجب سداد المبلغ المتبقي (${remainingAmount.toFixed(2)} ${effectiveLang === 'ar' ? 'جنيه' : 'SAR'}) قبل التسليم`
             : `Remaining amount (${remainingAmount.toFixed(2)} SAR) must be paid before delivery`,
           variant: 'destructive'
         });
@@ -440,6 +440,7 @@ export default function PrepareOrdersPage() {
               onViewDetails={handleOpenDetailsModal}
               lang={effectiveLang}
               hasEditPermission={hasPermission('orders_prepare')}
+              currentUserName={currentUser?.fullName || currentUser?.username || 'Unknown User'}
             />
           )}
         </CardContent>

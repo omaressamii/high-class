@@ -1,12 +1,13 @@
 
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import type { Order } from '@/types';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Eye, Send, CheckCircle, User, ShoppingBag, Store, CalendarDays, CreditCard } from 'lucide-react';
+import { AddPaymentDialog } from './AddPaymentDialog';
 import { format } from 'date-fns';
 import { arSA, enUS } from 'date-fns/locale';
 import Link from 'next/link';
@@ -23,10 +24,13 @@ interface DeliverOrdersTableProps {
   onViewDetails: (order: OrderWithDetails) => void;
   lang: 'ar' | 'en';
   hasEditPermission: boolean;
+  currentUserName?: string;
 }
 
-const DeliverOrdersTableComponent = ({ orders, onMarkAsDelivered, onViewDetails, lang, hasEditPermission }: DeliverOrdersTableProps) => {
+const DeliverOrdersTableComponent = ({ orders, onMarkAsDelivered, onViewDetails, lang, hasEditPermission, currentUserName }: DeliverOrdersTableProps) => {
   const locale = lang === 'ar' ? arSA : enUS;
+  const [showPaymentDialog, setShowPaymentDialog] = useState(false);
+  const [selectedOrderForPayment, setSelectedOrderForPayment] = useState<OrderWithDetails | null>(null);
   
   const t = {
     orderCode: lang === 'ar' ? 'كود الطلب' : 'Order Code',
@@ -49,6 +53,18 @@ const DeliverOrdersTableComponent = ({ orders, onMarkAsDelivered, onViewDetails,
       if (isNaN(dateObj.getTime())) return dateString;
       return format(dateObj, 'PPP', { locale });
     } catch { return dateString; }
+  };
+
+  const handleAddPayment = (order: OrderWithDetails) => {
+    setSelectedOrderForPayment(order);
+    setShowPaymentDialog(true);
+  };
+
+  const handlePaymentAdded = () => {
+    setShowPaymentDialog(false);
+    setSelectedOrderForPayment(null);
+    // Refresh the page to show updated data
+    window.location.reload();
   };
   
   return (
@@ -101,7 +117,7 @@ const DeliverOrdersTableComponent = ({ orders, onMarkAsDelivered, onViewDetails,
               <TableCell>
                 {order.remainingAmount && order.remainingAmount > 0 ? (
                   <div className="text-red-600 font-semibold">
-                    {order.remainingAmount.toFixed(2)} {lang === 'ar' ? 'ريال' : 'SAR'}
+                    {order.remainingAmount.toFixed(2)} {lang === 'ar' ? 'جنيه' : 'SAR'}
                   </div>
                 ) : (
                   <div className="text-green-600 font-semibold">
@@ -125,13 +141,11 @@ const DeliverOrdersTableComponent = ({ orders, onMarkAsDelivered, onViewDetails,
                   <Button
                     variant="outline"
                     size="sm"
-                    asChild
+                    onClick={() => handleAddPayment(order)}
                     className="text-blue-600 border-blue-600 hover:bg-blue-50"
                   >
-                    <Link href={`/${lang}/orders/${order.id}`}>
-                      <CreditCard className="mr-1 rtl:ml-1 rtl:mr-0 h-4 w-4" />
-                      {lang === 'ar' ? 'إضافة دفعة' : 'Add Payment'}
-                    </Link>
+                    <CreditCard className="mr-1 rtl:ml-1 rtl:mr-0 h-4 w-4" />
+                    {lang === 'ar' ? 'إضافة دفعة' : 'Add Payment'}
                   </Button>
                 )}
               </TableCell>
@@ -158,6 +172,18 @@ const DeliverOrdersTableComponent = ({ orders, onMarkAsDelivered, onViewDetails,
           ))}
         </TableBody>
       </Table>
+
+      {/* Add Payment Dialog */}
+      {showPaymentDialog && selectedOrderForPayment && (
+        <AddPaymentDialog
+          isOpen={showPaymentDialog}
+          setIsOpen={setShowPaymentDialog}
+          order={selectedOrderForPayment}
+          lang={lang}
+          currentUserName={currentUserName || 'Unknown User'}
+          onPaymentAdded={handlePaymentAdded}
+        />
+      )}
     </div>
   );
 };
