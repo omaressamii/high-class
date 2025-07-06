@@ -86,6 +86,7 @@ const FinancialTransactionCard = React.memo(function FinancialTransactionCard({ 
   const getAmountColorClass = (type: FinancialTransaction['type']) => {
     if (type === 'Payment Received') return 'text-green-600 dark:text-green-400';
     if (type === 'Initial Sale Value' || type === 'Initial Rental Value') return 'text-primary dark:text-blue-400';
+    if (type === 'Discount Applied') return 'text-red-600 dark:text-red-400';
     return '';
   };
 
@@ -142,7 +143,7 @@ const FinancialTransactionCard = React.memo(function FinancialTransactionCard({ 
         )}
         <div className={cn("flex items-center font-semibold", getAmountColorClass(transaction.type))}>
           <DollarSign className="h-4 w-4 mr-2 rtl:ml-2 rtl:mr-0" />
-          <p>{t.amount}: {t.currencySymbol} {transaction.amount.toFixed(2)}</p>
+          <p>{t.amount}: {transaction.type === 'Discount Applied' ? '-' : ''}{t.currencySymbol} {transaction.amount.toFixed(2)}</p>
         </div>
         {transaction.type === 'Payment Received' && transaction.paymentMethod && (
           <div className="flex items-center">

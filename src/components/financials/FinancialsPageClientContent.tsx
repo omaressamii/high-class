@@ -200,9 +200,15 @@ export function FinancialsPageClientContent({ initialTransactions, allBranches, 
 
 
   const filteredOverallTotalIncome = useMemo(() => {
-    return displayedTransactions 
+    const income = displayedTransactions
       .filter(tx => tx.type === 'Payment Received')
       .reduce((sum, tx) => sum + tx.amount, 0);
+
+    const discounts = displayedTransactions
+      .filter(tx => tx.type === 'Discount Applied')
+      .reduce((sum, tx) => sum + tx.amount, 0);
+
+    return income - discounts;
   }, [displayedTransactions]);
 
   const processorSummaries = useMemo(() => {
@@ -255,6 +261,47 @@ export function FinancialsPageClientContent({ initialTransactions, allBranches, 
         }
         summaryMap[processor].totalAmount += tx.amount;
         summaryMap[processor].transactionCount += 1;
+    });
+
+    // Subtract discounts from processor summaries
+    let discountTransactionsToConsider = allTransactions.filter(tx => tx.type === 'Discount Applied');
+
+    if (!hasPermission('view_all_branches') && currentUser?.branchId) {
+      discountTransactionsToConsider = discountTransactionsToConsider.filter(tx => tx.branchId === currentUser.branchId);
+    } else if (hasPermission('view_all_branches') && selectedPageBranchId !== 'all') {
+        discountTransactionsToConsider = discountTransactionsToConsider.filter(tx => tx.branchId === selectedPageBranchId);
+    }
+
+    // Apply date filters to discount transactions
+    if (filters?.startDate || filters?.endDate) {
+      discountTransactionsToConsider = discountTransactionsToConsider.filter(tx => {
+        let dateMatch = true;
+        if (filters.startDate || filters.endDate) {
+          const transactionDateString = tx.date;
+          if (transactionDateString) {
+            try {
+              const effectiveTransactionDate = new Date(transactionDateString);
+              const { start, end } = filters;
+              if (start && effectiveTransactionDate < start) {
+                dateMatch = false;
+              }
+              if (end && effectiveTransactionDate > end) {
+                dateMatch = false;
+              }
+            } catch (e) {
+              dateMatch = false;
+            }
+          }
+        }
+        return dateMatch;
+      });
+    }
+
+    discountTransactionsToConsider.forEach(tx => {
+        const processor = tx.processedByUserName || t.unknownProcessor;
+        if (summaryMap[processor]) {
+          summaryMap[processor].totalAmount -= tx.amount;
+        }
     });
 
     return Object.entries(summaryMap).map(([processorName, data]) => ({

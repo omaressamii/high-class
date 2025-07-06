@@ -59,9 +59,15 @@ export function RealtimeMetrics({ lang }: RealtimeMetricsProps) {
     const totalCustomers = customers.length;
     
     // Calculate revenue from financial transactions
-    const totalRevenue = financialTransactions
+    const income = financialTransactions
       .filter(t => t.type === 'Payment Received')
       .reduce((sum, t) => sum + (t.amount || 0), 0);
+
+    const discounts = financialTransactions
+      .filter(t => t.type === 'Discount Applied')
+      .reduce((sum, t) => sum + (t.amount || 0), 0);
+
+    const totalRevenue = income - discounts;
 
     // Active orders (not completed or cancelled)
     const activeOrders = orders.filter(order => 

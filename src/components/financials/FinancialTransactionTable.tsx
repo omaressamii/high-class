@@ -78,6 +78,8 @@ const FinancialTransactionTableComponent = ({ transactions, lang }: FinancialTra
         return 'bg-accent/5 hover:bg-accent/10 dark:bg-accent/10 dark:hover:bg-accent/20';
       case 'Payment Received':
         return 'bg-green-500/5 hover:bg-green-500/10 dark:bg-green-500/10 dark:hover:bg-green-500/20';
+      case 'Discount Applied':
+        return 'bg-red-500/5 hover:bg-red-500/10 dark:bg-red-500/10 dark:hover:bg-red-500/20';
       default:
         return 'hover:bg-muted/50';
     }
@@ -125,8 +127,8 @@ const FinancialTransactionTableComponent = ({ transactions, lang }: FinancialTra
                 ) : (
                   t.notApplicable
                 )}
-              </TableCell><TableCell className={`text-right font-medium ${transaction.type === 'Payment Received' ? 'text-green-600 dark:text-green-400' : (transaction.type === 'Initial Sale Value' || transaction.type === 'Initial Rental Value') ? 'text-primary dark:text-blue-400' : ''}`}>
-                {t.currencySymbol} {transaction.amount.toFixed(2)}
+              </TableCell><TableCell className={`text-right font-medium ${transaction.type === 'Payment Received' ? 'text-green-600 dark:text-green-400' : (transaction.type === 'Initial Sale Value' || transaction.type === 'Initial Rental Value') ? 'text-primary dark:text-blue-400' : transaction.type === 'Discount Applied' ? 'text-red-600 dark:text-red-400' : ''}`}>
+                {transaction.type === 'Discount Applied' ? '-' : ''}{t.currencySymbol} {transaction.amount.toFixed(2)}
               </TableCell><TableCell>
                 {transaction.type === 'Payment Received' && transaction.paymentMethod 
                   ? transaction.paymentMethod 
