@@ -298,6 +298,20 @@ export default function PrepareOrdersPage() {
       }
 
       const orderData = orderSnap.val();
+
+      // Check if there's a remaining amount that needs to be paid
+      const remainingAmount = orderData.remainingAmount || 0;
+      if (remainingAmount > 0) {
+        toast({
+          title: effectiveLang === 'ar' ? 'لا يمكن التسليم' : 'Cannot Deliver',
+          description: effectiveLang === 'ar'
+            ? `يجب سداد المبلغ المتبقي (${remainingAmount.toFixed(2)} ${effectiveLang === 'ar' ? 'ريال' : 'SAR'}) قبل التسليم`
+            : `Remaining amount (${remainingAmount.toFixed(2)} SAR) must be paid before delivery`,
+          variant: 'destructive'
+        });
+        return;
+      }
+
       const existingNotes = orderData.notes || '';
       const currentUserFullName = currentUser.fullName || currentUser.username || 'SystemUser';
       const timestamp = format(new Date(), 'yyyy-MM-dd HH:mm:ss');

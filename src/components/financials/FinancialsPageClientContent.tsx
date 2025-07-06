@@ -200,15 +200,13 @@ export function FinancialsPageClientContent({ initialTransactions, allBranches, 
 
 
   const filteredOverallTotalIncome = useMemo(() => {
+    // Only count actual payments received
+    // Discounts are already applied to remainingAmount, so we shouldn't double-subtract them
     const income = displayedTransactions
       .filter(tx => tx.type === 'Payment Received')
       .reduce((sum, tx) => sum + tx.amount, 0);
 
-    const discounts = displayedTransactions
-      .filter(tx => tx.type === 'Discount Applied')
-      .reduce((sum, tx) => sum + tx.amount, 0);
-
-    return income - discounts;
+    return income;
   }, [displayedTransactions]);
 
   const processorSummaries = useMemo(() => {
@@ -263,46 +261,9 @@ export function FinancialsPageClientContent({ initialTransactions, allBranches, 
         summaryMap[processor].transactionCount += 1;
     });
 
-    // Subtract discounts from processor summaries
-    let discountTransactionsToConsider = allTransactions.filter(tx => tx.type === 'Discount Applied');
-
-    if (!hasPermission('view_all_branches') && currentUser?.branchId) {
-      discountTransactionsToConsider = discountTransactionsToConsider.filter(tx => tx.branchId === currentUser.branchId);
-    } else if (hasPermission('view_all_branches') && selectedPageBranchId !== 'all') {
-        discountTransactionsToConsider = discountTransactionsToConsider.filter(tx => tx.branchId === selectedPageBranchId);
-    }
-
-    // Apply date filters to discount transactions
-    if (filters?.startDate || filters?.endDate) {
-      discountTransactionsToConsider = discountTransactionsToConsider.filter(tx => {
-        let dateMatch = true;
-        if (filters.startDate || filters.endDate) {
-          const transactionDateString = tx.date;
-          if (transactionDateString) {
-            try {
-              const effectiveTransactionDate = new Date(transactionDateString);
-              const { start, end } = filters;
-              if (start && effectiveTransactionDate < start) {
-                dateMatch = false;
-              }
-              if (end && effectiveTransactionDate > end) {
-                dateMatch = false;
-              }
-            } catch (e) {
-              dateMatch = false;
-            }
-          }
-        }
-        return dateMatch;
-      });
-    }
-
-    discountTransactionsToConsider.forEach(tx => {
-        const processor = tx.processedByUserName || t.unknownProcessor;
-        if (summaryMap[processor]) {
-          summaryMap[processor].totalAmount -= tx.amount;
-        }
-    });
+    // Note: We don't subtract discounts from processor summaries because
+    // discounts are already applied to remainingAmount in orders.
+    // Subtracting discount transactions would result in double-counting the discount.
 
     return Object.entries(summaryMap).map(([processorName, data]) => ({
       processorName,

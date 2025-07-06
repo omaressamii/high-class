@@ -6,7 +6,7 @@ import type { Order } from '@/types';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Eye, Send, CheckCircle, User, ShoppingBag, Store, CalendarDays } from 'lucide-react';
+import { Eye, Send, CheckCircle, User, ShoppingBag, Store, CalendarDays, CreditCard } from 'lucide-react';
 import { format } from 'date-fns';
 import { arSA, enUS } from 'date-fns/locale';
 import Link from 'next/link';
@@ -61,8 +61,9 @@ const DeliverOrdersTableComponent = ({ orders, onMarkAsDelivered, onViewDetails,
             <TableHead className="min-w-[150px]">{t.product}</TableHead>
             <TableHead className="min-w-[120px]">{t.branch}</TableHead>
             <TableHead className="min-w-[130px]">{t.deliveryDate}</TableHead>
+            <TableHead className="min-w-[120px]">{lang === 'ar' ? 'المبلغ المتبقي' : 'Remaining Amount'}</TableHead>
             <TableHead className="min-w-[100px]">{t.status}</TableHead>
-            <TableHead className="text-center min-w-[150px]" colSpan={2}>{t.actions}</TableHead>
+            <TableHead className="text-center min-w-[200px]" colSpan={3}>{t.actions}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -98,6 +99,17 @@ const DeliverOrdersTableComponent = ({ orders, onMarkAsDelivered, onViewDetails,
                 </div>
                 </TableCell>
               <TableCell>
+                {order.remainingAmount && order.remainingAmount > 0 ? (
+                  <div className="text-red-600 font-semibold">
+                    {order.remainingAmount.toFixed(2)} {lang === 'ar' ? 'ريال' : 'SAR'}
+                  </div>
+                ) : (
+                  <div className="text-green-600 font-semibold">
+                    {lang === 'ar' ? 'مسدد بالكامل' : 'Fully Paid'}
+                  </div>
+                )}
+              </TableCell>
+              <TableCell>
                 <Badge variant="outline">
                   {t.prepared}
                 </Badge>
@@ -109,8 +121,34 @@ const DeliverOrdersTableComponent = ({ orders, onMarkAsDelivered, onViewDetails,
                 </Button>
               </TableCell>
               <TableCell className="text-center">
+                {hasEditPermission && order.remainingAmount && order.remainingAmount > 0 && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    asChild
+                    className="text-blue-600 border-blue-600 hover:bg-blue-50"
+                  >
+                    <Link href={`/${lang}/orders/${order.id}`}>
+                      <CreditCard className="mr-1 rtl:ml-1 rtl:mr-0 h-4 w-4" />
+                      {lang === 'ar' ? 'إضافة دفعة' : 'Add Payment'}
+                    </Link>
+                  </Button>
+                )}
+              </TableCell>
+              <TableCell className="text-center">
                 {hasEditPermission && (
-                  <Button variant="default" size="sm" onClick={() => onMarkAsDelivered(order.id)} className="bg-green-600 hover:bg-green-700 text-white">
+                  <Button
+                    variant="default"
+                    size="sm"
+                    onClick={() => onMarkAsDelivered(order.id)}
+                    disabled={order.remainingAmount && order.remainingAmount > 0}
+                    className={`${order.remainingAmount && order.remainingAmount > 0
+                      ? 'bg-gray-400 hover:bg-gray-400 cursor-not-allowed'
+                      : 'bg-green-600 hover:bg-green-700'} text-white`}
+                    title={order.remainingAmount && order.remainingAmount > 0
+                      ? (lang === 'ar' ? 'يجب سداد المبلغ المتبقي قبل التسليم' : 'Remaining amount must be paid before delivery')
+                      : undefined}
+                  >
                     <Send className="mr-1 rtl:ml-1 rtl:mr-0 h-4 w-4" />
                     {t.markAsDelivered}
                   </Button>
