@@ -49,7 +49,7 @@ export function RealtimeMetrics({ lang }: RealtimeMetricsProps) {
     disconnected: lang === 'ar' ? 'غير متصل' : 'Disconnected',
     loading: lang === 'ar' ? 'جاري التحميل...' : 'Loading...',
     noData: lang === 'ar' ? 'لا توجد بيانات' : 'No data',
-    currency: lang === 'ar' ? 'ر.س' : 'SAR',
+    currency: lang === 'ar' ? 'ج.م' : 'SAR',
   };
 
   // Calculate metrics
