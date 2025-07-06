@@ -60,7 +60,7 @@ export function RealtimeMetrics({ lang }: RealtimeMetricsProps) {
     
     // Calculate revenue from financial transactions
     const totalRevenue = financialTransactions
-      .filter(t => t.transactionType === 'Income')
+      .filter(t => t.type === 'Payment Received')
       .reduce((sum, t) => sum + (t.amount || 0), 0);
 
     // Active orders (not completed or cancelled)
@@ -73,9 +73,9 @@ export function RealtimeMetrics({ lang }: RealtimeMetricsProps) {
       order.status === 'Pending Preparation'
     ).length;
 
-    // Low stock products (assuming quantity < 10 is low stock)
-    const lowStockProducts = products.filter(product => 
-      (product.quantity || 0) < 10
+    // Low stock products (assuming quantityInStock < 10 is low stock)
+    const lowStockProducts = products.filter(product =>
+      (product.quantityInStock || 0) < 10
     ).length;
 
     return {
