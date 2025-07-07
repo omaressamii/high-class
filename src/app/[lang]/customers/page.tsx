@@ -40,6 +40,8 @@ async function getCustomersFromRealtimeDB(): Promise<Customer[] | null> {
           notes: data.notes || undefined,
           createdAt: data.createdAt || undefined, // Already in ISO string format
           createdByUserId: data.createdByUserId || undefined,
+          branchId: data.branchId || undefined,
+          branchName: data.branchName || undefined,
         };
         customerList.push(customer);
       } catch (mapError: any) {

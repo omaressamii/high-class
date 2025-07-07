@@ -12,12 +12,14 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { PageTitle } from '@/components/shared/PageTitle';
 import { ArrowLeft, PlusCircle, Save, Loader } from 'lucide-react';
-import { ref, push, set } from 'firebase/database';
+import { ref, push, set, get } from 'firebase/database';
 import { database } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/AuthContext';
+import type { Branch } from '@/types';
 
 export default function AddNewCustomerPage() {
   const params = useParams();
@@ -26,6 +28,9 @@ export default function AddNewCustomerPage() {
   const { isLoading: authIsLoading, currentUser, hasPermission } = useAuth();
   const pageLang = params.lang as 'ar' | 'en';
   const effectiveLang = pageLang === 'en' ? 'en' : 'ar';
+
+  const [branches, setBranches] = React.useState<Branch[]>([]);
+  const [branchesLoading, setBranchesLoading] = React.useState(true);
 
 
   React.useEffect(() => {
@@ -38,6 +43,35 @@ export default function AddNewCustomerPage() {
       router.push(`/${effectiveLang}/customers`);
     }
   }, [authIsLoading, hasPermission, effectiveLang, router, toast]);
+
+  // Load branches
+  React.useEffect(() => {
+    const loadBranches = async () => {
+      try {
+        const branchesRef = ref(database, 'branches');
+        const branchesSnapshot = await get(branchesRef);
+
+        if (branchesSnapshot.exists()) {
+          const branchesData = branchesSnapshot.val();
+          const branchList: Branch[] = Object.entries(branchesData).map(([id, data]: [string, any]) => ({
+            id,
+            ...data
+          }));
+          setBranches(branchList);
+        }
+      } catch (error) {
+        console.error('Error loading branches:', error);
+        toast({
+          title: effectiveLang === 'ar' ? 'خطأ في تحميل الفروع' : 'Error loading branches',
+          variant: 'destructive',
+        });
+      } finally {
+        setBranchesLoading(false);
+      }
+    };
+
+    loadBranches();
+  }, [effectiveLang, toast]);
 
 
   const t = {
@@ -68,15 +102,25 @@ export default function AddNewCustomerPage() {
     notesLabel: effectiveLang === 'ar' ? 'ملاحظات (اختياري)' : 'Notes (Optional)',
     notesPlaceholder: effectiveLang === 'ar' ? 'أي ملاحظات إضافية عن العميل...' : 'Any additional notes about the customer...',
     errorSavingCustomer: effectiveLang === 'ar' ? 'حدث خطأ أثناء محاولة حفظ بيانات العميل.' : 'An error occurred while trying to save the customer data.',
+
+    branchLabel: effectiveLang === 'ar' ? 'الفرع' : 'Branch',
+    branchPlaceholder: effectiveLang === 'ar' ? 'اختر الفرع' : 'Select Branch',
+    branchRequired: effectiveLang === 'ar' ? 'الفرع مطلوب' : 'Branch is required',
   };
 
   const FormSchema = z.object({
     fullName: z.string().min(1, { message: t.fullNameRequired }),
     phoneNumber: z.string().min(1, { message: t.phoneNumberRequired })
-      .regex(/^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/, {message: t.phoneNumberInvalid}), 
+      .regex(/^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/, {message: t.phoneNumberInvalid}),
     address: z.string().optional(),
     idCardNumber: z.string().optional(),
     notes: z.string().optional(),
+    branchId: z.string().optional(),
+  }).superRefine((data, ctx) => {
+    // If user doesn't have view_all_branches permission, branchId is required
+    if (!hasPermission('view_all_branches') && (!data.branchId || data.branchId.trim() === "")) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: t.branchRequired, path: ["branchId"] });
+    }
   });
 
   type FormData = z.infer<typeof FormSchema>;
@@ -89,20 +133,32 @@ export default function AddNewCustomerPage() {
       address: '',
       idCardNumber: '',
       notes: '',
+      branchId: '',
     },
   });
 
   const [isSaving, setIsSaving] = React.useState(false);
 
+  // Auto-set branch for users with specific branch
+  React.useEffect(() => {
+    if (!hasPermission('view_all_branches') && currentUser?.branchId) {
+      form.setValue('branchId', currentUser.branchId);
+    }
+  }, [currentUser, hasPermission, form]);
+
   const onSubmit: SubmitHandler<FormData> = async (data) => {
     setIsSaving(true);
     try {
+      const selectedBranch = data.branchId ? branches.find(b => b.id === data.branchId) : undefined;
+
       const customerDataToSave = {
         fullName: data.fullName,
         phoneNumber: data.phoneNumber,
         address: data.address || null,
         idCardNumber: data.idCardNumber || null,
         notes: data.notes || null,
+        branchId: data.branchId || null,
+        branchName: selectedBranch?.name || null,
         createdAt: new Date().toISOString(), // Use ISO string instead of serverTimestamp for Realtime DB
         createdByUserId: currentUser?.id || 'UNKNOWN_USER',
       };
@@ -185,6 +241,39 @@ export default function AddNewCustomerPage() {
                     <FormControl>
                       <Input type="tel" placeholder={t.phoneNumberPlaceholder} {...field} />
                     </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="branchId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t.branchLabel}</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      value={field.value || undefined}
+                      dir={effectiveLang === 'ar' ? 'rtl' : 'ltr'}
+                      disabled={branchesLoading || (!hasPermission('view_all_branches') && !!currentUser?.branchId)}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder={
+                            (!hasPermission('view_all_branches') && currentUser?.branchName)
+                            ? currentUser.branchName
+                            : t.branchPlaceholder
+                          } />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {branches.map((branch) => (
+                          <SelectItem key={branch.id} value={branch.id}>
+                            {branch.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}

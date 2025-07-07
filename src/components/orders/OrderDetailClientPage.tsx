@@ -575,6 +575,10 @@ export function OrderDetailClientPage({ initialOrderDetails, lang, orderId }: Or
             <p><User className="inline h-5 w-5 mr-2 text-muted-foreground rtl:ml-2 rtl:mr-0" /> {customerFullName}</p>
             {customer?.phoneNumber && <p className="text-sm text-muted-foreground ml-7 rtl:mr-7 rtl:ml-0">{customer.phoneNumber}</p>}
             {customer?.address && <p className="text-sm text-muted-foreground ml-7 rtl:mr-7 rtl:ml-0">{customer.address}</p>}
+            {customer?.branchName && <p className="text-sm text-muted-foreground ml-7 rtl:mr-7 rtl:ml-0">
+              <Store className="inline h-4 w-4 mr-1 rtl:ml-1 rtl:mr-0" />
+              {effectiveLang === 'ar' ? 'فرع العميل: ' : 'Customer Branch: '}{customer.branchName}
+            </p>}
           </div>
           <hr/>
            <div>

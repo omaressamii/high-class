@@ -7,6 +7,7 @@ import { CustomerFilters } from './CustomerFilters';
 import { CustomerList } from './CustomerList';
 import { RealtimeStatus } from '@/components/shared/RealtimeStatus';
 import { useRealtimeCustomers } from '@/context/RealtimeDataContext';
+import { useAuth } from '@/context/AuthContext';
 import { Users as UsersIcon, RefreshCw } from 'lucide-react';
 
 interface CustomerListClientWrapperProps {
@@ -16,6 +17,7 @@ interface CustomerListClientWrapperProps {
 
 export function CustomerListClientWrapper({ allCustomers: fallbackCustomers, lang }: CustomerListClientWrapperProps) {
   const { customers: realtimeCustomers, isLoading: realtimeLoading, connectionStatus } = useRealtimeCustomers();
+  const { currentUser, hasPermission } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
 
   // Use real-time data if available, otherwise fallback to server data
@@ -31,7 +33,16 @@ export function CustomerListClientWrapper({ allCustomers: fallbackCustomers, lan
 
   const filteredCustomers = useMemo(() => {
     if (!allCustomers) return [];
-    return allCustomers.filter((customer) => {
+
+    let customers = allCustomers;
+
+    // Apply branch filtering first
+    if (!hasPermission('view_all_branches') && currentUser?.branchId) {
+      customers = customers.filter(customer => customer.branchId === currentUser.branchId);
+    }
+
+    // Then apply search filtering
+    return customers.filter((customer) => {
       const searchTermLower = searchTerm.toLowerCase();
       return (
         customer.fullName.toLowerCase().includes(searchTermLower) ||
@@ -40,7 +51,7 @@ export function CustomerListClientWrapper({ allCustomers: fallbackCustomers, lan
         customer.id.toLowerCase().includes(searchTermLower)
       );
     });
-  }, [allCustomers, searchTerm]);
+  }, [allCustomers, searchTerm, currentUser, hasPermission]);
 
   // Show loading state for real-time data if no fallback data
   if (realtimeLoading && fallbackCustomers.length === 0) {

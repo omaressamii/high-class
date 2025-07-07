@@ -3,7 +3,7 @@ import React from 'react'; // Import React
 import type { Customer } from '@/types';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Phone, MapPin, Info, UserCircle, Fingerprint } from 'lucide-react';
+import { Phone, MapPin, Info, UserCircle, Fingerprint, Store } from 'lucide-react';
 
 interface CustomerCardProps {
   customer: Customer;
@@ -16,6 +16,7 @@ const CustomerCard = React.memo(function CustomerCard({ customer, lang: propLang
   const viewHistoryText = lang === 'ar' ? 'عرض السجل الكامل' : 'View Full History';
   const customerIdText = lang === 'ar' ? 'معرف العميل' : 'Customer ID';
   const idPassportText = lang === 'ar' ? 'رقم الهوية/جواز السفر' : 'ID/Passport';
+  const branchText = lang === 'ar' ? 'الفرع' : 'Branch';
 
   return (
     <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300 rounded-lg">
@@ -42,6 +43,12 @@ const CustomerCard = React.memo(function CustomerCard({ customer, lang: propLang
                 <Fingerprint className="h-4 w-4 mr-2 text-primary" />
                 <span>{idPassportText}: {customer.idCardNumber}</span>
             </div>
+        )}
+        {customer.branchName && (
+          <div className="flex items-center">
+            <Store className="h-4 w-4 mr-2 text-primary" />
+            <span>{branchText}: {customer.branchName}</span>
+          </div>
         )}
         {customer.notes && (
           <div className="flex items-start">

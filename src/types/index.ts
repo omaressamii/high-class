@@ -110,6 +110,8 @@ export interface Customer {
   notes?: string;
   createdAt?: any;
   createdByUserId?: string;
+  branchId?: string;
+  branchName?: string;
 }
 
 // Order-related types

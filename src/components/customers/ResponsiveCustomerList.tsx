@@ -5,7 +5,7 @@ import type { Customer } from '@/types';
 import { ResponsiveTable, createTableColumn } from '@/components/ui/responsive-table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Eye, Phone, MapPin, User } from 'lucide-react';
+import { Eye, Phone, MapPin, User, Store } from 'lucide-react';
 import Link from 'next/link';
 
 interface ResponsiveCustomerListProps {
@@ -18,6 +18,7 @@ const ResponsiveCustomerListComponent = ({ customers, lang }: ResponsiveCustomer
     name: lang === 'ar' ? 'الاسم' : 'Name',
     phone: lang === 'ar' ? 'الهاتف' : 'Phone',
     address: lang === 'ar' ? 'العنوان' : 'Address',
+    branch: lang === 'ar' ? 'الفرع' : 'Branch',
     actions: lang === 'ar' ? 'الإجراءات' : 'Actions',
     view: lang === 'ar' ? 'عرض' : 'View',
     noCustomers: lang === 'ar' ? 'لا يوجد عملاء' : 'No customers found',
@@ -68,6 +69,25 @@ const ResponsiveCustomerListComponent = ({ customers, lang }: ResponsiveCustomer
         render: (value) => value ? (
           <div className="flex items-center gap-2">
             <MapPin className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+            <span className="truncate">{value}</span>
+          </div>
+        ) : (
+          <span className="text-muted-foreground text-sm">
+            {lang === 'ar' ? 'غير محدد' : 'Not specified'}
+          </span>
+        )
+      }
+    ),
+    createTableColumn<Customer>(
+      'branch',
+      t.branch,
+      'branchName',
+      {
+        mobileLabel: t.branch,
+        hideOnMobile: false,
+        render: (value) => value ? (
+          <div className="flex items-center gap-2">
+            <Store className="h-4 w-4 text-muted-foreground flex-shrink-0" />
             <span className="truncate">{value}</span>
           </div>
         ) : (

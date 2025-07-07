@@ -25,6 +25,46 @@
       "branchName": null,
       "createdAt": "2025-06-21T09:00:00.000Z",
       "createdByUserId": "SYSTEM_INIT"
+    },
+    "user-002": {
+      "username": "branch_manager",
+      "password": "branch123",
+      "fullName": "مدير الفرع الرئيسي",
+      "isSeller": false,
+      "permissions": [
+        "dashboard_view",
+        "products_view",
+        "customers_view",
+        "customers_manage",
+        "orders_view",
+        "orders_manage",
+        "financials_view",
+        "reports_view"
+      ],
+      "branchId": "B001",
+      "branchName": "الفرع الرئيسي",
+      "createdAt": "2025-06-21T14:00:00.000Z",
+      "createdByUserId": "admin-001"
+    },
+    "user-003": {
+      "username": "north_manager",
+      "password": "north123",
+      "fullName": "مدير فرع الشمال",
+      "isSeller": false,
+      "permissions": [
+        "dashboard_view",
+        "products_view",
+        "customers_view",
+        "customers_manage",
+        "orders_view",
+        "orders_manage",
+        "financials_view",
+        "reports_view"
+      ],
+      "branchId": "B002",
+      "branchName": "فرع الشمال",
+      "createdAt": "2025-06-21T15:00:00.000Z",
+      "createdByUserId": "admin-001"
     }
   },
   "branches": {
@@ -35,6 +75,48 @@
       "notes": "الفرع الرئيسي للشركة",
       "createdAt": "2025-06-21T09:00:00.000Z",
       "createdByUserId": "SYSTEM_INIT"
+    },
+    "B002": {
+      "name": "فرع الشمال",
+      "address": "شارع الملك فهد، الرياض",
+      "phoneNumber": "01234567891",
+      "notes": "فرع الشمال",
+      "createdAt": "2025-06-21T10:00:00.000Z",
+      "createdByUserId": "SYSTEM_INIT"
+    }
+  },
+  "customers": {
+    "C001": {
+      "fullName": "أحمد محمد علي",
+      "phoneNumber": "0501234567",
+      "address": "حي النخيل، الرياض",
+      "idCardNumber": "1234567890",
+      "notes": "عميل مميز",
+      "branchId": "B001",
+      "branchName": "الفرع الرئيسي",
+      "createdAt": "2025-06-21T11:00:00.000Z",
+      "createdByUserId": "admin-001"
+    },
+    "C002": {
+      "fullName": "فاطمة أحمد السالم",
+      "phoneNumber": "0507654321",
+      "address": "حي الملز، الرياض",
+      "idCardNumber": "0987654321",
+      "notes": "عميلة دائمة",
+      "branchId": "B002",
+      "branchName": "فرع الشمال",
+      "createdAt": "2025-06-21T12:00:00.000Z",
+      "createdByUserId": "admin-001"
+    },
+    "C003": {
+      "fullName": "محمد عبدالله الخالد",
+      "phoneNumber": "0551234567",
+      "address": "حي العليا، الرياض",
+      "notes": "عميل جديد",
+      "branchId": "B001",
+      "branchName": "الفرع الرئيسي",
+      "createdAt": "2025-06-21T13:00:00.000Z",
+      "createdByUserId": "admin-001"
     }
   },
   "system_settings": {

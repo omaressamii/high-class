@@ -315,6 +315,11 @@ export default function AddNewOrderPage() {
           customerList = Object.entries(customersData)
             .map(([id, data]: [string, any]) => ({ id, ...data } as Customer))
             .sort((a, b) => (a.fullName || '').localeCompare(b.fullName || ''));
+
+          // Apply branch filtering for customers
+          if (!currentHasPermission('view_all_branches') && currentUser?.branchId) {
+            customerList = customerList.filter(customer => customer.branchId === currentUser.branchId);
+          }
         }
 
         setAvailableCustomers(customerList);

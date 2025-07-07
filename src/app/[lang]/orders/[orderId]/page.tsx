@@ -140,6 +140,8 @@ async function getOrderDetailsFromRealtimeDB(orderId: string): Promise<OrderDeta
             address: rawCustomer.address,
             idCardNumber: rawCustomer.idCardNumber,
             notes: rawCustomer.notes,
+            branchId: rawCustomer.branchId,
+            branchName: rawCustomer.branchName,
             createdByUserId: rawCustomer.createdByUserId,
             createdAt: serializeTimestamp(rawCustomer.createdAt),
         } as Customer;
