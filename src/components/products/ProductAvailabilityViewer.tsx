@@ -13,6 +13,7 @@ import { database } from '@/lib/firebase';
 import { format } from 'date-fns';
 import { arSA, enUS } from 'date-fns/locale';
 import Link from 'next/link';
+import { useAuth } from '@/context/AuthContext';
 
 interface ProductAvailabilityViewerProps {
   lang: 'ar' | 'en';
@@ -35,6 +36,9 @@ export function ProductAvailabilityViewer({ lang }: ProductAvailabilityViewerPro
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [searched, setSearched] = useState(false);
+
+  // Get current user and permissions for branch filtering
+  const { currentUser, hasPermission } = useAuth();
 
   const locale = lang === 'ar' ? arSA : enUS;
 
@@ -178,6 +182,26 @@ export function ProductAvailabilityViewer({ lang }: ProductAvailabilityViewerPro
         return;
       }
 
+      // Check if user has permission to view this product based on branch
+      if (!hasPermission('view_all_branches')) {
+        if (currentUser?.branchId) {
+          // User has a specific branch - only allow products from their branch or global products
+          if (!productData.isGlobalProduct && productData.branchId !== currentUser.branchId) {
+            setError(lang === 'ar' ? 'ليس لديك صلاحية للتحقق من توفر هذا المنتج.' : 'You do not have permission to check availability for this product.');
+            setIsLoading(false);
+            return;
+          }
+        } else {
+          // User has no branch - only allow global products
+          if (!productData.isGlobalProduct) {
+            setError(lang === 'ar' ? 'ليس لديك صلاحية للتحقق من توفر هذا المنتج.' : 'You do not have permission to check availability for this product.');
+            setIsLoading(false);
+            return;
+          }
+        }
+      }
+      // If user has view_all_branches permission, allow access to all products
+
       setProductDetails(productData);
 
       if (productData.category !== 'Rental') {
@@ -197,9 +221,24 @@ export function ProductAvailabilityViewer({ lang }: ProductAvailabilityViewerPro
 
         Object.entries(ordersData).forEach(([orderId, orderData]: [string, any]) => {
           const order = orderData as Order;
+
           // Filter by transaction type and status
           if (order.transactionType === 'Rental' && relevantStatuses.includes(order.status)) {
-            if (order.items && Array.isArray(order.items)) {
+            // Apply branch filtering based on user permissions
+            let shouldIncludeOrder = true;
+
+            if (!hasPermission('view_all_branches')) {
+              if (currentUser?.branchId) {
+                // User has a specific branch - only show orders from their branch
+                shouldIncludeOrder = order.branchId === currentUser.branchId;
+              } else {
+                // User has no branch - don't show any orders
+                shouldIncludeOrder = false;
+              }
+            }
+            // If user has view_all_branches permission, show all orders (shouldIncludeOrder remains true)
+
+            if (shouldIncludeOrder && order.items && Array.isArray(order.items)) {
               const relevantItem = order.items.find(item => item.productId === productData!.id);
               if (relevantItem) {
                 schedule.push({

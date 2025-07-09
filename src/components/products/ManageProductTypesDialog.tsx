@@ -37,7 +37,6 @@ export function ManageProductTypesDialog({
   const [isLoading, setIsLoading] = useState(false);
   const [isFetchingTypes, setIsFetchingTypes] = useState(false);
   const [existingTypes, setExistingTypes] = useState<ProductTypeDefinition[]>([]);
-  const [newTypeNameEn, setNewTypeNameEn] = useState('');
   const [newTypeNameAr, setNewTypeNameAr] = useState('');
 
   const t = {
@@ -46,9 +45,7 @@ export function ManageProductTypesDialog({
     currentTypesLabel: lang === 'ar' ? 'الأنواع الحالية:' : 'Current Types:',
     noTypesExist: lang === 'ar' ? 'لا توجد أنواع معرفة بعد.' : 'No types defined yet.',
     addNewTypeSectionTitle: lang === 'ar' ? 'إضافة نوع جديد' : 'Add New Type',
-    typeNameEnLabel: lang === 'ar' ? 'اسم النوع (انجليزي)' : 'Type Name (English)',
-    typeNameEnPlaceholder: lang === 'ar' ? 'مثال: Suit' : 'e.g., Suit',
-    typeNameArLabel: lang === 'ar' ? 'اسم النوع (عربي)' : 'Type Name (Arabic)',
+    typeNameArLabel: lang === 'ar' ? 'اسم النوع' : 'Type Name',
     typeNameArPlaceholder: lang === 'ar' ? 'مثال: بدلة' : 'e.g., بدلة',
     addButton: lang === 'ar' ? 'إضافة النوع' : 'Add Type',
     addingButton: lang === 'ar' ? 'جار الإضافة...' : 'Adding...',
@@ -86,22 +83,20 @@ export function ManageProductTypesDialog({
   }, [isOpen]);
 
   const handleAddType = async () => {
-    if (!newTypeNameEn.trim() || !newTypeNameAr.trim()) {
+    if (!newTypeNameAr.trim()) {
       toast({ title: t.nameRequired, variant: 'destructive' });
       return;
     }
     setIsLoading(true);
 
-    const newTypeId = newTypeNameEn.trim().toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/gi, '');
-    if (existingTypes.some(type => type.id === newTypeId)) {
-        toast({ title: lang === 'ar' ? 'معرف النوع مستخدم بالفعل.' : 'Type ID already exists.', description: lang === 'ar' ? 'الرجاء اختيار اسم إنجليزي مختلف.' : 'Please choose a different English name.', variant: 'destructive' });
-        setIsLoading(false);
-        return;
-    }
+    // Generate a unique ID based on timestamp and random number
+    const timestamp = Date.now();
+    const randomNum = Math.floor(Math.random() * 1000);
+    const newTypeId = `type_${timestamp}_${randomNum}`;
 
     const newType: ProductTypeDefinition = {
       id: newTypeId,
-      name: newTypeNameEn.trim(),
+      name: newTypeNameAr.trim(), // Use Arabic name as the main name
       name_ar: newTypeNameAr.trim(),
       createdAt: new Date().toISOString(),
     };
@@ -124,7 +119,6 @@ export function ManageProductTypesDialog({
       await set(typesConfigRef, { types: updatedTypes });
 
       toast({ title: t.typeAddedSuccess });
-      setNewTypeNameEn('');
       setNewTypeNameAr('');
       onTypeAdded(); // Refresh types in parent
       fetchProductTypes(); // Re-fetch types for the dialog
@@ -173,16 +167,6 @@ export function ManageProductTypesDialog({
             <h3 className="font-semibold mb-3">{t.addNewTypeSectionTitle}</h3>
             <div className="space-y-3">
               <div>
-                <Label htmlFor="newTypeNameEn">{t.typeNameEnLabel}</Label>
-                <Input
-                  id="newTypeNameEn"
-                  value={newTypeNameEn}
-                  onChange={(e) => setNewTypeNameEn(e.target.value)}
-                  placeholder={t.typeNameEnPlaceholder}
-                  disabled={isLoading}
-                />
-              </div>
-              <div>
                 <Label htmlFor="newTypeNameAr">{t.typeNameArLabel}</Label>
                 <Input
                   id="newTypeNameAr"
@@ -193,7 +177,7 @@ export function ManageProductTypesDialog({
                   dir="rtl"
                 />
               </div>
-              <Button onClick={handleAddType} disabled={isLoading || !newTypeNameEn.trim() || !newTypeNameAr.trim()}>
+              <Button onClick={handleAddType} disabled={isLoading || !newTypeNameAr.trim()}>
                 {isLoading ? (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin rtl:ml-2 rtl:mr-0" />
                 ) : (
