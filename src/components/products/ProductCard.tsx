@@ -125,12 +125,14 @@ const ProductCard = React.memo(function ProductCard({ product, allProductTypes, 
         <p className="text-sm text-foreground line-clamp-3">{product.description}</p>
       </CardContent>
       <CardFooter className="p-4 border-t flex flex-col sm:flex-row gap-2 items-stretch sm:items-center">
-        <Button asChild variant="outline" className="flex-1 hover:bg-accent hover:text-accent-foreground">
-          <Link href={`/${lang}/products/${product.id}`}>
-            <Eye className="mr-2 rtl:ml-2 rtl:mr-0 h-4 w-4" />
-            {t.viewDetails}
-          </Link>
-        </Button>
+        {hasPermission('products_view_details') && (
+          <Button asChild variant="outline" className="flex-1 hover:bg-accent hover:text-accent-foreground">
+            <Link href={`/${lang}/products/${product.id}`}>
+              <Eye className="mr-2 rtl:ml-2 rtl:mr-0 h-4 w-4" />
+              {t.viewDetails}
+            </Link>
+          </Button>
+        )}
         {authIsLoading ? (
           <Button disabled className="flex-1">
             <Loader2 className="mr-2 rtl:ml-2 rtl:mr-0 h-4 w-4 animate-spin" />

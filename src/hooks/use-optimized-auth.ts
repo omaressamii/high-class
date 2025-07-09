@@ -32,6 +32,7 @@ export function useOptimizedAuth() {
   const commonPermissions = useMemo(() => ({
     canViewDashboard: hasPermission('dashboard_view'),
     canViewProducts: hasPermission('products_view'),
+    canViewProductDetails: hasPermission('products_view_details'),
     canAddProducts: hasPermission('products_add'),
     canViewOrders: hasPermission('orders_view'),
     canPrepareOrders: hasPermission('orders_prepare'),

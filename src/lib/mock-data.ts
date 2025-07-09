@@ -9,6 +9,7 @@ export const allPermissions: UserPermissionsArray = [...PERMISSION_STRINGS];
 export const cashierPermissions: UserPermissionsArray = [
   'dashboard_view',
   'products_view',
+  'products_view_details',
   'products_add',
   'products_availability_view',
   'customers_view',
@@ -26,6 +27,7 @@ export const cashierPermissions: UserPermissionsArray = [
 export const permissionDetails: { id: PermissionString; oldKey?: string }[] = [
   { id: 'dashboard_view' },
   { id: 'products_view', oldKey: 'canViewProducts' },
+  { id: 'products_view_details' },
   { id: 'products_add', oldKey: 'canAddProducts' },
   { id: 'products_edit', oldKey: 'canEditProducts' },
   { id: 'products_delete', oldKey: 'canDeleteProducts' },

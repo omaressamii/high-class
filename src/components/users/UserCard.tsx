@@ -27,15 +27,7 @@ const UserCard = React.memo(function UserCard({ user, lang: propLang }: UserCard
   };
 
   const displayRoleOrType = () => {
-    if (user.isSeller) {
-      return (
-        <Badge variant="outline" className="capitalize">
-          <Briefcase className="h-4 w-4 mr-1 rtl:ml-1 rtl:mr-0" />
-          {t.seller}
-        </Badge>
-      );
-    }
-    // For non-sellers, check permissions
+    // Check for admin/manager permissions first
     if (user.permissions?.includes('users_manage')) {
        return (
         <Badge variant="default" className="capitalize">
@@ -44,7 +36,9 @@ const UserCard = React.memo(function UserCard({ user, lang: propLang }: UserCard
         </Badge>
       );
     }
-    if (user.permissions?.includes('payments_record') || user.permissions?.includes('orders_add')) { // Cashier-like
+
+    // Check for cashier-like permissions
+    if (user.permissions?.includes('payments_record') || user.permissions?.includes('orders_add')) {
         return (
          <Badge variant="secondary" className="capitalize">
            <ShieldQuestion className="h-4 w-4 mr-1 rtl:ml-1 rtl:mr-0" />
@@ -52,6 +46,18 @@ const UserCard = React.memo(function UserCard({ user, lang: propLang }: UserCard
          </Badge>
        );
      }
+
+    // Show seller badge if user is marked as seller
+    if (user.isSeller) {
+      return (
+        <Badge variant="outline" className="capitalize">
+          <Briefcase className="h-4 w-4 mr-1 rtl:ml-1 rtl:mr-0" />
+          {t.seller}
+        </Badge>
+      );
+    }
+
+    // Default system user
     return (
         <Badge variant="outline" className="capitalize">
           <UserCircle className="h-4 w-4 mr-1 rtl:ml-1 rtl:mr-0" />
@@ -72,24 +78,24 @@ const UserCard = React.memo(function UserCard({ user, lang: propLang }: UserCard
             {displayRoleOrType()}
         </div>
         <CardDescription>
-          {user.isSeller ? (lang === 'ar' ? 'معرف البائع' : 'Seller ID') : t.username}: @{user.username || (lang === 'ar' ? 'غير متوفر' : 'N/A')}
+          {t.username}: @{user.username || (lang === 'ar' ? 'غير متوفر' : 'N/A')}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-3 text-sm">
         <p className="text-muted-foreground">ID: {user.id}</p>
-        {!user.isSeller && user.branchName && (
+        {user.branchName && (
           <div className="flex items-center">
             <Store className="h-4 w-4 mr-2 rtl:ml-2 rtl:mr-0 text-muted-foreground" />
             <span>{t.branch}: {user.branchName}</span>
           </div>
         )}
-        {!user.isSeller && !user.branchName && (
+        {!user.branchName && (
             <div className="flex items-center">
                 <Store className="h-4 w-4 mr-2 rtl:ml-2 rtl:mr-0 text-muted-foreground" />
                 <span className="text-xs text-muted-foreground italic">{t.noBranchAssigned}</span>
             </div>
         )}
-        {!user.isSeller && user.permissions && user.permissions.length > 0 && (
+        {user.permissions && user.permissions.length > 0 && (
           <div className="text-xs text-muted-foreground">
             {lang === 'ar' ? 'صلاحيات رئيسية: ' : 'Key Permissions: '}
             {user.permissions.includes('users_manage') ? (lang === 'ar' ? 'إدارة المستخدمين، ' : 'Manage Users, ') : ''}
@@ -97,7 +103,7 @@ const UserCard = React.memo(function UserCard({ user, lang: propLang }: UserCard
             {user.permissions.length > 2 ? '...' : ''}
           </div>
         )}
-         {!user.isSeller && (!user.permissions || user.permissions.length === 0) && (
+         {(!user.permissions || user.permissions.length === 0) && (
             <p className="text-xs text-muted-foreground italic">{t.permissionsNotSet}</p>
         )}
       </CardContent>

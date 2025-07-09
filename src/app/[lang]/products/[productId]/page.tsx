@@ -13,6 +13,7 @@ import { database } from '@/lib/firebase';
 import { EditProductButton } from '@/components/products/EditProductButton';
 import { ProductOrderHistoryTable } from '@/components/products/ProductOrderHistoryTable';
 import { PrintBarcodeButton } from '@/components/products/PrintBarcodeButton';
+import { ProductDetailsAuthWrapper } from '@/components/products/ProductDetailsAuthWrapper';
 
 interface ProductDetailsPageProps {
   params: { lang: string; productId: string };
@@ -222,11 +223,12 @@ export default async function ProductDetailsPage({ params: routeParams }: { para
   const availableForOperation = stock - rented;
 
   return (
-    <div className="space-y-8">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
-        <PageTitle className="mb-4 sm:mb-0">{t.productNameTitle(product.name)}</PageTitle>
-        <div className="flex flex-col items-stretch gap-2 mt-4 w-full sm:flex-row sm:items-center sm:mt-0 sm:w-auto">
-            <PrintBarcodeButton
+    <ProductDetailsAuthWrapper lang={effectiveLang}>
+      <div className="space-y-8">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
+          <PageTitle className="mb-4 sm:mb-0">{t.productNameTitle(product.name)}</PageTitle>
+          <div className="flex flex-col items-stretch gap-2 mt-4 w-full sm:flex-row sm:items-center sm:mt-0 sm:w-auto">
+              <PrintBarcodeButton
               productId={product.id}
               productCode={product.productCode}
               lang={effectiveLang}
@@ -385,6 +387,7 @@ export default async function ProductDetailsPage({ params: routeParams }: { para
           )}
         </CardContent>
       </Card>
-    </div>
+      </div>
+    </ProductDetailsAuthWrapper>
   );
 }

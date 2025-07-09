@@ -58,6 +58,7 @@ export interface Branch {
 export const PERMISSION_STRINGS = [
   'dashboard_view',
   'products_view',
+  'products_view_details',
   'products_add',
   'products_edit',
   'products_delete',
@@ -243,7 +244,7 @@ export const PERMISSION_GROUPS: PermissionGroup[] = [
   {
     id: 'products_group',
     nameKey: 'group_products_management',
-    permissions: ['products_view', 'products_add', 'products_edit', 'products_delete', 'products_availability_view'],
+    permissions: ['products_view', 'products_view_details', 'products_add', 'products_edit', 'products_delete', 'products_availability_view'],
   },
   {
     id: 'customers_group',

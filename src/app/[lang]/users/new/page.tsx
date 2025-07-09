@@ -104,8 +104,8 @@ export default function AddNewUserPage() {
     branchRequired: effectiveLang === 'ar' ? 'الفرع مطلوب (إذا لم يكن بائعًا فقط ولم يتم تحديد الوصول لجميع الفروع)' : 'Branch is required (if not a seller and not all branches access)',
     noBranchesAvailable: effectiveLang === 'ar' ? 'لا توجد فروع متاحة حاليًا.' : 'No branches available currently.',
 
-    isSellerLabel: effectiveLang === 'ar' ? 'هل هذا المستخدم بائع فقط (لأغراض التتبع)؟' : 'Is this user a salesperson only (for tracking purposes)?',
-    isSellerDescription: effectiveLang === 'ar' ? 'إذا تم تحديده، لن يتمكن هذا المستخدم من تسجيل الدخول، ولكن يمكن اختياره كبائع في الطلبات. سيتم إنشاء اسم مستخدم تلقائيًا ولن يحتاج لفرع أو صلاحيات دخول أو صلاحية جميع الفروع.' : 'If checked, user cannot log in but can be selected as a seller in orders. Username auto-generated. Branch, login permissions, and all branches access will not apply.',
+    isSellerLabel: effectiveLang === 'ar' ? 'هل هذا المستخدم بائع؟' : 'Is this user a salesperson?',
+    isSellerDescription: effectiveLang === 'ar' ? 'إذا تم تحديده، سيتم تصنيف هذا المستخدم كبائع ويمكن اختياره في الطلبات. يمكن للبائعين تسجيل الدخول والحصول على صلاحيات مثل المستخدمين العاديين.' : 'If checked, this user will be classified as a salesperson and can be selected in orders. Sellers can log in and have permissions like regular users.',
     
     accessAllBranchesLabel: effectiveLang === 'ar' ? 'منح صلاحية الوصول لجميع الفروع؟' : 'Grant access to all branches?',
     accessAllBranchesDescription: effectiveLang === 'ar' ? 'إذا تم تحديده، سيتمكن هذا المستخدم من رؤية بيانات جميع الفروع والتصرف نيابة عنها. سيتم تجاهل اختيار الفرع المحدد إذا كان هذا الخيار مفعلًا.' : 'If checked, this user can view data from all branches and act on their behalf. Specific branch selection will be ignored if this is active.',
@@ -115,6 +115,7 @@ export default function AddNewUserPage() {
     
     perm_dashboard_view: effectiveLang === 'ar' ? 'عرض لوحة التحكم' : 'View Dashboard',
     perm_products_view: effectiveLang === 'ar' ? 'عرض المنتجات' : 'View Products',
+    perm_products_view_details: effectiveLang === 'ar' ? 'عرض تفاصيل المنتجات' : 'View Product Details',
     perm_products_add: effectiveLang === 'ar' ? 'إضافة منتجات' : 'Add Products',
     perm_products_edit: effectiveLang === 'ar' ? 'تعديل منتجات' : 'Edit Products',
     perm_products_delete: effectiveLang === 'ar' ? 'حذف منتجات' : 'Delete Products',
@@ -148,28 +149,16 @@ export default function AddNewUserPage() {
 
   const FormSchema = z.object({
     fullName: z.string().min(1, { message: t.fullNameRequired }),
-    username: z.string().optional(),
-    password: z.string().optional(),
+    username: z.string().min(3, { message: t.usernameMinLength }),
+    password: z.string().min(6, { message: t.passwordMinLength }),
     branchId: z.string().optional(),
     isSeller: z.boolean().default(false),
     accessAllBranches: z.boolean().default(false),
     permissions: z.array(z.string()).default([]),
   }).superRefine((data, ctx) => {
-    if (!data.isSeller) {
-      if (!data.accessAllBranches) {
-        if (!data.branchId || data.branchId.trim() === "") {
-          ctx.addIssue({ code: z.ZodIssueCode.custom, message: t.branchRequired, path: ["branchId"] });
-        }
-      }
-      if (!data.username || data.username.trim() === "") {
-        ctx.addIssue({ code: z.ZodIssueCode.custom, message: t.usernameRequired, path: ["username"] });
-      } else if (data.username.trim().length < 3) {
-         ctx.addIssue({ code: z.ZodIssueCode.custom, message: t.usernameMinLength, path: ["username"] });
-      }
-      if (!data.password || data.password.trim() === "") {
-        ctx.addIssue({ code: z.ZodIssueCode.custom, message: t.passwordRequired, path: ["password"] });
-      } else if (data.password.length < 6) {
-         ctx.addIssue({ code: z.ZodIssueCode.custom, message: t.passwordMinLength, path: ["password"] });
+    if (!data.accessAllBranches) {
+      if (!data.branchId || data.branchId.trim() === "") {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, message: t.branchRequired, path: ["branchId"] });
       }
     }
   });
@@ -194,34 +183,20 @@ export default function AddNewUserPage() {
   const accessAllBranchesWatcher = form.watch('accessAllBranches');
 
   React.useEffect(() => {
-    if (isSellerWatcher) {
-      form.setValue('username', '');
-      form.setValue('password', '');
+    if (accessAllBranchesWatcher) {
       form.setValue('branchId', undefined);
-      form.setValue('permissions', []);
-      form.setValue('accessAllBranches', false);
-      form.clearErrors(['username', 'password', 'branchId', 'accessAllBranches']);
+      form.clearErrors('branchId');
     }
-  }, [isSellerWatcher, form]);
-  
-  React.useEffect(() => {
-    if (accessAllBranchesWatcher && !isSellerWatcher) {
-      form.setValue('branchId', undefined); 
-      form.clearErrors('branchId'); 
-    }
-  }, [accessAllBranchesWatcher, isSellerWatcher, form]);
+  }, [accessAllBranchesWatcher, form]);
 
 
   const onSubmit: SubmitHandler<FormData> = async (data) => {
     setIsSaving(true);
 
-    let finalUsername = data.username?.trim() || '';
-    if (data.isSeller) {
-      const namePart = data.fullName.split(' ')[0].toLowerCase().replace(/[^a-z0-9]/gi, '');
-      finalUsername = `seller_track_${namePart}_${Math.floor(Math.random() * 1000)}`;
-    }
+    const finalUsername = data.username?.trim() || '';
 
-    if (!data.isSeller && finalUsername) {
+    // Check if username already exists
+    if (finalUsername) {
         const usersRef = ref(database, "users");
         const usersQuery = query(usersRef, orderByChild("username"), equalTo(finalUsername));
         const querySnapshot = await get(usersQuery);
@@ -233,37 +208,32 @@ export default function AddNewUserPage() {
         }
     }
 
-    const finalPermissions = data.isSeller ? [] : [...data.permissions];
-    if (!data.isSeller && data.accessAllBranches) {
+    const finalPermissions = [...data.permissions];
+    if (data.accessAllBranches) {
       if (!finalPermissions.includes('view_all_branches')) {
         finalPermissions.push('view_all_branches');
       }
-    } else if (!data.isSeller && !data.accessAllBranches) {
+    } else {
       const index = finalPermissions.indexOf('view_all_branches');
       if (index > -1) {
         finalPermissions.splice(index, 1);
       }
     }
     
-    const selectedBranch = (!data.isSeller && !data.accessAllBranches && data.branchId) 
-                            ? branches.find(b => b.id === data.branchId) 
+    const selectedBranch = (!data.accessAllBranches && data.branchId)
+                            ? branches.find(b => b.id === data.branchId)
                             : undefined;
 
     const userDataToSave: Partial<User> & {createdAt: any, username: string} = {
       fullName: data.fullName.trim(),
       username: finalUsername,
+      password: data.password,
       isSeller: data.isSeller,
-      branchId: data.isSeller || data.accessAllBranches ? null : (data.branchId || null),
-      branchName: data.isSeller || data.accessAllBranches ? null : (selectedBranch?.name || null),
+      branchId: data.accessAllBranches ? null : (data.branchId || null),
+      branchName: data.accessAllBranches ? null : (selectedBranch?.name || null),
       permissions: finalPermissions,
       createdAt: new Date().toISOString(), // Use ISO string instead of serverTimestamp for Realtime DB
     };
-
-    if (!data.isSeller && data.password) {
-      userDataToSave.password = data.password;
-    } else if (data.isSeller) {
-      delete userDataToSave.password;
-    }
 
 
     try {
@@ -369,139 +339,132 @@ export default function AddNewUserPage() {
                   </FormItem>
                 )}
               />
-               {!isSellerWatcher && (
+               <FormField
+                control={form.control}
+                name="accessAllBranches"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4 rtl:space-x-reverse">
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                    <div className="space-y-1 leading-none">
+                      <FormLabel className="flex items-center">
+                         <Globe className="h-4 w-4 mr-2 rtl:ml-2 rtl:mr-0" />
+                         {t.accessAllBranchesLabel}
+                      </FormLabel>
+                      <FormDescription>
+                        {t.accessAllBranchesDescription}
+                      </FormDescription>
+                    </div>
+                  </FormItem>
+                )}
+              />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <FormField
                   control={form.control}
-                  name="accessAllBranches"
+                  name="username"
                   render={({ field }) => (
-                    <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4 rtl:space-x-reverse">
+                    <FormItem>
+                      <FormLabel>{t.usernameLabel}</FormLabel>
                       <FormControl>
-                        <Checkbox
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                          disabled={isSellerWatcher}
-                        />
+                        <Input placeholder={t.usernamePlaceholder} {...field} autoComplete="off" />
                       </FormControl>
-                      <div className="space-y-1 leading-none">
-                        <FormLabel className="flex items-center">
-                           <Globe className="h-4 w-4 mr-2 rtl:ml-2 rtl:mr-0" />
-                           {t.accessAllBranchesLabel}
-                        </FormLabel>
-                        <FormDescription>
-                          {t.accessAllBranchesDescription}
-                        </FormDescription>
-                      </div>
+                      <FormMessage />
                     </FormItem>
                   )}
                 />
-              )}
-              {!isSellerWatcher && (
-                <>
-                  <FormField
-                    control={form.control}
-                    name="username"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>{t.usernameLabel}</FormLabel>
+                <FormField
+                  control={form.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t.passwordLabel}</FormLabel>
+                      <FormControl>
+                        <Input type="password" placeholder={t.passwordPlaceholder} {...field} autoComplete="new-password"/>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="branchId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t.branchLabel}</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value}
+                        dir={effectiveLang === 'ar' ? 'rtl' : 'ltr'}
+                        disabled={branchesLoading || accessAllBranchesWatcher}
+                      >
                         <FormControl>
-                          <Input placeholder={t.usernamePlaceholder} {...field} autoComplete="off" />
+                          <SelectTrigger>
+                            <SelectValue placeholder={branchesLoading ? t.loadingBranches : t.branchPlaceholder} />
+                          </SelectTrigger>
                         </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="password"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>{t.passwordLabel}</FormLabel>
-                        <FormControl>
-                          <Input type="password" placeholder={t.passwordPlaceholder} {...field} autoComplete="new-password"/>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="branchId"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>{t.branchLabel}</FormLabel>
-                        <Select
-                          onValueChange={field.onChange}
-                          value={field.value}
-                          dir={effectiveLang === 'ar' ? 'rtl' : 'ltr'}
-                          disabled={branchesLoading || isSellerWatcher || accessAllBranchesWatcher}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder={branchesLoading ? t.loadingBranches : t.branchPlaceholder} />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {branchesLoading ? (
-                              <SelectItem value="loading" disabled>{t.loadingBranches}</SelectItem>
-                            ) : branches.length === 0 ? (
-                              <SelectItem value="no-branches" disabled>{t.noBranchesAvailable}</SelectItem>
-                            ) : (
-                              branches.map(branch => (
-                                <SelectItem key={branch.id} value={branch.id}>{branch.name}</SelectItem>
-                              ))
-                            )}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </>
-              )}
+                        <SelectContent>
+                          {branchesLoading ? (
+                            <SelectItem value="loading" disabled>{t.loadingBranches}</SelectItem>
+                          ) : branches.length === 0 ? (
+                            <SelectItem value="no-branches" disabled>{t.noBranchesAvailable}</SelectItem>
+                          ) : (
+                            branches.map(branch => (
+                              <SelectItem key={branch.id} value={branch.id}>{branch.name}</SelectItem>
+                            ))
+                          )}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
             </CardContent>
           </Card>
 
-          {!isSellerWatcher && (
-            <Card className="shadow-lg rounded-lg">
-              <CardHeader>
-                <div className="flex items-center space-x-2 rtl:space-x-reverse">
-                  <ShieldQuestion className="h-6 w-6 text-primary" />
-                  <CardTitle>{t.permissionsTitle}</CardTitle>
-                </div>
-                <CardDescription>{t.permissionsDescription}</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                {PERMISSION_GROUPS.map((group) => (
-                  <div key={group.id} className="space-y-3">
-                    <h3 className="text-md font-semibold text-foreground border-b pb-2 mb-3">
-                      {t[group.nameKey as keyof typeof t] || group.nameKey}
-                    </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-3">
-                      {group.permissions.map((permissionId) => (
-                        <FormField
-                          key={permissionId}
-                          control={form.control}
-                          name="permissions"
-                          render={({ field }) => (
-                            <FormItem className="flex flex-row items-center space-x-2 space-y-0 rtl:space-x-reverse">
-                              <FormControl>
-                                <Checkbox
-                                  checked={field.value?.includes(permissionId)}
-                                  onCheckedChange={(checked) => {
-                                    return checked
-                                      ? field.onChange([...(field.value || []), permissionId])
-                                      : field.onChange(
-                                          (field.value || []).filter(
-                                            (value) => value !== permissionId
-                                          )
-                                        );
-                                  }}
-                                  disabled={isSellerWatcher}
-                                />
-                              </FormControl>
-                              <FormLabel className="font-normal text-sm">
-                                {getPermissionLabel(permissionId as PermissionString)}
-                              </FormLabel>
+          <Card className="shadow-lg rounded-lg">
+            <CardHeader>
+              <div className="flex items-center space-x-2 rtl:space-x-reverse">
+                <ShieldQuestion className="h-6 w-6 text-primary" />
+                <CardTitle>{t.permissionsTitle}</CardTitle>
+              </div>
+              <CardDescription>{t.permissionsDescription}</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {PERMISSION_GROUPS.map((group) => (
+                <div key={group.id} className="space-y-3">
+                  <h3 className="text-md font-semibold text-foreground border-b pb-2 mb-3">
+                    {t[group.nameKey as keyof typeof t] || group.nameKey}
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-3">
+                    {group.permissions.map((permissionId) => (
+                      <FormField
+                        key={permissionId}
+                        control={form.control}
+                        name="permissions"
+                        render={({ field }) => (
+                          <FormItem className="flex flex-row items-center space-x-2 space-y-0 rtl:space-x-reverse">
+                            <FormControl>
+                              <Checkbox
+                                checked={field.value?.includes(permissionId)}
+                                onCheckedChange={(checked) => {
+                                  return checked
+                                    ? field.onChange([...(field.value || []), permissionId])
+                                    : field.onChange(
+                                        (field.value || []).filter(
+                                          (value) => value !== permissionId
+                                        )
+                                      );
+                                }}
+                              />
+                            </FormControl>
+                            <FormLabel className="font-normal text-sm">
+                              {getPermissionLabel(permissionId as PermissionString)}
+                            </FormLabel>
                             </FormItem>
                           )}
                         />

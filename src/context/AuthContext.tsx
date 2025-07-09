@@ -134,13 +134,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return false;
       }
 
-      // Find user with matching username and isSeller = false
+      // Find user with matching username (removed isSeller restriction)
       let foundUser: User | null = null;
       let foundUserId: string | null = null;
 
       querySnapshot.forEach((childSnapshot) => {
         const userData = childSnapshot.val();
-        if (userData.username === usernameInput && userData.isSeller === false) {
+        if (userData.username === usernameInput) {
           foundUser = { id: childSnapshot.key!, ...userData } as User;
           foundUserId = childSnapshot.key!;
         }
