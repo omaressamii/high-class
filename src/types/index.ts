@@ -8,7 +8,7 @@
 export type ProductType = string; // Changed from 'Suit' | 'Dress' to string (will store type ID)
 export type ProductCategory = 'Rental' | 'Sale';
 export type ProductStatus = 'Available' | 'Rented' | 'Sold';
-export type ProductSize = 'XS' | 'S' | 'M' | 'L' | 'XL' | 'XXL' | 'Custom';
+export type ProductSize = '36' | '38' | '40' | '42' | '44' | '46' | '48' | '50' | '52' | '54' | '56' | '58' | 'Custom';
 
 export interface ProductTypeDefinition {
   id: string; // e.g., 'suit', 'dress', 'abaya'

@@ -36,7 +36,7 @@ async function getProductFromRealtimeDB(productId: string): Promise<Product | nu
         quantityRented: Number(data.quantityRented) || 0,
         name: String(data.name || ''),
         category: data.category as ProductCategory || 'Rental',
-        size: data.size as Product['size'] || 'M',
+        size: data.size as Product['size'] || '42',
         status: data.status as ProductStatus || 'Available',
         imageUrl: String(data.imageUrl || 'https://placehold.co/600x400.png'),
         description: String(data.description || ''),

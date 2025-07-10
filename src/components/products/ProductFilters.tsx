@@ -23,7 +23,7 @@ interface ProductFiltersProps {
 // const productTypeValues: ProductType[] = ['Suit', 'Dress']; // Removed
 const productCategoryValues: ProductCategory[] = ['Rental', 'Sale'];
 const productStatusValues: ProductStatus[] = ['Available', 'Rented', 'Sold'];
-const productSizeValues: ProductSize[] = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'Custom'];
+const productSizeValues: ProductSize[] = ['36', '38', '40', '42', '44', '46', '48', '50', '52', '54', '56', '58', 'Custom'];
 
 
 export function ProductFilters({ filters, setFilters, lang: propLang, availableProductTypes }: ProductFiltersProps) {

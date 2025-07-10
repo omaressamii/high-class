@@ -32,7 +32,7 @@ async function getProductsFromRealtimeDB(): Promise<Product[]> {
         const name = data.name !== undefined && data.name !== null ? String(data.name) : '';
         const type = data.type !== undefined && data.type !== null ? String(data.type) : 'suit'; // Default type ID
         const category = (data.category && ['Rental', 'Sale'].includes(data.category) ? data.category : 'Rental') as ProductCategory;
-        const size = (data.size && ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'Custom'].includes(data.size) ? data.size : 'M') as ProductSize;
+        const size = (data.size && ['36', '38', '40', '42', '44', '46', '48', '50', '52', '54', '56', '58', 'Custom'].includes(data.size) ? data.size : '42') as ProductSize;
 
         let price = 0;
         if (typeof data.price === 'number' && !isNaN(data.price)) {

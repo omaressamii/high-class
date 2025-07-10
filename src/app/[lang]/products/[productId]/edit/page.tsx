@@ -199,6 +199,41 @@ export default function EditProductPage() {
     }
   }, [authIsLoading, hasPermission, effectiveLang, router, productId, toast]);
 
+  // Watch for changes in name and size to auto-merge them
+  const watchedName = form.watch('name');
+  const watchedSize = form.watch('size');
+  const [originalName, setOriginalName] = useState<string>('');
+  const [isAutoMerging, setIsAutoMerging] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (watchedName && watchedSize && !isAutoMerging) {
+      // Extract the base name without size if it was previously merged
+      let baseName = watchedName;
+      if (originalName && watchedName.includes(' - مقاس ')) {
+        baseName = originalName;
+      } else if (watchedName.includes(' - مقاس ')) {
+        baseName = watchedName.split(' - مقاس ')[0];
+      }
+
+      // Create the new name with size
+      const newName = `${baseName} - مقاس ${watchedSize}`;
+
+      setIsAutoMerging(true);
+      form.setValue('name', newName);
+      setOriginalName(baseName);
+
+      // Reset the flag after a short delay
+      setTimeout(() => setIsAutoMerging(false), 100);
+    }
+  }, [watchedName, watchedSize, form, originalName, isAutoMerging]);
+
+  // Track original name when user types
+  useEffect(() => {
+    if (watchedName && !watchedName.includes(' - مقاس ') && !isAutoMerging) {
+      setOriginalName(watchedName);
+    }
+  }, [watchedName, isAutoMerging]);
+
   useEffect(() => {
     if (productId) {
       setIsLoadingData(true);

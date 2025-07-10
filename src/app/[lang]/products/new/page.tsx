@@ -213,6 +213,41 @@ export default function AddNewProductPage() {
       }
   }, [currentUser, hasPermission, form]);
 
+  // Watch for changes in name and size to auto-merge them
+  const watchedName = form.watch('name');
+  const watchedSize = form.watch('size');
+  const [originalName, setOriginalName] = React.useState<string>('');
+  const [isAutoMerging, setIsAutoMerging] = React.useState<boolean>(false);
+
+  React.useEffect(() => {
+    if (watchedName && watchedSize && !isAutoMerging) {
+      // Extract the base name without size if it was previously merged
+      let baseName = watchedName;
+      if (originalName && watchedName.includes(' - مقاس ')) {
+        baseName = originalName;
+      } else if (watchedName.includes(' - مقاس ')) {
+        baseName = watchedName.split(' - مقاس ')[0];
+      }
+
+      // Create the new name with size
+      const newName = `${baseName} - مقاس ${watchedSize}`;
+
+      setIsAutoMerging(true);
+      form.setValue('name', newName);
+      setOriginalName(baseName);
+
+      // Reset the flag after a short delay
+      setTimeout(() => setIsAutoMerging(false), 100);
+    }
+  }, [watchedName, watchedSize, form, originalName, isAutoMerging]);
+
+  // Track original name when user types
+  React.useEffect(() => {
+    if (watchedName && !watchedName.includes(' - مقاس ') && !isAutoMerging) {
+      setOriginalName(watchedName);
+    }
+  }, [watchedName, isAutoMerging]);
+
 
   const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -423,6 +458,10 @@ export default function AddNewProductPage() {
       setImagePreview(null);
       setIsUploading(false);
       setUploadProgress(null);
+
+      // Reset auto-merge state
+      setOriginalName('');
+      setIsAutoMerging(false);
 
       // Reset file input element with a small delay to ensure DOM is updated
       setTimeout(() => {
