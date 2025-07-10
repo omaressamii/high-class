@@ -1,15 +1,16 @@
 
 'use client';
 
-import React from 'react';
-import type { Order } from '@/types'; 
+import React, { useState } from 'react';
+import type { Order } from '@/types';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Eye, CheckCircle, PackageSearch, User, ShoppingBag, Store, CalendarDays } from 'lucide-react';
+import { Eye, CheckCircle, PackageSearch, User, ShoppingBag, Store, CalendarDays, Scissors } from 'lucide-react';
 import { format } from 'date-fns';
 import { arSA, enUS } from 'date-fns/locale';
 import Link from 'next/link';
+import { TailorReceiptDialog } from './TailorReceiptDialog';
 
 type OrderWithDetails = Order & {
   productName?: string;
@@ -27,6 +28,13 @@ interface PrepareOrdersTableProps {
 
 const PrepareOrdersTableComponent = ({ orders, onMarkAsPrepared, onViewDetails, lang, hasEditPermission: hasPreparePermission }: PrepareOrdersTableProps) => {
   const locale = lang === 'ar' ? arSA : enUS;
+  const [isTailorReceiptOpen, setIsTailorReceiptOpen] = useState(false);
+  const [selectedOrderForTailor, setSelectedOrderForTailor] = useState<OrderWithDetails | null>(null);
+
+  const handleOpenTailorReceipt = (order: OrderWithDetails) => {
+    setSelectedOrderForTailor(order);
+    setIsTailorReceiptOpen(true);
+  };
   
   const t = {
     orderCode: lang === 'ar' ? 'كود الطلب' : 'Order Code',
@@ -39,8 +47,9 @@ const PrepareOrdersTableComponent = ({ orders, onMarkAsPrepared, onViewDetails, 
     viewDetails: lang === 'ar' ? 'عرض التفاصيل' : 'View Details',
     markAsPrepared: lang === 'ar' ? 'تأكيد التجهيز' : 'Mark as Prepared',
     prepared: lang === 'ar' ? 'تم التجهيز' : 'Prepared',
-    ongoing: lang === 'ar' ? 'قيد التجهيز' : 'Ongoing', 
+    ongoing: lang === 'ar' ? 'قيد التجهيز' : 'Ongoing',
     notApplicable: lang === 'ar' ? 'غير متوفر' : 'N/A',
+    tailorReceipt: lang === 'ar' ? 'وصل الخياط' : 'Tailor Receipt',
   };
 
   const formatDateDisplay = (dateString?: string) => {
@@ -63,7 +72,7 @@ const PrepareOrdersTableComponent = ({ orders, onMarkAsPrepared, onViewDetails, 
             <TableHead className="min-w-[120px]">{t.branch}</TableHead>
             <TableHead className="min-w-[130px]">{t.deliveryDate}</TableHead>
             <TableHead className="min-w-[100px]">{t.status}</TableHead>
-            <TableHead className="text-center min-w-[150px]" colSpan={2}>{t.actions}</TableHead>
+            <TableHead className="text-center min-w-[200px]" colSpan={3}>{t.actions}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -123,10 +132,25 @@ const PrepareOrdersTableComponent = ({ orders, onMarkAsPrepared, onViewDetails, 
                    </span>
                 )}
               </TableCell>
+              <TableCell className="text-center">
+                <Button variant="outline" size="sm" onClick={() => handleOpenTailorReceipt(order)}>
+                  <Scissors className="mr-1 rtl:ml-1 rtl:mr-0 h-4 w-4" />
+                  {t.tailorReceipt}
+                </Button>
+              </TableCell>
             </TableRow>
           ))}
         </TableBody>
       </Table>
+
+      {selectedOrderForTailor && (
+        <TailorReceiptDialog
+          isOpen={isTailorReceiptOpen}
+          setIsOpen={setIsTailorReceiptOpen}
+          order={selectedOrderForTailor}
+          lang={lang}
+        />
+      )}
     </div>
   );
 };

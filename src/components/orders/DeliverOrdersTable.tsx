@@ -6,8 +6,9 @@ import type { Order } from '@/types';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Eye, Send, CheckCircle, User, ShoppingBag, Store, CalendarDays, CreditCard } from 'lucide-react';
+import { Eye, Send, CheckCircle, User, ShoppingBag, Store, CalendarDays, CreditCard, Scissors } from 'lucide-react';
 import { AddPaymentDialog } from './AddPaymentDialog';
+import { TailorReceiptDialog } from './TailorReceiptDialog';
 import { format } from 'date-fns';
 import { arSA, enUS } from 'date-fns/locale';
 import Link from 'next/link';
@@ -31,6 +32,8 @@ const DeliverOrdersTableComponent = ({ orders, onMarkAsDelivered, onViewDetails,
   const locale = lang === 'ar' ? arSA : enUS;
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
   const [selectedOrderForPayment, setSelectedOrderForPayment] = useState<OrderWithDetails | null>(null);
+  const [isTailorReceiptOpen, setIsTailorReceiptOpen] = useState(false);
+  const [selectedOrderForTailor, setSelectedOrderForTailor] = useState<OrderWithDetails | null>(null);
   
   const t = {
     orderCode: lang === 'ar' ? 'كود الطلب' : 'Order Code',
@@ -44,6 +47,7 @@ const DeliverOrdersTableComponent = ({ orders, onMarkAsDelivered, onViewDetails,
     markAsDelivered: lang === 'ar' ? 'تسليم للعميل' : 'Deliver to Customer',
     prepared: lang === 'ar' ? 'تم التجهيز' : 'Prepared',
     notApplicable: lang === 'ar' ? 'غير متوفر' : 'N/A',
+    tailorReceipt: lang === 'ar' ? 'وصل الخياط' : 'Tailor Receipt',
   };
 
   const formatDateDisplay = (dateString?: string) => {
@@ -66,6 +70,11 @@ const DeliverOrdersTableComponent = ({ orders, onMarkAsDelivered, onViewDetails,
     // Refresh the page to show updated data
     window.location.reload();
   };
+
+  const handleOpenTailorReceipt = (order: OrderWithDetails) => {
+    setSelectedOrderForTailor(order);
+    setIsTailorReceiptOpen(true);
+  };
   
   return (
     <div className="rounded-lg border overflow-hidden shadow-lg bg-card">
@@ -79,7 +88,7 @@ const DeliverOrdersTableComponent = ({ orders, onMarkAsDelivered, onViewDetails,
             <TableHead className="min-w-[130px]">{t.deliveryDate}</TableHead>
             <TableHead className="min-w-[120px]">{lang === 'ar' ? 'المبلغ المتبقي' : 'Remaining Amount'}</TableHead>
             <TableHead className="min-w-[100px]">{t.status}</TableHead>
-            <TableHead className="text-center min-w-[200px]" colSpan={3}>{t.actions}</TableHead>
+            <TableHead className="text-center min-w-[250px]" colSpan={4}>{t.actions}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -168,6 +177,12 @@ const DeliverOrdersTableComponent = ({ orders, onMarkAsDelivered, onViewDetails,
                   </Button>
                 )}
               </TableCell>
+              <TableCell className="text-center">
+                <Button variant="outline" size="sm" onClick={() => handleOpenTailorReceipt(order)}>
+                  <Scissors className="mr-1 rtl:ml-1 rtl:mr-0 h-4 w-4" />
+                  {t.tailorReceipt}
+                </Button>
+              </TableCell>
             </TableRow>
           ))}
         </TableBody>
@@ -182,6 +197,16 @@ const DeliverOrdersTableComponent = ({ orders, onMarkAsDelivered, onViewDetails,
           lang={lang}
           currentUserName={currentUserName || 'Unknown User'}
           onPaymentAdded={handlePaymentAdded}
+        />
+      )}
+
+      {/* Tailor Receipt Dialog */}
+      {selectedOrderForTailor && (
+        <TailorReceiptDialog
+          isOpen={isTailorReceiptOpen}
+          setIsOpen={setIsTailorReceiptOpen}
+          order={selectedOrderForTailor}
+          lang={lang}
         />
       )}
     </div>

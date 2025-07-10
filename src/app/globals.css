@@ -405,7 +405,8 @@
 
   /* Show print-only elements */
   .printable-dialog-content .no-screen,
-  .printable-receipt-area .no-screen {
+  .printable-receipt-area .no-screen,
+  .print-only {
     display: block !important;
   }
 
@@ -516,6 +517,78 @@
   [data-radix-portal] .printable-dialog-content {
     display: block !important;
     position: static !important;
+  }
+
+  /* Tailor receipt specific styles */
+  .receipt-content {
+    font-size: 12px !important;
+    line-height: 1.5 !important;
+    color: black !important;
+    max-width: 210mm !important;
+    margin: 0 auto !important;
+    padding: 10mm !important;
+  }
+
+  .receipt-value {
+    word-wrap: break-word !important;
+    white-space: pre-wrap !important;
+  }
+
+  /* Hide textarea in print mode */
+  .receipt-content textarea {
+    display: none !important;
+  }
+
+  /* Print layout improvements */
+  .receipt-content {
+    page-break-inside: avoid !important;
+  }
+
+  /* Center content and improve spacing */
+  .receipt-content .text-center {
+    text-align: center !important;
+  }
+
+  .receipt-content h1 {
+    font-size: 16px !important;
+    font-weight: bold !important;
+    margin-bottom: 5px !important;
+  }
+
+  .receipt-content h2 {
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    margin-bottom: 15px !important;
+  }
+
+  .receipt-content h3 {
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    margin-bottom: 10px !important;
+  }
+
+  /* Improve information layout */
+  .receipt-content .space-y-3 > div {
+    margin-bottom: 8px !important;
+  }
+
+  .receipt-content .flex.items-center {
+    justify-content: flex-start !important;
+    align-items: center !important;
+  }
+
+  .receipt-content strong {
+    font-weight: 600 !important;
+    margin-right: 5px !important;
+  }
+
+
+}
+
+/* Screen-only styles */
+@media screen {
+  .print-only {
+    display: none !important;
   }
 }
 
