@@ -399,9 +399,43 @@ export default function AddNewProductPage() {
         title: t.productSavedSuccess,
         description: `${(cleanProductData.name || 'Product')} ${effectiveLang === 'ar' ? 'أضيف بنجاح برقم كود' : 'has been added with code'}: ${productCodeString}.`,
       });
-      form.reset();
+
+      // Reset form with proper default values
+      const defaultValues = {
+        name: '',
+        type: undefined,
+        category: undefined,
+        size: undefined,
+        initialStock: 0,
+        price: undefined,
+        imageUrl: '',
+        description: '',
+        notes: '',
+        dataAiHint: '',
+        branchId: (currentUser?.branchId && !hasPermission('view_all_branches')) ? currentUser.branchId : undefined,
+        isGlobalProduct: false,
+      };
+
+      form.reset(defaultValues);
+
+      // Reset image state
       setImageFile(null);
       setImagePreview(null);
+      setIsUploading(false);
+      setUploadProgress(null);
+
+      // Reset file input element with a small delay to ensure DOM is updated
+      setTimeout(() => {
+        const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+        if (fileInput) {
+          fileInput.value = '';
+        }
+
+        // Force re-trigger validation for required fields if needed
+        if (currentUser?.branchId && !hasPermission('view_all_branches')) {
+          form.setValue('branchId', currentUser.branchId);
+        }
+      }, 100);
     } catch (error: any) {
       console.error("Error adding product:", error);
       toast({
@@ -409,6 +443,10 @@ export default function AddNewProductPage() {
         description: error.message || t.productSavedError,
         variant: "destructive",
       });
+
+      // Reset upload states in case of error
+      setIsUploading(false);
+      setUploadProgress(null);
     } finally {
       setIsSaving(false);
     }
