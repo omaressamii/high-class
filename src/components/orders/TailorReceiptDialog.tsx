@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -20,7 +20,13 @@ interface TailorReceiptDialogProps {
 }
 
 export function TailorReceiptDialog({ isOpen, setIsOpen, order, lang }: TailorReceiptDialogProps) {
-  const [specialInstructions, setSpecialInstructions] = useState('');
+  // Initialize special instructions with order notes if available
+  const [specialInstructions, setSpecialInstructions] = useState(order.notes || '');
+
+  // Update special instructions when order changes
+  useEffect(() => {
+    setSpecialInstructions(order.notes || '');
+  }, [order.notes]);
 
   const t = {
     dialogTitle: lang === 'ar' ? 'وصل تفاصيل المقاسات للخياط' : 'Tailor Measurements Receipt',
