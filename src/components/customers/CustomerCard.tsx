@@ -4,6 +4,7 @@ import type { Customer } from '@/types';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Phone, MapPin, Info, UserCircle, Fingerprint, Store } from 'lucide-react';
+import Link from 'next/link';
 
 interface CustomerCardProps {
   customer: Customer;
@@ -12,11 +13,11 @@ interface CustomerCardProps {
 
 // Wrap component with React.memo
 const CustomerCard = React.memo(function CustomerCard({ customer, lang: propLang }: CustomerCardProps) {
-  const lang = propLang === 'en' ? 'en' : 'ar';
-  const viewHistoryText = lang === 'ar' ? 'عرض السجل الكامل' : 'View Full History';
-  const customerIdText = lang === 'ar' ? 'معرف العميل' : 'Customer ID';
-  const idPassportText = lang === 'ar' ? 'رقم الهوية/جواز السفر' : 'ID/Passport';
-  const branchText = lang === 'ar' ? 'الفرع' : 'Branch';
+  const effectiveLang = propLang === 'en' ? 'en' : 'ar';
+  const viewHistoryText = effectiveLang === 'ar' ? 'عرض السجل الكامل' : 'View Full History';
+  const customerIdText = effectiveLang === 'ar' ? 'معرف العميل' : 'Customer ID';
+  const idPassportText = effectiveLang === 'ar' ? 'رقم الهوية/جواز السفر' : 'ID/Passport';
+  const branchText = effectiveLang === 'ar' ? 'الفرع' : 'Branch';
 
   return (
     <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300 rounded-lg">
@@ -58,8 +59,10 @@ const CustomerCard = React.memo(function CustomerCard({ customer, lang: propLang
         )}
       </CardContent>
       <CardFooter className="border-t pt-4">
-        <Button variant="outline" className="w-full hover:bg-accent hover:text-accent-foreground">
-          {viewHistoryText}
+        <Button asChild variant="outline" className="w-full hover:bg-accent hover:text-accent-foreground">
+          <Link href={`/${effectiveLang}/customers/${customer.id}`}>
+            {viewHistoryText}
+          </Link>
         </Button>
       </CardFooter>
     </Card>

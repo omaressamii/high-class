@@ -1,0 +1,64 @@
+{
+  "rules": {
+    ".read": "auth != null",
+    ".write": "auth != null",
+    
+    "users": {
+      ".indexOn": ["username", "branchId"],
+      "$userId": {
+        ".read": "auth != null",
+        ".write": "auth != null"
+      }
+    },
+    
+    "customers": {
+      ".indexOn": ["phoneNumber", "branchId"],
+      "$customerId": {
+        ".read": "auth != null",
+        ".write": "auth != null"
+      }
+    },
+    
+    "orders": {
+      ".indexOn": ["customerId", "branchId", "sellerId", "orderDate", "status", "transactionType"],
+      "$orderId": {
+        ".read": "auth != null",
+        ".write": "auth != null"
+      }
+    },
+    
+    "products": {
+      ".indexOn": ["productCode", "category", "type", "branchId"],
+      "$productId": {
+        ".read": "auth != null",
+        ".write": "auth != null"
+      }
+    },
+    
+    "branches": {
+      ".indexOn": ["name"],
+      "$branchId": {
+        ".read": "auth != null",
+        ".write": "auth != null"
+      }
+    },
+    
+    "financial_transactions": {
+      ".indexOn": ["orderId", "branchId", "transactionDate", "type"],
+      "$transactionId": {
+        ".read": "auth != null",
+        ".write": "auth != null"
+      }
+    },
+    
+    "product_types": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    },
+    
+    "system_settings": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    }
+  }
+}

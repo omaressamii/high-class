@@ -2,15 +2,10 @@
 // 'use client'; // Removed to make it a Server Component
 
 import React from 'react';
-import Link from 'next/link';
-import { PageTitle } from '@/components/shared/PageTitle';
-import { UserList } from '@/components/users/UserList';
-import { Button } from '@/components/ui/button';
-import { PlusCircle, Users as UsersIcon, Loader } from 'lucide-react';
-import { ClientAuthWrapperForUsersPage } from '@/components/users/ClientAuthWrapperForUsersPage';
-import { ref, get, query, orderByChild } from "firebase/database";
+import { UsersPageClient } from '@/components/users/UsersPageClient';
+import { ref, get } from "firebase/database";
 import { database } from "@/lib/firebase";
-import type { User, Branch } from '@/types'; // Added Branch
+import type { User, Branch } from '@/types';
 
 async function getUsersFromRealtimeDB(): Promise<User[]> {
   const usersRef = ref(database, "users");
@@ -74,28 +69,5 @@ export default async function UsersPage({ params: routeParams }: { params: Promi
 
   const users = await getUsersFromRealtimeDB();
 
-  const t = {
-    pageTitle: effectiveLang === 'ar' ? 'إدارة المستخدمين' : 'User Management',
-    addUser: effectiveLang === 'ar' ? 'إضافة مستخدم جديد' : 'Add New User',
-    noUsers: effectiveLang === 'ar' ? 'لا يوجد مستخدمون حاليًا.' : 'No users found.',
-    loadingPage: effectiveLang === 'ar' ? 'جار تحميل الصفحة...' : 'Loading page...',
-  };
-
-  return (
-    <div className="space-y-8">
-      <div className="flex justify-between items-center">
-        <PageTitle>{t.pageTitle}</PageTitle>
-        <ClientAuthWrapperForUsersPage lang={effectiveLang} addUserText={t.addUser} />
-      </div>
-
-      {users.length > 0 ? (
-        <UserList users={users} lang={effectiveLang} />
-      ) : (
-        <div className="text-center py-12">
-          <UsersIcon className="mx-auto h-12 w-12 text-muted-foreground" />
-          <p className="text-xl text-muted-foreground mt-4">{t.noUsers}</p>
-        </div>
-      )}
-    </div>
-  );
+  return <UsersPageClient initialUsers={users} lang={effectiveLang} />;
 }

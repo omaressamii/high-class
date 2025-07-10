@@ -1,29 +1,86 @@
 
-import React from 'react'; // Import React
+import React, { useState } from 'react'; // Import React
 import type { User } from '@/types';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { UserCircle, Settings, Briefcase, ShieldCheck, ShieldQuestion, Store } from 'lucide-react';
+import { UserCircle, Settings, Briefcase, ShieldCheck, ShieldQuestion, Store, Trash2 } from 'lucide-react';
 import { Badge } from '../ui/badge';
 import Link from 'next/link';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { useToast } from '@/hooks/use-toast';
+import { ref, remove } from "firebase/database";
+import { database } from "@/lib/firebase";
+import { useRouter } from 'next/navigation';
 
 interface UserCardProps {
   user: User;
   lang: string;
+  onUserDeleted?: () => void;
 }
 
 // Wrap component with React.memo
-const UserCard = React.memo(function UserCard({ user, lang: propLang }: UserCardProps) {
+const UserCard = React.memo(function UserCard({ user, lang: propLang, onUserDeleted }: UserCardProps) {
   const lang = propLang === 'en' ? 'en' : 'ar';
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const { toast } = useToast();
+  const router = useRouter();
 
   const t = {
     manageUser: lang === 'ar' ? 'إدارة المستخدم' : 'Manage User',
+    deleteUser: lang === 'ar' ? 'حذف المستخدم' : 'Delete User',
     username: lang === 'ar' ? 'اسم المستخدم' : 'Username',
     branch: lang === 'ar' ? 'الفرع' : 'Branch',
     seller: lang === 'ar' ? 'بائع (للتتبع)' : 'Seller (Tracking)',
     systemUser: lang === 'ar' ? 'مستخدم نظام' : 'System User',
     permissionsNotSet: lang === 'ar' ? 'الصلاحيات غير محددة' : 'Permissions not set',
     noBranchAssigned: lang === 'ar' ? 'لم يتم تعيين فرع' : 'No branch assigned',
+    deleteConfirmTitle: lang === 'ar' ? 'تأكيد حذف المستخدم' : 'Confirm User Deletion',
+    deleteConfirmDescription: lang === 'ar'
+      ? `هل أنت متأكد من حذف المستخدم "${user.fullName}"؟ هذا الإجراء لا يمكن التراجع عنه.`
+      : `Are you sure you want to delete user "${user.fullName}"? This action cannot be undone.`,
+    cancel: lang === 'ar' ? 'إلغاء' : 'Cancel',
+    delete: lang === 'ar' ? 'حذف' : 'Delete',
+    userDeletedSuccess: lang === 'ar' ? 'تم حذف المستخدم بنجاح' : 'User deleted successfully',
+    userDeleteError: lang === 'ar' ? 'فشل في حذف المستخدم' : 'Failed to delete user',
+  };
+
+  const handleDeleteUser = async () => {
+    setIsDeleting(true);
+    try {
+      const userRef = ref(database, `users/${user.id}`);
+      await remove(userRef);
+
+      toast({
+        title: t.userDeletedSuccess,
+        description: `${user.fullName} ${lang === 'ar' ? 'تم حذفه من النظام.' : 'has been removed from the system.'}`,
+      });
+
+      // Call the callback to refresh the user list
+      if (onUserDeleted) {
+        onUserDeleted();
+      }
+
+      setShowDeleteDialog(false);
+    } catch (error) {
+      console.error("Error deleting user:", error);
+      toast({
+        title: t.userDeleteError,
+        description: (error as Error).message,
+        variant: "destructive"
+      });
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   const displayRoleOrType = () => {
@@ -107,14 +164,53 @@ const UserCard = React.memo(function UserCard({ user, lang: propLang }: UserCard
             <p className="text-xs text-muted-foreground italic">{t.permissionsNotSet}</p>
         )}
       </CardContent>
-      <CardFooter className="border-t pt-4">
-        <Button asChild variant="outline" className="w-full hover:bg-accent hover:text-accent-foreground">
+      <CardFooter className="border-t pt-4 flex gap-2">
+        <Button asChild variant="outline" className="flex-1 hover:bg-accent hover:text-accent-foreground">
           <Link href={`/${lang}/users/${user.id}/edit`}>
             <Settings className="mr-2 h-4 w-4 rtl:ml-2 rtl:mr-0" />
             {t.manageUser}
           </Link>
         </Button>
+        <Button
+          variant="destructive"
+          size="sm"
+          onClick={() => setShowDeleteDialog(true)}
+          className="px-3"
+        >
+          <Trash2 className="h-4 w-4" />
+        </Button>
       </CardFooter>
+
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t.deleteConfirmTitle}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t.deleteConfirmDescription}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t.cancel}</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteUser}
+              disabled={isDeleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isDeleting ? (
+                <>
+                  <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                  {lang === 'ar' ? 'جاري الحذف...' : 'Deleting...'}
+                </>
+              ) : (
+                <>
+                  <Trash2 className="mr-2 h-4 w-4 rtl:ml-2 rtl:mr-0" />
+                  {t.delete}
+                </>
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   );
 });
