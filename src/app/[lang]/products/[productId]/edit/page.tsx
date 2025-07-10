@@ -655,7 +655,21 @@ export default function EditProductPage() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>{t.initialStockLabel}</FormLabel>
-                    <FormControl><Input type="number" step="1" {...field} value={field.value === undefined ? "" : field.value} onChange={e => field.onChange(parseInt(e.target.value,10) || 0)} /></FormControl>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        step="1"
+                        {...field}
+                        value={field.value === 0 ? "" : field.value}
+                        onChange={e => field.onChange(e.target.value === '' ? 0 : parseInt(e.target.value, 10) || 0)}
+                        onFocus={e => {
+                          if (e.target.value === '0') {
+                            e.target.value = '';
+                            field.onChange('');
+                          }
+                        }}
+                      />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}

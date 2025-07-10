@@ -1035,8 +1035,14 @@ export default function AddNewOrderPage() {
                               type="number"
                               min="1"
                               {...field}
-                              value={field.value === undefined ? 1 : field.value}
-                              onChange={(e) => field.onChange(parseInt(e.target.value, 10) || 1)}
+                              value={field.value === 1 ? "" : field.value}
+                              onChange={(e) => field.onChange(e.target.value === '' ? 1 : parseInt(e.target.value, 10) || 1)}
+                              onFocus={e => {
+                                if (e.target.value === '1') {
+                                  e.target.value = '';
+                                  field.onChange('');
+                                }
+                              }}
                             />
                           </FormControl>
                           <FormMessage />
@@ -1054,10 +1060,16 @@ export default function AddNewOrderPage() {
                                 type="number"
                                 step="0.01"
                                 {...field}
-                                value={field.value === undefined ? 0 : field.value}
+                                value={field.value === 0 ? "" : field.value}
                                 onChange={(e) => {
-                                    const value = parseFloat(e.target.value);
+                                    const value = e.target.value === '' ? 0 : parseFloat(e.target.value);
                                     field.onChange(isNaN(value) ? 0 : value);
+                                }}
+                                onFocus={e => {
+                                  if (e.target.value === '0') {
+                                    e.target.value = '';
+                                    field.onChange('');
+                                  }
                                 }}
                                 disabled={!currentHasPermission('orders_edit_price')}
                                 />
@@ -1106,8 +1118,14 @@ export default function AddNewOrderPage() {
                         step="0.01"
                         placeholder={t.paidAmountPlaceholder}
                         {...field}
-                        value={field.value === undefined ? "" : field.value}
+                        value={field.value === 0 ? "" : field.value}
                         onChange={(e) => field.onChange(e.target.value === '' ? 0 : parseFloat(e.target.value))}
+                        onFocus={e => {
+                          if (e.target.value === '0') {
+                            e.target.value = '';
+                            field.onChange('');
+                          }
+                        }}
                         disabled={authIsLoading}
                       />
                     </FormControl>
