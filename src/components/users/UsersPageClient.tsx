@@ -1,13 +1,16 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { PageTitle } from '@/components/shared/PageTitle';
 import { UserList } from '@/components/users/UserList';
 import { ClientAuthWrapperForUsersPage } from '@/components/users/ClientAuthWrapperForUsersPage';
-import { Users as UsersIcon } from 'lucide-react';
+import { Users as UsersIcon, Search, Filter } from 'lucide-react';
 import { ref, get } from "firebase/database";
 import { database } from "@/lib/firebase";
 import type { User, Branch } from '@/types';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 interface UsersPageClientProps {
   initialUsers: User[];
@@ -66,12 +69,31 @@ async function getUsersFromRealtimeDB(): Promise<User[]> {
 const UsersPageClient = ({ initialUsers, lang }: UsersPageClientProps) => {
   const [users, setUsers] = useState<User[]>(initialUsers);
   const [isLoading, setIsLoading] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
 
   const t = {
     pageTitle: lang === 'ar' ? 'إدارة المستخدمين' : 'User Management',
     addUser: lang === 'ar' ? 'إضافة مستخدم جديد' : 'Add New User',
     noUsers: lang === 'ar' ? 'لا يوجد مستخدمون حاليًا.' : 'No users found.',
+    filterUsers: lang === 'ar' ? 'فلترة المستخدمين' : 'Filter Users',
+    searchLabel: lang === 'ar' ? 'البحث' : 'Search',
+    searchPlaceholder: lang === 'ar' ? 'ابحث بالاسم أو اسم المستخدم أو الفرع...' : 'Search by name, username, or branch...',
   };
+
+  // Filter users based on search term
+  const filteredUsers = useMemo(() => {
+    if (!searchTerm.trim()) {
+      return users;
+    }
+
+    const searchLower = searchTerm.toLowerCase().trim();
+    return users.filter(user =>
+      user.fullName.toLowerCase().includes(searchLower) ||
+      user.username.toLowerCase().includes(searchLower) ||
+      (user.branchName && user.branchName.toLowerCase().includes(searchLower)) ||
+      user.id.toLowerCase().includes(searchLower)
+    );
+  }, [users, searchTerm]);
 
   const handleUserDeleted = async () => {
     setIsLoading(true);
@@ -92,8 +114,43 @@ const UsersPageClient = ({ initialUsers, lang }: UsersPageClientProps) => {
         <ClientAuthWrapperForUsersPage lang={lang} addUserText={t.addUser} />
       </div>
 
-      {users.length > 0 ? (
-        <UserList users={users} lang={lang} onUserDeleted={handleUserDeleted} />
+      {/* Search Filter */}
+      <Card className="shadow-md rounded-lg">
+        <CardHeader className="pb-4">
+          <CardTitle className="font-headline text-xl flex items-center">
+            <Filter className="h-5 w-5 mr-2 rtl:ml-2 rtl:mr-0 text-primary" />
+            {t.filterUsers}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-1">
+            <Label htmlFor="userSearch">{t.searchLabel}</Label>
+            <div className="relative">
+              <Search className="absolute left-3 rtl:right-3 rtl:left-auto top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                id="userSearch"
+                placeholder={t.searchPlaceholder}
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="bg-card pl-10 rtl:pr-10 rtl:pl-3"
+              />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {filteredUsers.length > 0 ? (
+        <UserList users={filteredUsers} lang={lang} onUserDeleted={handleUserDeleted} />
+      ) : users.length > 0 ? (
+        <div className="text-center py-12">
+          <Search className="mx-auto h-12 w-12 text-muted-foreground" />
+          <p className="text-xl text-muted-foreground mt-4">
+            {lang === 'ar' ? 'لا توجد نتائج للبحث' : 'No search results found'}
+          </p>
+          <p className="text-sm text-muted-foreground mt-2">
+            {lang === 'ar' ? 'جرب مصطلح بحث مختلف' : 'Try a different search term'}
+          </p>
+        </div>
       ) : (
         <div className="text-center py-12">
           <UsersIcon className="mx-auto h-12 w-12 text-muted-foreground" />
