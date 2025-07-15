@@ -27,7 +27,7 @@ export interface Product {
   price: number;
   status: ProductStatus;
   imageUrl: string;
-  description: string;
+  description?: string;
   notes?: string;
   "data-ai-hint"?: string;
   initialStock: number;

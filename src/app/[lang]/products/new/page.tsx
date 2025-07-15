@@ -144,10 +144,7 @@ export default function AddNewProductPage() {
     changeImageButton: effectiveLang === 'ar' ? 'تغيير الصورة' : 'Change Image',
     imageUploadInProgress: effectiveLang === 'ar' ? 'جار رفع الصورة...' : 'Uploading image...',
     imageUploadError: effectiveLang === 'ar' ? 'فشل رفع الصورة.' : 'Image upload failed.',
-    descriptionLabel: effectiveLang === 'ar' ? 'وصف المنتج' : 'Description',
-    descriptionPlaceholder: effectiveLang === 'ar' ? 'أدخل وصفًا تفصيليًا للمنتج...' : 'Enter a detailed description of the product...',
-    descriptionRequired: effectiveLang === 'ar' ? 'وصف المنتج مطلوب' : 'Description is required',
-    descriptionMinLength: effectiveLang === 'ar' ? 'يجب أن يكون الوصف 10 أحرف على الأقل' : 'Description must be at least 10 characters',
+
     notesLabel: effectiveLang === 'ar' ? 'ملاحظات (اختياري)' : 'Notes (Optional)',
     notesPlaceholder: effectiveLang === 'ar' ? 'أي ملاحظات إضافية...' : 'Any additional notes...',
     aiHintLabel: effectiveLang === 'ar' ? 'تلميح للصور بالذكاء الاصطناعي (اختياري)' : 'AI Image Hint (Optional)',
@@ -157,7 +154,13 @@ export default function AddNewProductPage() {
     loadingBranches: effectiveLang === 'ar' ? 'جار تحميل الفروع...' : 'Loading branches...',
     selectBranchPlaceholder: effectiveLang === 'ar' ? 'اختر فرع المنتج' : 'Select product branch',
     noBranchesAvailable: effectiveLang === 'ar' ? 'لا توجد فروع متاحة' : 'No branches available',
-    productCodeGenerationError: effectiveLang === 'ar' ? 'خطأ في إنشاء كود المنتج' : 'Error generating product code',
+    productCodeGenerationError: effectiveLang === 'ar' ? 'خطأ في إنشاء باركود المنتج' : 'Error generating product barcode',
+    useManualBarcodeLabel: effectiveLang === 'ar' ? 'إدخال الباركود يدوياً' : 'Enter barcode manually',
+    useManualBarcodeDescription: effectiveLang === 'ar' ? 'إذا تم تحديده، يمكنك إدخال رقم الباركود يدوياً بدلاً من الإنشاء التلقائي' : 'If checked, you can enter the barcode number manually instead of auto-generation',
+    manualBarcodeLabel: effectiveLang === 'ar' ? 'رقم الباركود' : 'Barcode Number',
+    manualBarcodePlaceholder: effectiveLang === 'ar' ? 'مثال: 15 (سيصبح 90000015)' : 'e.g., 15 (will become 90000015)',
+    manualBarcodeRequired: effectiveLang === 'ar' ? 'رقم الباركود مطلوب عند الإدخال اليدوي' : 'Barcode number is required for manual entry',
+    manualBarcodeNumbersOnly: effectiveLang === 'ar' ? 'رقم الباركود يجب أن يحتوي على أرقام فقط' : 'Barcode number must contain only digits',
     isGlobalProductLabel: effectiveLang === 'ar' ? 'عرض المنتج في جميع الفروع؟' : 'Make product visible in all branches?',
     isGlobalProductDescription: effectiveLang === 'ar' ? 'إذا تم تحديده، سيكون المنتج متاحًا للعرض والطلب من أي فرع. يمكن تحديد فرع أساسي لأغراض تنظيمية.' : 'If checked, this product will be visible and orderable from any branch. A primary branch can be set for organizational purposes.',
   };
@@ -171,17 +174,32 @@ export default function AddNewProductPage() {
     initialStock: z.coerce.number({invalid_type_error: t.initialStockRequired, required_error: t.initialStockRequired}).int().min(0, { message: t.initialStockMin }),
     price: z.coerce.number().positive({ message: t.pricePositive }).min(0.01, { message: t.priceRequired }),
     imageUrl: z.string().optional(),
-    description: z.string().min(10, { message: t.descriptionMinLength }),
     notes: z.string().optional(),
     dataAiHint: z.string().optional(),
     branchId: z.string().optional(),
     isGlobalProduct: z.boolean().default(false),
+    useManualBarcode: z.boolean().default(false),
+    manualBarcodeNumber: z.string().optional(),
   }).superRefine((data, ctx) => {
     if (!data.isGlobalProduct && hasPermission('view_all_branches') && (!data.branchId || data.branchId.trim() === "")) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         message: t.branchRequired,
         path: ["branchId"],
+      });
+    }
+    if (data.useManualBarcode && (!data.manualBarcodeNumber || data.manualBarcodeNumber.trim() === "")) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: t.manualBarcodeRequired,
+        path: ["manualBarcodeNumber"],
+      });
+    }
+    if (data.useManualBarcode && data.manualBarcodeNumber && !/^\d+$/.test(data.manualBarcodeNumber.trim())) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: t.manualBarcodeNumbersOnly,
+        path: ["manualBarcodeNumber"],
       });
     }
   });
@@ -199,11 +217,12 @@ export default function AddNewProductPage() {
       initialStock: 0,
       price: undefined,
       imageUrl: '',
-      description: '',
       notes: '',
       dataAiHint: '',
       branchId: (currentUser?.branchId && !hasPermission('view_all_branches')) ? currentUser.branchId : undefined,
       isGlobalProduct: false,
+      useManualBarcode: false,
+      manualBarcodeNumber: '',
     },
   });
 
@@ -357,20 +376,28 @@ export default function AddNewProductPage() {
     let productDataToSave: Omit<Product, 'id'>;
 
     try {
-      // Get and update product code counter
-      const counterRef = ref(database, "system_settings/productCodeConfig");
-      const counterSnap = await get(counterRef);
-      let nextCode: number;
+      let productCodeString: string;
 
-      if (!counterSnap.exists() || !counterSnap.val() || typeof counterSnap.val()?.nextProductCode !== 'number') {
-        console.warn("Product code config missing or invalid. Initializing to 90000001.");
-        nextCode = 90000001;
-        await set(counterRef, { nextProductCode: nextCode + 1 });
+      if (data.useManualBarcode && data.manualBarcodeNumber) {
+        // Manual barcode: add 90000000 to the entered number
+        const manualNumber = parseInt(data.manualBarcodeNumber.trim());
+        productCodeString = String(90000000 + manualNumber);
       } else {
-        nextCode = counterSnap.val().nextProductCode;
-        await update(counterRef, { nextProductCode: nextCode + 1 });
+        // Auto-generated barcode
+        const counterRef = ref(database, "system_settings/productCodeConfig");
+        const counterSnap = await get(counterRef);
+        let nextCode: number;
+
+        if (!counterSnap.exists() || !counterSnap.val() || typeof counterSnap.val()?.nextProductCode !== 'number') {
+          console.warn("Product code config missing or invalid. Initializing to 90000001.");
+          nextCode = 90000001;
+          await set(counterRef, { nextProductCode: nextCode + 1 });
+        } else {
+          nextCode = counterSnap.val().nextProductCode;
+          await update(counterRef, { nextProductCode: nextCode + 1 });
+        }
+        productCodeString = String(nextCode);
       }
-      const productCodeString = String(nextCode);
 
       const productStatus: ProductStatus = 'Available';
 
@@ -408,7 +435,7 @@ export default function AddNewProductPage() {
         size: data.size,
         price: data.price,
         imageUrl: finalImageUrl,
-        description: data.description,
+        description: '', // Set empty description as default
         initialStock: data.initialStock,
         quantityInStock: data.initialStock,
         quantityRented: 0,
@@ -432,7 +459,7 @@ export default function AddNewProductPage() {
 
       toast({
         title: t.productSavedSuccess,
-        description: `${(cleanProductData.name || 'Product')} ${effectiveLang === 'ar' ? 'أضيف بنجاح برقم كود' : 'has been added with code'}: ${productCodeString}.`,
+        description: `${(cleanProductData.name || 'Product')} ${effectiveLang === 'ar' ? 'أضيف بنجاح برقم باركود' : 'has been added with barcode'}: ${productCodeString}.`,
       });
 
       // Reset form with proper default values
@@ -444,11 +471,12 @@ export default function AddNewProductPage() {
         initialStock: 0,
         price: undefined,
         imageUrl: '',
-        description: '',
         notes: '',
         dataAiHint: '',
         branchId: (currentUser?.branchId && !hasPermission('view_all_branches')) ? currentUser.branchId : undefined,
         isGlobalProduct: false,
+        useManualBarcode: false,
+        manualBarcodeNumber: '',
       };
 
       form.reset(defaultValues);
@@ -772,19 +800,7 @@ export default function AddNewProductPage() {
                 <FormMessage />
               </FormItem>
 
-              <FormField
-                control={form.control}
-                name="description"
-                render={({ field }) => (
-                  <FormItem className="md:col-span-2">
-                    <FormLabel>{t.descriptionLabel}</FormLabel>
-                    <FormControl>
-                      <Textarea placeholder={t.descriptionPlaceholder} rows={4} {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+
               <FormField
                 control={form.control}
                 name="notes"
@@ -811,6 +827,52 @@ export default function AddNewProductPage() {
                   </FormItem>
                 )}
               />
+
+              <FormField
+                control={form.control}
+                name="useManualBarcode"
+                render={({ field }) => (
+                  <FormItem className="md:col-span-2 flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4 rtl:space-x-reverse">
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                    <div className="space-y-1 leading-none">
+                      <FormLabel>
+                        {t.useManualBarcodeLabel}
+                      </FormLabel>
+                      <FormDescription>
+                        {t.useManualBarcodeDescription}
+                      </FormDescription>
+                    </div>
+                  </FormItem>
+                )}
+              />
+
+              {form.watch('useManualBarcode') && (
+                <FormField
+                  control={form.control}
+                  name="manualBarcodeNumber"
+                  render={({ field }) => (
+                    <FormItem className="md:col-span-2">
+                      <FormLabel>{t.manualBarcodeLabel}</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder={t.manualBarcodePlaceholder}
+                          {...field}
+                          value={field.value ?? ''}
+                          type="text"
+                          inputMode="numeric"
+                          pattern="[0-9]*"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
             </CardContent>
             <CardFooter>
               <Button type="submit" disabled={isSaving || isUploading || productTypesLoading}>

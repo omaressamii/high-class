@@ -231,6 +231,8 @@ export default async function ProductDetailsPage({ params: routeParams }: { para
               <PrintBarcodeButton
               productId={product.id}
               productCode={product.productCode}
+              productName={product.name}
+              productPrice={product.price}
               lang={effectiveLang}
               buttonText={t.printBarcode}
               alertTextTemplate={t.printBarcodeAlertTemplate}

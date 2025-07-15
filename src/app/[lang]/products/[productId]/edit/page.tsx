@@ -110,7 +110,7 @@ export default function EditProductPage() {
     productNotFoundError: effectiveLang === 'ar' ? 'لم يتم العثور على المنتج.' : 'Product not found.',
     loadingProduct: effectiveLang === 'ar' ? 'جار تحميل المنتج...' : 'Loading product...',
     nameLabel: effectiveLang === 'ar' ? 'اسم المنتج' : 'Product Name',
-    productCodeLabel: effectiveLang === 'ar' ? 'كود الصنف (غير قابل للتعديل)' : 'Product Code (cannot be changed)',
+    productCodeLabel: effectiveLang === 'ar' ? 'باركود المنتج (غير قابل للتعديل)' : 'Product Barcode (cannot be changed)',
     typeLabel: effectiveLang === 'ar' ? 'نوع المنتج' : 'Product Type',
     manageProductTypesButton: effectiveLang === 'ar' ? 'إدارة الأنواع' : 'Manage Types',
     loadingTypes: effectiveLang === 'ar' ? 'جار تحميل الأنواع...' : 'Loading types...',
@@ -127,7 +127,7 @@ export default function EditProductPage() {
     imageUploadInProgress: effectiveLang === 'ar' ? 'جار رفع الصورة...' : 'Uploading image...',
     imageUploadError: effectiveLang === 'ar' ? 'فشل رفع الصورة.' : 'Image upload failed.',
     imageUrlRequired: effectiveLang === 'ar' ? 'صورة المنتج مطلوبة.' : 'Product image is required.',
-    descriptionLabel: effectiveLang === 'ar' ? 'وصف المنتج' : 'Description',
+
     notesLabel: effectiveLang === 'ar' ? 'ملاحظات (اختياري)' : 'Notes (Optional)',
     aiHintLabel: effectiveLang === 'ar' ? 'تلميح للصور بالذكاء الاصطناعي (اختياري)' : 'AI Image Hint (Optional)',
     nameRequired: effectiveLang === 'ar' ? 'اسم المنتج مطلوب' : 'Product name is required',
@@ -138,7 +138,7 @@ export default function EditProductPage() {
     initialStockMin: effectiveLang === 'ar' ? 'يجب أن تكون الكمية الأولية صفرًا أو أكثر' : 'Initial stock must be zero or more',
     priceRequired: effectiveLang === 'ar' ? 'السعر مطلوب' : 'Price is required',
     pricePositive: effectiveLang === 'ar' ? 'يجب أن يكون السعر رقمًا موجبًا' : 'Price must be a positive number',
-    descriptionMinLength: effectiveLang === 'ar' ? 'يجب أن يكون الوصف 10 أحرف على الأقل' : 'Description must be at least 10 characters',
+
     categoryRental: effectiveLang === 'ar' ? 'إيجار' : 'Rental',
     categorySale: effectiveLang === 'ar' ? 'بيع' : 'Sale',
     statusAvailable: effectiveLang === 'ar' ? 'متوفر' : 'Available',
@@ -162,7 +162,6 @@ export default function EditProductPage() {
     initialStock: z.coerce.number().int().min(0, { message: t.initialStockMin }),
     price: z.coerce.number().positive({ message: t.pricePositive }).min(0.01, { message: t.priceRequired }),
     imageUrl: z.string().min(1, { message: t.imageUrlRequired }), // Image is optional on creation, but must exist for edit
-    description: z.string().min(10, { message: t.descriptionMinLength }),
     notes: z.string().optional(),
     dataAiHint: z.string().optional(),
     branchId: z.string().optional(),
@@ -183,7 +182,7 @@ export default function EditProductPage() {
     resolver: zodResolver(currentFormSchema),
     defaultValues: {
       name: '', type: undefined, category: undefined, size: undefined, status: undefined,
-      initialStock: 0, price: undefined, imageUrl: '', description: '',
+      initialStock: 0, price: undefined, imageUrl: '',
       notes: '', dataAiHint: '', branchId: undefined, isGlobalProduct: false,
     },
   });
@@ -255,7 +254,6 @@ export default function EditProductPage() {
             initialStock: fetchedProduct.initialStock,
             price: fetchedProduct.price,
             imageUrl: fetchedProduct.imageUrl,
-            description: fetchedProduct.description,
             notes: fetchedProduct.notes || '',
             dataAiHint: fetchedProduct['data-ai-hint'] || '',
             branchId: fetchedProduct.branchId || undefined,
@@ -424,7 +422,7 @@ export default function EditProductPage() {
       status: data.status,
       price: data.price,
       imageUrl: finalImageUrl,
-      description: data.description,
+      description: '', // Set empty description as default
       initialStock: data.initialStock,
       quantityInStock: data.status === 'Available' ? data.initialStock - (product.quantityRented || 0) : product.quantityInStock,
       notes: data.notes || undefined,
@@ -461,7 +459,6 @@ export default function EditProductPage() {
             initialStock: updatedProductData.initialStock,
             price: updatedProductData.price,
             imageUrl: updatedProductData.imageUrl,
-            description: updatedProductData.description,
             notes: updatedProductData.notes || '',
             dataAiHint: updatedProductData['data-ai-hint'] || '',
             branchId: updatedProductData.branchId || undefined,
@@ -538,7 +535,7 @@ export default function EditProductPage() {
                   <Input value={product?.productCode || ''} disabled readOnly />
                 </FormControl>
                  <FormDescription>
-                   {effectiveLang === 'ar' ? 'كود الصنف يتم إنشاؤه تلقائيًا ولا يمكن تعديله.' : 'Product code is auto-generated and cannot be changed.'}
+                   {effectiveLang === 'ar' ? 'باركود المنتج يتم إنشاؤه تلقائيًا ولا يمكن تعديله.' : 'Product barcode is auto-generated and cannot be changed.'}
                  </FormDescription>
               </FormItem>
               <FormField
@@ -778,17 +775,7 @@ export default function EditProductPage() {
                 <FormMessage />
               </FormItem>
 
-              <FormField
-                control={form.control}
-                name="description"
-                render={({ field }) => (
-                  <FormItem className="md:col-span-2">
-                    <FormLabel>{t.descriptionLabel}</FormLabel>
-                    <FormControl><Textarea rows={4} {...field} /></FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+
               <FormField
                 control={form.control}
                 name="notes"
