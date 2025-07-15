@@ -25,6 +25,7 @@ import { ref, get, update } from 'firebase/database';
 import { database } from '@/lib/firebase';
 import { productCategoryValues, productSizeValues, productStatusValues } from '@/lib/mock-data'; // productTypeValues removed
 import { ManageProductTypesDialog } from '@/components/products/ManageProductTypesDialog';
+import { SearchableProductTypeFilter } from '@/components/products/SearchableProductTypeFilter';
 
 export default function EditProductPage() {
   const params = useParams();
@@ -576,17 +577,18 @@ export default function EditProductPage() {
                             <Loader className="mr-2 h-4 w-4 animate-spin" /> {t.loadingTypes}
                         </div>
                     ) : (
-                    <Select onValueChange={field.onChange} value={field.value} dir={effectiveLang === 'ar' ? 'rtl' : 'ltr'} disabled={productTypes.length === 0}>
-                      <FormControl><SelectTrigger><SelectValue placeholder={typeDisplayValue} /></SelectTrigger></FormControl>
-                      <SelectContent>
-                        {productTypes.length === 0 && <SelectItem value="no-types-placeholder" disabled>{t.noTypesAvailable}</SelectItem>}
-                        {productTypes.map(typeDef => (
-                          <SelectItem key={typeDef.id} value={typeDef.id}>
-                            {effectiveLang === 'ar' ? typeDef.name_ar : typeDef.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                      <FormControl>
+                        <SearchableProductTypeFilter
+                          value={field.value || ''}
+                          onValueChange={field.onChange}
+                          availableProductTypes={productTypes}
+                          lang={effectiveLang}
+                          placeholder={typeDisplayValue}
+                          disabled={productTypes.length === 0}
+                          allowEmpty={true}
+                          emptyText={effectiveLang === 'ar' ? 'اختر نوع المنتج...' : 'Select product type...'}
+                        />
+                      </FormControl>
                     )}
                     <FormMessage />
                   </FormItem>

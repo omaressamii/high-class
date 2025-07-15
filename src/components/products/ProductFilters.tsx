@@ -5,6 +5,7 @@ import { Label } from '@/components/ui/label';
 import type { ProductTypeDefinition, ProductCategory, ProductStatus, ProductSize } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Filter } from 'lucide-react';
+import { SearchableProductTypeFilter } from './SearchableProductTypeFilter';
 
 interface ProductFiltersProps {
   filters: {
@@ -104,19 +105,14 @@ export function ProductFilters({ filters, setFilters, lang: propLang, availableP
 
           <div className="space-y-1">
             <Label htmlFor="type">{t.typeLabel}</Label>
-            <Select value={filters.type} onValueChange={handleSelectChange('type')}>
-              <SelectTrigger id="type" className="bg-card">
-                <SelectValue placeholder={t.selectTypePlaceholder} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">{t.allTypes}</SelectItem>
-                {availableProductTypes.map(typeDef => (
-                  <SelectItem key={typeDef.id} value={typeDef.id}>
-                    {lang === 'ar' ? typeDef.name_ar : typeDef.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <SearchableProductTypeFilter
+              value={filters.type}
+              onValueChange={handleSelectChange('type')}
+              availableProductTypes={availableProductTypes}
+              lang={lang}
+              placeholder={t.selectTypePlaceholder}
+              allTypesText={t.allTypes}
+            />
           </div>
 
           <div className="space-y-1">

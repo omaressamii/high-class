@@ -25,6 +25,7 @@ import { ref, get, push, set, update } from 'firebase/database';
 import { database } from '@/lib/firebase';
 import { productCategoryValues, productSizeValues } from '@/lib/mock-data';
 import { ManageProductTypesDialog } from '@/components/products/ManageProductTypesDialog';
+import { SearchableProductTypeFilter } from '@/components/products/SearchableProductTypeFilter';
 
 export default function AddNewProductPage() {
   const params = useParams();
@@ -600,20 +601,18 @@ export default function AddNewProductPage() {
                             <Loader className="mr-2 h-4 w-4 animate-spin" /> {t.loadingTypes}
                         </div>
                     ) : (
-                    <Select onValueChange={field.onChange} value={field.value} dir={effectiveLang === 'ar' ? 'rtl' : 'ltr'} disabled={productTypes.length === 0}>
                       <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder={productTypes.length === 0 ? t.noTypesAvailable : t.typePlaceholder} />
-                        </SelectTrigger>
+                        <SearchableProductTypeFilter
+                          value={field.value || ''}
+                          onValueChange={field.onChange}
+                          availableProductTypes={productTypes}
+                          lang={effectiveLang}
+                          placeholder={productTypes.length === 0 ? t.noTypesAvailable : t.typePlaceholder}
+                          disabled={productTypes.length === 0}
+                          allowEmpty={true}
+                          emptyText={effectiveLang === 'ar' ? 'اختر نوع المنتج...' : 'Select product type...'}
+                        />
                       </FormControl>
-                      <SelectContent>
-                        {productTypes.map(typeDef => (
-                          <SelectItem key={typeDef.id} value={typeDef.id}>
-                            {effectiveLang === 'ar' ? typeDef.name_ar : typeDef.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
                     )}
                     <FormMessage />
                   </FormItem>
