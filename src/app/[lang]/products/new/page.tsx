@@ -171,7 +171,6 @@ export default function AddNewProductPage() {
     isGlobalProductDescription: effectiveLang === 'ar' ? 'إذا تم تحديده، سيكون المنتج متاحًا للعرض والطلب من أي فرع. يمكن تحديد فرع أساسي لأغراض تنظيمية.' : 'If checked, this product will be visible and orderable from any branch. A primary branch can be set for organizational purposes.',
   };
 
-
   const FormSchema = z.object({
     name: z.string().min(1, { message: t.nameRequired }),
     type: z.string().min(1, { message: t.typeRequired }), // Type is now string (ID)
@@ -336,6 +335,43 @@ export default function AddNewProductPage() {
 
   const [isSaving, setIsSaving] = React.useState(false);
   const isGlobalProductWatcher = form.watch('isGlobalProduct');
+  const categoryWatcher = form.watch('category');
+
+  // Dynamic labels based on category selection
+  const getDynamicStockLabel = () => {
+    if (categoryWatcher === 'Rental') {
+      return effectiveLang === 'ar' ? 'عدد مرات الإيجار' : 'Number of Rental Times';
+    }
+    return effectiveLang === 'ar' ? 'الكمية الأولية' : 'Initial Stock';
+  };
+
+  const getDynamicStockPlaceholder = () => {
+    if (categoryWatcher === 'Rental') {
+      return effectiveLang === 'ar' ? 'أدخل عدد مرات الإيجار المتاحة' : 'Enter available rental times';
+    }
+    return effectiveLang === 'ar' ? 'أدخل الكمية الأولية للمنتج' : 'Enter initial stock quantity';
+  };
+
+  const getDynamicStockRequired = () => {
+    if (categoryWatcher === 'Rental') {
+      return effectiveLang === 'ar' ? 'عدد مرات الإيجار مطلوب' : 'Number of rental times is required';
+    }
+    return effectiveLang === 'ar' ? 'الكمية الأولية مطلوبة' : 'Initial stock is required';
+  };
+
+  const getDynamicStockMin = () => {
+    if (categoryWatcher === 'Rental') {
+      return effectiveLang === 'ar' ? 'يجب أن يكون عدد مرات الإيجار صفرًا أو أكثر' : 'Number of rental times must be zero or more';
+    }
+    return effectiveLang === 'ar' ? 'يجب أن تكون الكمية الأولية صفرًا أو أكثر' : 'Initial stock must be zero or more';
+  };
+
+  const getDynamicStockDescription = () => {
+    if (categoryWatcher === 'Rental') {
+      return effectiveLang === 'ar' ? 'عدد المرات التي يمكن تأجير هذا المنتج فيها' : 'Number of times this product can be rented';
+    }
+    return effectiveLang === 'ar' ? 'الكمية المتاحة من هذا المنتج للبيع' : 'Available quantity of this product for sale';
+  };
 
   React.useEffect(() => {
     if (isGlobalProductWatcher) {
@@ -656,12 +692,12 @@ export default function AddNewProductPage() {
                 name="initialStock"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t.initialStockLabel}</FormLabel>
+                    <FormLabel>{getDynamicStockLabel()}</FormLabel>
                     <FormControl>
                       <Input
                         type="number"
                         step="1"
-                        placeholder={t.initialStockPlaceholder}
+                        placeholder={getDynamicStockPlaceholder()}
                         {...field}
                         value={field.value === 0 ? "" : field.value}
                         onChange={e => field.onChange(e.target.value === '' ? 0 : parseInt(e.target.value, 10) || 0)}
@@ -673,6 +709,9 @@ export default function AddNewProductPage() {
                         }}
                       />
                     </FormControl>
+                    <FormDescription className="text-xs text-muted-foreground">
+                      {getDynamicStockDescription()}
+                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
