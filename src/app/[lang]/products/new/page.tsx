@@ -24,6 +24,7 @@ import { useAuth } from '@/context/AuthContext';
 import { ref, get, push, set, update } from 'firebase/database';
 import { database } from '@/lib/firebase';
 import { productCategoryValues, productSizeValues } from '@/lib/mock-data';
+import { checkProductCodeExists } from '@/lib/product-utils';
 import { ManageProductTypesDialog } from '@/components/products/ManageProductTypesDialog';
 import { SearchableProductTypeFilter } from '@/components/products/SearchableProductTypeFilter';
 
@@ -162,6 +163,9 @@ export default function AddNewProductPage() {
     manualBarcodePlaceholder: effectiveLang === 'ar' ? 'مثال: 15 (سيصبح 90000015)' : 'e.g., 15 (will become 90000015)',
     manualBarcodeRequired: effectiveLang === 'ar' ? 'رقم الباركود مطلوب عند الإدخال اليدوي' : 'Barcode number is required for manual entry',
     manualBarcodeNumbersOnly: effectiveLang === 'ar' ? 'رقم الباركود يجب أن يحتوي على أرقام فقط' : 'Barcode number must contain only digits',
+    barcodeAlreadyExists: effectiveLang === 'ar' ? 'رقم الباركود موجود بالفعل!' : 'Barcode already exists!',
+    barcodeAlreadyExistsDescription: effectiveLang === 'ar' ? 'رقم الباركود الذي أدخلته موجود بالفعل لمنتج آخر. يرجى اختيار رقم مختلف.' : 'The barcode number you entered already exists for another product. Please choose a different number.',
+    checkingBarcode: effectiveLang === 'ar' ? 'جار التحقق من الباركود...' : 'Checking barcode...',
     isGlobalProductLabel: effectiveLang === 'ar' ? 'عرض المنتج في جميع الفروع؟' : 'Make product visible in all branches?',
     isGlobalProductDescription: effectiveLang === 'ar' ? 'إذا تم تحديده، سيكون المنتج متاحًا للعرض والطلب من أي فرع. يمكن تحديد فرع أساسي لأغراض تنظيمية.' : 'If checked, this product will be visible and orderable from any branch. A primary branch can be set for organizational purposes.',
   };
@@ -383,6 +387,18 @@ export default function AddNewProductPage() {
         // Manual barcode: add 90000000 to the entered number
         const manualNumber = parseInt(data.manualBarcodeNumber.trim());
         productCodeString = String(90000000 + manualNumber);
+
+        // Check if the manual barcode already exists
+        const barcodeExists = await checkProductCodeExists(productCodeString);
+        if (barcodeExists) {
+          toast({
+            title: t.barcodeAlreadyExists,
+            description: t.barcodeAlreadyExistsDescription,
+            variant: "destructive"
+          });
+          setIsSaving(false);
+          return;
+        }
       } else {
         // Auto-generated barcode
         const counterRef = ref(database, "system_settings/productCodeConfig");
@@ -398,6 +414,15 @@ export default function AddNewProductPage() {
           await update(counterRef, { nextProductCode: nextCode + 1 });
         }
         productCodeString = String(nextCode);
+
+        // For auto-generated codes, also check for duplicates (just in case)
+        const barcodeExists = await checkProductCodeExists(productCodeString);
+        if (barcodeExists) {
+          // If auto-generated code exists, increment and try again
+          console.warn(`Auto-generated barcode ${productCodeString} already exists, incrementing...`);
+          await update(counterRef, { nextProductCode: nextCode + 2 });
+          productCodeString = String(nextCode + 1);
+        }
       }
 
       const productStatus: ProductStatus = 'Available';
