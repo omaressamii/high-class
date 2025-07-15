@@ -113,6 +113,7 @@ export default function AddNewProductPage() {
     saving: effectiveLang === 'ar' ? 'جار الحفظ...' : 'Saving...',
     productSavedSuccess: effectiveLang === 'ar' ? 'تم حفظ المنتج بنجاح!' : 'Product saved successfully!',
     productSavedError: effectiveLang === 'ar' ? 'فشل حفظ المنتج. حاول مرة أخرى.' : 'Failed to save product. Please try again.',
+    readyForNextProduct: effectiveLang === 'ar' ? 'سيتم تحديث الصفحة تلقائياً لإضافة منتج آخر...' : 'Page will refresh automatically to add another product...',
     loadingPage: effectiveLang === 'ar' ? 'جار تحميل الصفحة...' : 'Loading page...',
     nameLabel: effectiveLang === 'ar' ? 'اسم المنتج' : 'Product Name',
     namePlaceholder: effectiveLang === 'ar' ? 'مثال: فستان سهرة أنيق' : 'e.g., Elegant Evening Gown',
@@ -485,50 +486,13 @@ export default function AddNewProductPage() {
 
       toast({
         title: t.productSavedSuccess,
-        description: `${(cleanProductData.name || 'Product')} ${effectiveLang === 'ar' ? 'أضيف بنجاح برقم باركود' : 'has been added with barcode'}: ${productCodeString}.`,
+        description: `${(cleanProductData.name || 'Product')} ${effectiveLang === 'ar' ? 'أضيف بنجاح برقم باركود' : 'has been added with barcode'}: ${productCodeString}. ${t.readyForNextProduct}`,
       });
 
-      // Reset form with proper default values
-      const defaultValues = {
-        name: '',
-        type: undefined,
-        category: undefined,
-        size: undefined,
-        initialStock: 0,
-        price: undefined,
-        imageUrl: '',
-        notes: '',
-        dataAiHint: '',
-        branchId: (currentUser?.branchId && !hasPermission('view_all_branches')) ? currentUser.branchId : undefined,
-        isGlobalProduct: false,
-        useManualBarcode: false,
-        manualBarcodeNumber: '',
-      };
-
-      form.reset(defaultValues);
-
-      // Reset image state
-      setImageFile(null);
-      setImagePreview(null);
-      setIsUploading(false);
-      setUploadProgress(null);
-
-      // Reset auto-merge state
-      setOriginalName('');
-      setIsAutoMerging(false);
-
-      // Reset file input element with a small delay to ensure DOM is updated
+      // Refresh the page after a short delay to allow the toast to be seen
       setTimeout(() => {
-        const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
-        if (fileInput) {
-          fileInput.value = '';
-        }
-
-        // Force re-trigger validation for required fields if needed
-        if (currentUser?.branchId && !hasPermission('view_all_branches')) {
-          form.setValue('branchId', currentUser.branchId);
-        }
-      }, 100);
+        window.location.reload();
+      }, 2000); // 2 seconds delay to show the success message
     } catch (error: any) {
       console.error("Error adding product:", error);
       toast({
