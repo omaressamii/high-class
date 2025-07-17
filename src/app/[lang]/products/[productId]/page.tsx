@@ -14,6 +14,7 @@ import { EditProductButton } from '@/components/products/EditProductButton';
 import { ProductOrderHistoryTable } from '@/components/products/ProductOrderHistoryTable';
 import { PrintBarcodeButton } from '@/components/products/PrintBarcodeButton';
 import { ProductDetailsAuthWrapper } from '@/components/products/ProductDetailsAuthWrapper';
+import { ProductQuantityDetails } from '@/components/products/ProductQuantityDetails';
 
 interface ProductDetailsPageProps {
   params: { lang: string; productId: string };
@@ -334,30 +335,7 @@ export default async function ProductDetailsPage({ params: routeParams }: { para
           </div>
 
           <hr/>
-          <div>
-            <h3 className="font-semibold text-lg mb-3 text-primary flex items-center">
-              <Package className="mr-2 h-5 w-5" />
-              {t.quantityDetails}
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3 text-sm">
-              <div className="flex items-center">
-                <PackageSearch className="h-4 w-4 mr-2 text-muted-foreground" />
-                <span>{t.initialStockLabel}: <span className="font-medium">{product.initialStock}</span></span>
-              </div>
-              <div className="flex items-center">
-                <PackageX className="h-4 w-4 mr-2 text-muted-foreground" />
-                <span>{t.rentedQuantityLabel}: <span className="font-medium">{product.quantityRented}</span></span>
-              </div>
-              <div className="flex items-center">
-                <PackageCheck className="h-4 w-4 mr-2 text-muted-foreground" />
-                <span>{t.currentStockLabel}: <span className="font-medium">{product.quantityInStock}</span></span>
-              </div>
-              <div className="flex items-center">
-                <PackageCheck className="h-4 w-4 mr-2 text-green-600" />
-                <span className="font-semibold">{t.availableForOperationLabel}: <span className="font-bold text-green-600">{availableForOperation}</span></span>
-              </div>
-            </div>
-          </div>
+          <ProductQuantityDetails product={product} lang={effectiveLang} />
 
           {product.notes && (
             <>

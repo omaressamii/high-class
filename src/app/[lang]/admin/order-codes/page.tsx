@@ -11,11 +11,12 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { useOrderCodeMonitor } from '@/hooks/useOrderCodeMonitor';
 import { findDuplicateOrderCodes, repairDuplicateOrderCodes } from '@/lib/orderValidation';
-import { 
-  AlertTriangle, 
-  CheckCircle, 
-  RefreshCw, 
-  Wrench, 
+import Link from 'next/link';
+import {
+  AlertTriangle,
+  CheckCircle,
+  RefreshCw,
+  Wrench,
   Database,
   TrendingUp,
   Activity
@@ -241,6 +242,26 @@ export default function OrderCodesAdminPage() {
               </div>
             </div>
           )}
+        </CardContent>
+      </Card>
+
+      {/* Quick Links */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Database className="h-5 w-5" />
+            {effectiveLang === 'ar' ? 'أدوات إدارية أخرى' : 'Other Admin Tools'}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex gap-4">
+            <Button asChild variant="outline">
+              <Link href={`/${effectiveLang}/admin/quantity-sync`}>
+                <RefreshCw className="mr-2 h-4 w-4" />
+                {effectiveLang === 'ar' ? 'مزامنة كميات المنتجات' : 'Sync Product Quantities'}
+              </Link>
+            </Button>
+          </div>
         </CardContent>
       </Card>
 

@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { DollarSign, Tag, Layers, Ruler, Info, Eye, PackageCheck, ShoppingCart, Loader2, ScanBarcode } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
+import { useRealtimeOrders } from '@/context/RealtimeDataContext';
 
 interface ProductCardProps {
   product: Product;
@@ -21,6 +22,7 @@ interface ProductCardProps {
 const ProductCard = React.memo(function ProductCard({ product, allProductTypes, lang: propLang }: ProductCardProps) {
   const lang = propLang === 'en' ? 'en' : 'ar';
   const { isLoading: authIsLoading, hasPermission, currentUser } = useAuth();
+  const { orders } = useRealtimeOrders();
 
   const getStatusVariant = (status: Product['status']) => {
     switch (status) {
@@ -42,6 +44,7 @@ const ProductCard = React.memo(function ProductCard({ product, allProductTypes, 
     size: lang === 'ar' ? 'المقاس' : 'Size',
     status: lang === 'ar' ? 'الحالة' : 'Status',
     availableQuantity: lang === 'ar' ? 'المتاح حاليًا' : 'Currently Available',
+    rentedQuantity: lang === 'ar' ? 'الكمية المؤجرة حاليًا' : 'Currently Rented Quantity',
     currencySymbol: lang === 'ar' ? 'ج.م' : 'EGP',
     statusAvailable: lang === 'ar' ? 'متوفر' : 'Available',
     statusRented: lang === 'ar' ? 'مستأجر' : 'Rented',
@@ -73,7 +76,31 @@ const ProductCard = React.memo(function ProductCard({ product, allProductTypes, 
     return statusValue;
   };
 
-  const availableForOperation = product.quantityInStock - product.quantityRented;
+  // Calculate actual rented quantity from active orders
+  const actualRentedQuantity = React.useMemo(() => {
+    if (!orders || orders.length === 0) return product.quantityRented || 0;
+
+    const activeStatuses = ['Ongoing', 'Pending Preparation', 'Prepared', 'Delivered to Customer', 'Overdue'];
+
+    return orders
+      .filter(order =>
+        order.transactionType === 'Rental' &&
+        activeStatuses.includes(order.status)
+      )
+      .reduce((total, order) => {
+        if (order.items && order.items.length > 0) {
+          // New format with items array
+          const productItems = order.items.filter(item => item.productId === product.id);
+          return total + productItems.reduce((sum, item) => sum + (item.quantity || 0), 0);
+        } else if (order.productId === product.id) {
+          // Legacy format with single productId
+          return total + 1;
+        }
+        return total;
+      }, 0);
+  }, [orders, product.id, product.quantityRented]);
+
+  const availableForOperation = product.quantityInStock - actualRentedQuantity;
 
   return (
     <Card className="flex flex-col overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 rounded-lg">
@@ -110,6 +137,10 @@ const ProductCard = React.memo(function ProductCard({ product, allProductTypes, 
           <div className="flex items-center">
             <Layers className="h-4 w-4 mr-2 rtl:ml-2 rtl:mr-0 text-primary" />
             <span>{t.status}: <Badge variant={getStatusVariant(product.status)} className="ml-1 rtl:mr-1 rtl:ml-0">{statusDisplay(product.status)}</Badge></span>
+          </div>
+          <div className="flex items-center">
+            <PackageCheck className="h-4 w-4 mr-2 rtl:ml-2 rtl:mr-0 text-blue-600" />
+            <span className="font-semibold">{t.rentedQuantity}: <span className="font-bold text-blue-700">{actualRentedQuantity}</span></span>
           </div>
           <div className="flex items-center">
             <PackageCheck className="h-4 w-4 mr-2 rtl:ml-2 rtl:mr-0 text-green-600" />
