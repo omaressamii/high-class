@@ -164,7 +164,7 @@ const DeliverOrdersTableComponent = ({ orders, onMarkAsDelivered, onViewDetails,
                     variant="default"
                     size="sm"
                     onClick={() => onMarkAsDelivered(order.id)}
-                    disabled={order.remainingAmount && order.remainingAmount > 0}
+                    disabled={!!(order.remainingAmount && order.remainingAmount > 0)}
                     className={`${order.remainingAmount && order.remainingAmount > 0
                       ? 'bg-gray-400 hover:bg-gray-400 cursor-not-allowed'
                       : 'bg-green-600 hover:bg-green-700'} text-white`}

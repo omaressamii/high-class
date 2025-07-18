@@ -5,7 +5,7 @@
 import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import type { Product, ProductTypeDefinition } from '@/types'; // Added ProductTypeDefinition
+import type { Product, ProductTypeDefinition, Order } from '@/types'; // Added ProductTypeDefinition and Order
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -22,7 +22,7 @@ interface ProductCardProps {
 const ProductCard = React.memo(function ProductCard({ product, allProductTypes, lang: propLang }: ProductCardProps) {
   const lang = propLang === 'en' ? 'en' : 'ar';
   const { isLoading: authIsLoading, hasPermission, currentUser } = useAuth();
-  const { orders } = useRealtimeOrders();
+  const { orders }: { orders: Order[] } = useRealtimeOrders();
 
   const getStatusVariant = (status: Product['status']) => {
     switch (status) {

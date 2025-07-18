@@ -144,6 +144,9 @@ export interface Order {
   items: OrderItem[];
   customerId: string;
   customerName?: string;
+  // Legacy format support - for backward compatibility
+  productId?: string;
+  productName?: string;
   sellerId?: string;
   sellerName?: string;
   processedByUserId?: string;
