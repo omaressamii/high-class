@@ -83,12 +83,13 @@ const CustomerDetailClientPage = ({ initialCustomerDetails, lang, customerId }: 
   };
 
   const displayStatus = (status: OrderStatus) => {
-    const statusMap = {
-      'Pending': lang === 'ar' ? 'قيد الانتظار' : 'Pending',
-      'Processing': lang === 'ar' ? 'قيد المعالجة' : 'Processing',
-      'Ready': lang === 'ar' ? 'جاهز' : 'Ready',
-      'Delivered': lang === 'ar' ? 'تم التسليم' : 'Delivered',
-      'Returned': lang === 'ar' ? 'تم الإرجاع' : 'Returned',
+    const statusMap: Record<OrderStatus, string> = {
+      'Pending Preparation': lang === 'ar' ? 'قيد التحضير' : 'Pending Preparation',
+      'Prepared': lang === 'ar' ? 'جاهز' : 'Prepared',
+      'Delivered to Customer': lang === 'ar' ? 'تم التسليم للعميل' : 'Delivered to Customer',
+      'Completed': lang === 'ar' ? 'مكتمل' : 'Completed',
+      'Ongoing': lang === 'ar' ? 'جاري' : 'Ongoing',
+      'Overdue': lang === 'ar' ? 'متأخر' : 'Overdue',
       'Cancelled': lang === 'ar' ? 'ملغي' : 'Cancelled',
     };
     return statusMap[status] || status;
@@ -96,11 +97,12 @@ const CustomerDetailClientPage = ({ initialCustomerDetails, lang, customerId }: 
 
   const getStatusVariant = (status: OrderStatus) => {
     switch (status) {
-      case 'Delivered': return 'default';
-      case 'Ready': return 'secondary';
-      case 'Processing': return 'outline';
-      case 'Pending': return 'outline';
-      case 'Returned': return 'secondary';
+      case 'Delivered to Customer': return 'default';
+      case 'Completed': return 'default';
+      case 'Prepared': return 'secondary';
+      case 'Pending Preparation': return 'outline';
+      case 'Ongoing': return 'outline';
+      case 'Overdue': return 'destructive';
       case 'Cancelled': return 'destructive';
       default: return 'outline';
     }
@@ -108,11 +110,12 @@ const CustomerDetailClientPage = ({ initialCustomerDetails, lang, customerId }: 
 
   const getStatusIcon = (status: OrderStatus) => {
     switch (status) {
-      case 'Delivered': return <CheckCircle className="h-3 w-3" />;
-      case 'Ready': return <CheckCircle className="h-3 w-3" />;
-      case 'Processing': return <Clock className="h-3 w-3" />;
-      case 'Pending': return <AlertTriangle className="h-3 w-3" />;
-      case 'Returned': return <CheckCircle className="h-3 w-3" />;
+      case 'Delivered to Customer': return <CheckCircle className="h-3 w-3" />;
+      case 'Completed': return <CheckCircle className="h-3 w-3" />;
+      case 'Prepared': return <CheckCircle className="h-3 w-3" />;
+      case 'Pending Preparation': return <AlertTriangle className="h-3 w-3" />;
+      case 'Ongoing': return <Clock className="h-3 w-3" />;
+      case 'Overdue': return <AlertTriangle className="h-3 w-3" />;
       case 'Cancelled': return <XCircle className="h-3 w-3" />;
       default: return <Clock className="h-3 w-3" />;
     }

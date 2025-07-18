@@ -1,4 +1,7 @@
 
+/* Tailwind CSS directives */
+/* @tailwind directives are processed by PostCSS and Tailwind CSS */
+
 @import "../styles/theme.css";
 @import "../styles/print.css";
 
