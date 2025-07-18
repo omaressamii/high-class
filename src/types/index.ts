@@ -285,7 +285,7 @@ export const PERMISSION_GROUPS: PermissionGroup[] = [
   },
   {
     id: 'database_group',
-    nameKey: 'group_database_management',
+    nameKey: 'إدارة قاعدة البيانات:',
     permissions: ['database_backup', 'database_restore'],
   },
 ];
