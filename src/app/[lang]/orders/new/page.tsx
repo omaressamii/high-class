@@ -17,6 +17,8 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { PageTitle } from '@/components/shared/PageTitle';
 import { DatePicker } from '@/components/shared/DatePicker';
 import { ProductSelector } from '@/components/orders/ProductSelector';
+import { SearchableCustomerFilter } from '@/components/orders/SearchableCustomerFilter';
+import { SearchableSellerFilter } from '@/components/orders/SearchableSellerFilter';
 import { ArrowLeft, PlusCircle, Save, ShoppingBag, Loader, Info, Store, Trash2 } from 'lucide-react';
 import type { TransactionType, Product, User, Order, Customer, FinancialTransaction, Branch, PaymentMethod, OrderItem } from '@/types';
 import { paymentMethodValues } from '@/types';
@@ -837,21 +839,17 @@ export default function AddNewOrderPage() {
                         <span>{t.loadingCustomers}</span>
                       </div>
                     ) : (
-                      <Select onValueChange={field.onChange} value={field.value} dir={effectiveLang === 'ar' ? 'rtl' : 'ltr'}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder={t.customerIdPlaceholder} />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {availableCustomers.length === 0 && <SelectItem value="no-customers-placeholder" disabled>{t.noCustomersAvailable}</SelectItem>}
-                          {availableCustomers.map(customer => (
-                            <SelectItem key={customer.id} value={customer.id}>
-                              {customer.fullName} ({customer.phoneNumber})
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <FormControl>
+                        <SearchableCustomerFilter
+                          value={field.value || ''}
+                          onValueChange={field.onChange}
+                          availableCustomers={availableCustomers}
+                          lang={effectiveLang}
+                          placeholder={availableCustomers.length === 0 ? t.noCustomersAvailable : t.customerIdPlaceholder}
+                          disabled={availableCustomers.length === 0}
+                          allowEmpty={false}
+                        />
+                      </FormControl>
                     )}
                     <FormMessage />
                   </FormItem>
@@ -869,20 +867,19 @@ export default function AddNewOrderPage() {
                         <span>{t.loadingSellers}</span>
                       </div>
                     ) : (
-                      <Select onValueChange={field.onChange} value={field.value || NO_SELLER_VALUE} dir={effectiveLang === 'ar' ? 'rtl' : 'ltr'}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder={t.sellerIdPlaceholder} />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value={NO_SELLER_VALUE}>{t.noSpecificSeller}</SelectItem>
-                          {sellersList.length === 0 && !field.value && <SelectItem value="no-sellers-placeholder" disabled>{t.noSellersAvailable}</SelectItem>}
-                          {sellersList.map(seller => (
-                            <SelectItem key={seller.id} value={seller.id}>{seller.fullName} ({seller.username})</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <FormControl>
+                        <SearchableSellerFilter
+                          value={field.value || NO_SELLER_VALUE}
+                          onValueChange={field.onChange}
+                          availableSellers={sellersList}
+                          lang={effectiveLang}
+                          placeholder={t.sellerIdPlaceholder}
+                          disabled={false}
+                          allowEmpty={false}
+                          noSellerValue={NO_SELLER_VALUE}
+                          noSellerText={t.noSpecificSeller}
+                        />
+                      </FormControl>
                     )}
                     <FormMessage />
                   </FormItem>
