@@ -156,7 +156,7 @@ const UserCard = React.memo(function UserCard({ user, lang: propLang, onUserDele
           <div className="text-xs text-muted-foreground">
             {lang === 'ar' ? 'صلاحيات رئيسية: ' : 'Key Permissions: '}
             {user.permissions.includes('users_manage') ? (lang === 'ar' ? 'إدارة المستخدمين، ' : 'Manage Users, ') : ''}
-            {user.permissions.includes('products_manage') ? (lang === 'ar' ? 'إدارة المنتجات، ' : 'Manage Products, ') : ''}
+            {user.permissions.includes('products_edit') ? (lang === 'ar' ? 'إدارة المنتجات، ' : 'Manage Products, ') : ''}
             {user.permissions.length > 2 ? '...' : ''}
           </div>
         )}
