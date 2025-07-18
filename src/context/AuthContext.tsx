@@ -153,11 +153,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return false;
       }
 
-      const usernameMatch = foundUser.username === usernameInput;
-      const passwordMatch = foundUser.password === passwordAttempt;
+      // TypeScript assertion: foundUser is guaranteed to be User at this point
+      const user = foundUser as User;
+      const usernameMatch = user.username === usernameInput;
+      const passwordMatch = user.password === passwordAttempt;
 
       if (usernameMatch && passwordMatch) {
-        await updateUserSession(foundUser);
+        await updateUserSession(user);
         router.push(`/${lang}/dashboard`); // Redirect to the new dashboard on successful login
       } else {
         setCurrentUser(null);
