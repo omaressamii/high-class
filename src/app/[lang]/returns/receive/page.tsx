@@ -688,8 +688,8 @@ export default function ReceiveReturnsPage() {
         </Card>
       )}
 
-      <Dialog open={isCustomerContactDialogOpen} onOpenChange={setIsCustomerContactDialogOpen} dir={effectiveLang === 'ar' ? 'rtl' : 'ltr'}>
-        <DialogContent className="sm:max-w-md">
+      <Dialog open={isCustomerContactDialogOpen} onOpenChange={setIsCustomerContactDialogOpen}>
+        <DialogContent className={`sm:max-w-md ${effectiveLang === 'ar' ? 'rtl' : 'ltr'}`}>
           <DialogHeader>
             <DialogTitle>{t.customerContactDialogTitle}</DialogTitle>
           </DialogHeader>
@@ -713,8 +713,8 @@ export default function ReceiveReturnsPage() {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={isReturnDetailsModalOpen} onOpenChange={setIsReturnDetailsModalOpen} dir={effectiveLang === 'ar' ? 'rtl' : 'ltr'}>
-        <DialogContent className="sm:max-w-lg">
+      <Dialog open={isReturnDetailsModalOpen} onOpenChange={setIsReturnDetailsModalOpen}>
+        <DialogContent className={`sm:max-w-lg ${effectiveLang === 'ar' ? 'rtl' : 'ltr'}`}>
           <DialogHeader>
             <DialogTitle>{t.returnDetailsModalTitle}</DialogTitle>
             {selectedOrderForModal && <CardDescription>{t.orderCodeLabel}: {selectedOrderForModal.orderCode || selectedOrderForModal.id} - {displayOrderItemsShort(selectedOrderForModal.items)}</CardDescription>}

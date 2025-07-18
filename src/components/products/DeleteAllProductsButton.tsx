@@ -104,7 +104,7 @@ export function DeleteAllProductsButton({ lang }: DeleteAllProductsButtonProps) 
           {t.deleteAllProducts}
         </Button>
       </AlertDialogTrigger>
-      <AlertDialogContent dir={lang === 'ar' ? 'rtl' : 'ltr'}>
+      <AlertDialogContent className={lang === 'ar' ? 'rtl' : 'ltr'}>
         <AlertDialogHeader>
           <AlertDialogTitle className="flex items-center">
              <ShieldAlert className="mr-2 h-6 w-6 text-destructive rtl:ml-2 rtl:mr-0" />

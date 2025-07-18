@@ -157,10 +157,10 @@ export function ApplyDiscountDialog({
         customerId: order.customerId,
         customerName: order.customerName || '',
         productName: order.items.length > 0 ? (order.items[0]?.productName || "Multiple Items") : "N/A",
-        productId: order.items.length > 0 ? (order.items[0]?.productId || null) : null,
+        productId: order.items.length > 0 ? (order.items[0]?.productId || undefined) : undefined,
         notes: `Discount applied to Order ID: ${order.id}, Reason: ${discountReason}`,
-        branchId: order.branchId || null,
-        branchName: order.branchName || null,
+        branchId: order.branchId || undefined,
+        branchName: order.branchName || undefined,
         createdAt: new Date().toISOString(),
       };
 
@@ -208,8 +208,8 @@ export function ApplyDiscountDialog({
                           !order.discountApplied;
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen} dir={lang === 'ar' ? 'rtl' : 'ltr'}>
-      <DialogContent className="sm:max-w-md">
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogContent className={`sm:max-w-md ${lang === 'ar' ? 'rtl' : 'ltr'}`}>
         <DialogHeader>
           <DialogTitle className="flex items-center">
             <Percent className="mr-2 h-5 w-5 text-primary rtl:ml-2 rtl:mr-0" />

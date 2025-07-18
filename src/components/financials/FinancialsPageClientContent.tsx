@@ -150,7 +150,7 @@ export function FinancialsPageClientContent({ initialTransactions, allBranches, 
         if ((tx.processedByUserName || t.unknownProcessor) !== selectedProcessor) {
           return false;
         }
-         if (!tx.paymentMethod || tx.paymentMethod === '') {
+         if (!tx.paymentMethod) {
            return false;
         }
       }

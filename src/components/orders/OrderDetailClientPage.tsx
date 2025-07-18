@@ -677,7 +677,7 @@ export function OrderDetailClientPage({ initialOrderDetails, lang, orderId }: Or
 
 
       <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
-        <AlertDialogContent dir={effectiveLang === 'ar' ? 'rtl' : 'ltr'}>
+        <AlertDialogContent className={effectiveLang === 'ar' ? 'rtl' : 'ltr'}>
           <AlertDialogHeader>
             <AlertDialogTitle>{t.confirmDeleteTitle}</AlertDialogTitle>
             <AlertDialogDescription>

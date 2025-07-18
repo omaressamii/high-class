@@ -50,8 +50,8 @@ export function TailorReceiptDialog({ isOpen, setIsOpen, order, lang }: TailorRe
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen} dir={lang === 'ar' ? 'rtl' : 'ltr'}>
-      <DialogContent className="sm:max-w-md max-h-[80vh] overflow-y-auto printable-dialog-content">
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogContent className={`sm:max-w-md max-h-[80vh] overflow-y-auto printable-dialog-content ${lang === 'ar' ? 'rtl' : 'ltr'}`}>
         <DialogHeader className="no-print">
           <DialogTitle className="flex items-center">
             <Scissors className="mr-2 h-5 w-5 text-primary rtl:ml-2 rtl:mr-0" />

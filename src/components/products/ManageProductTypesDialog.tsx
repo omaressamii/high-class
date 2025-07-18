@@ -131,8 +131,8 @@ export function ManageProductTypesDialog({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen} dir={lang}>
-      <DialogContent className="sm:max-w-lg">
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogContent className={`sm:max-w-lg ${lang === 'ar' ? 'rtl' : 'ltr'}`}>
         <DialogHeader>
           <DialogTitle className="flex items-center">
             <ListChecks className="mr-2 h-5 w-5 rtl:ml-2 rtl:mr-0" />

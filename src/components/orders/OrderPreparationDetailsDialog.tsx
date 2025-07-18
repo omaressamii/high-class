@@ -57,8 +57,8 @@ export function OrderPreparationDetailsDialog({ isOpen, setIsOpen, order, lang }
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen} dir={lang === 'ar' ? 'rtl' : 'ltr'}>
-      <DialogContent className="sm:max-w-md printable-dialog-content">
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogContent className={`sm:max-w-md printable-dialog-content ${lang === 'ar' ? 'rtl' : 'ltr'}`}>
         <DialogHeader>
           <DialogTitle className="flex items-center">
             <PackageSearch className="mr-2 h-5 w-5 text-primary rtl:ml-2 rtl:mr-0" />

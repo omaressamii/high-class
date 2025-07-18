@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useForm, type SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -31,8 +31,33 @@ export function OptimizerForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Create dynamic translations
+  const t = {
+    formSchema_minChars: lang === 'ar' ? 'يجب أن يكون وصف المنتج 20 حرفًا على الأقل.' : 'Product description must be at least 20 characters.',
+    formSchema_maxChars: lang === 'ar' ? 'يجب ألا يتجاوز وصف المنتج 1000 حرف.' : 'Product description must not exceed 1000 characters.',
+    enhanceListingTitle: lang === 'ar' ? 'عزز قائمتك' : 'Enhance Your Listing',
+    provideDescription: lang === 'ar' ? 'قدم وصف المنتج الحالي ودع الذكاء الاصطناعي يقترح تحسينات.' : 'Provide your current product description and let our AI suggest improvements.',
+    productDescriptionLabel: lang === 'ar' ? 'وصف المنتج' : 'Product Description',
+    productDescriptionPlaceholder: lang === 'ar' ? 'مثال: فستان زفاف حريري جميل بذيل طويل وتفاصيل دانتيل...' : 'e.g., Beautiful silk wedding dress with long train and lace details...',
+    optimizingButton: lang === 'ar' ? 'تحسين...' : 'Optimizing...',
+    getSuggestionsButton: lang === 'ar' ? 'احصل على اقتراحات' : 'Get Suggestions',
+    errorTitle: lang === 'ar' ? 'خطأ' : 'Error',
+    suggestedPhrasesTitle: lang === 'ar' ? 'العبارات المقترحة' : 'Suggested Phrases',
+    noSuggestionsTitle: lang === 'ar' ? 'لا توجد اقتراحات' : 'No Suggestions',
+    noSuggestionsDescription: lang === 'ar' ? 'لم يتمكن الذكاء الاصطناعي من إنشاء عبارات محددة لهذا الوصف. حاول تقديم المزيد من التفاصيل أو زاوية مختلفة.' : "The AI couldn't generate specific phrases for this description. Try providing more details or a different angle."
+  };
+
+  // Create dynamic schema with localized messages
+  const currentFormSchema = useMemo(() => z.object({
+    productDescription: z.string().min(20, {
+      message: t.formSchema_minChars,
+    }).max(1000, {
+      message: t.formSchema_maxChars,
+    }),
+  }), [t.formSchema_minChars, t.formSchema_maxChars]);
+
   const form = useForm<FormData>({
-    resolver: zodResolver(FormSchema),
+    resolver: zodResolver(currentFormSchema),
     defaultValues: {
       productDescription: '',
     },
@@ -54,30 +79,7 @@ export function OptimizerForm() {
     }
   };
 
-  const t = {
-    formSchema_minChars: lang === 'ar' ? 'يجب أن لا يقل وصف المنتج عن 20 حرفًا.' : 'Product description must be at least 20 characters.',
-    formSchema_maxChars: lang === 'ar' ? 'يجب أن لا يتجاوز وصف المنتج 1000 حرف.' : 'Product description must not exceed 1000 characters.',
-    enhanceListingTitle: lang === 'ar' ? 'عزز قائمتك' : 'Enhance Your Listing',
-    provideDescription: lang === 'ar' ? 'قدم وصف المنتج الحالي ودع الذكاء الاصطناعي يقترح تحسينات.' : 'Provide your current product description and let our AI suggest improvements.',
-    productDescriptionLabel: lang === 'ar' ? 'وصف المنتج' : 'Product Description',
-    productDescriptionPlaceholder: lang === 'ar' ? 'مثال: فستان زفاف حريري جميل بذيل طويل وتفاصيل دانتيل...' : 'e.g., Beautiful silk wedding dress with long train and lace details...',
-    optimizingButton: lang === 'ar' ? 'تحسين...' : 'Optimizing...',
-    getSuggestionsButton: lang === 'ar' ? 'احصل على اقتراحات' : 'Get Suggestions',
-    errorTitle: lang === 'ar' ? 'خطأ' : 'Error',
-    suggestedPhrasesTitle: lang === 'ar' ? 'العبارات المقترحة' : 'Suggested Phrases',
-    noSuggestionsTitle: lang === 'ar' ? 'لا توجد اقتراحات' : 'No Suggestions',
-    noSuggestionsDescription: lang === 'ar' ? 'لم يتمكن الذكاء الاصطناعي من إنشاء عبارات محددة لهذا الوصف. حاول تقديم المزيد من التفاصيل أو زاوية مختلفة.' : "The AI couldn't generate specific phrases for this description. Try providing more details or a different angle."
-  };
-  
-  // Update Zod schema messages dynamically based on language
-  const currentFormSchema = z.object({
-    productDescription: z.string().min(20, {
-      message: t.formSchema_minChars,
-    }).max(1000, {
-      message: t.formSchema_maxChars,
-    }),
-  });
-  form.resolver = zodResolver(currentFormSchema);
+
 
 
   return (
