@@ -76,12 +76,20 @@ export default function QuantitySyncAdminPage() {
           <PageTitle className="mb-2">{t.pageTitle}</PageTitle>
           <p className="text-muted-foreground">{t.pageDescription}</p>
         </div>
-        <Button asChild variant="outline">
-          <Link href={`/${effectiveLang}/admin/order-codes`}>
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            {t.backToAdmin}
-          </Link>
-        </Button>
+        <div className="flex gap-2">
+          <Button asChild variant="outline">
+            <Link href={`/${effectiveLang}/admin/order-codes`}>
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              {t.backToAdmin}
+            </Link>
+          </Button>
+          <Button asChild variant="outline">
+            <Link href={`/${effectiveLang}/admin/database-backup`}>
+              <Database className="mr-2 h-4 w-4" />
+              {effectiveLang === 'ar' ? 'النسخ الاحتياطي' : 'Database Backup'}
+            </Link>
+          </Button>
+        </div>
       </div>
 
       {/* Admin Notice */}

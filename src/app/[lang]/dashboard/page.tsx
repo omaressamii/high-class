@@ -8,7 +8,7 @@ import { PageTitle } from '@/components/shared/PageTitle';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { RealtimeMetrics } from '@/components/dashboard/RealtimeMetrics';
-import { LayoutDashboard, DollarSign, ClipboardList, Undo2, PackageCheck, AlertTriangle, Loader, Calendar } from 'lucide-react';
+import { LayoutDashboard, DollarSign, ClipboardList, Undo2, PackageCheck, AlertTriangle, Loader, Calendar, Database, Download, Upload } from 'lucide-react';
 import type { Order, User, OrderStatus } from '@/types';
 import { DatePickerClient } from '@/components/dashboard/DatePickerClient';
 import { useAuth } from '@/context/AuthContext'; // For permission check
@@ -456,6 +456,46 @@ export default function DashboardPage() {
                 <p>Could not load dashboard statistics.</p>
             </CardContent>
         </Card>
+      )}
+
+      {/* Database Management Section - Only for users with backup/restore permissions */}
+      {currentUser && (currentUser.permissions?.includes('database_backup') || currentUser.permissions?.includes('database_restore')) && (
+        <section className="mt-8">
+          <Card className="shadow-xl rounded-lg border-orange-500/50 bg-gradient-to-br from-orange-50/50 via-card to-orange-100/50 dark:from-orange-950/20 dark:via-card dark:to-orange-900/20">
+            <CardHeader>
+              <CardTitle className="font-headline text-2xl text-orange-600 dark:text-orange-400 flex items-center">
+                <Database className={`h-6 w-6 ${effectiveLang === 'ar' ? 'ml-2' : 'mr-2'}`} />
+                {effectiveLang === 'ar' ? 'إدارة قاعدة البيانات' : 'Database Management'}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground mb-6">
+                {effectiveLang === 'ar'
+                  ? 'إدارة النسخ الاحتياطية واستعادة قاعدة البيانات'
+                  : 'Manage database backups and restore operations'
+                }
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4">
+                {currentUser.permissions?.includes('database_backup') && (
+                  <Button asChild variant="outline" className="flex-1">
+                    <Link href={`/${effectiveLang}/admin/database-backup`}>
+                      <Download className={`h-4 w-4 ${effectiveLang === 'ar' ? 'ml-2' : 'mr-2'}`} />
+                      {effectiveLang === 'ar' ? 'النسخ الاحتياطي' : 'Database Backup'}
+                    </Link>
+                  </Button>
+                )}
+                {currentUser.permissions?.includes('database_restore') && (
+                  <Button asChild variant="outline" className="flex-1">
+                    <Link href={`/${effectiveLang}/admin/database-backup`}>
+                      <Upload className={`h-4 w-4 ${effectiveLang === 'ar' ? 'ml-2' : 'mr-2'}`} />
+                      {effectiveLang === 'ar' ? 'استعادة البيانات' : 'Database Restore'}
+                    </Link>
+                  </Button>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </section>
       )}
     </div>
   );

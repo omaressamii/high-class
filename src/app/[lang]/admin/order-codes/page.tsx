@@ -254,11 +254,17 @@ export default function OrderCodesAdminPage() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex gap-4">
+          <div className="flex flex-wrap gap-4">
             <Button asChild variant="outline">
               <Link href={`/${effectiveLang}/admin/quantity-sync`}>
                 <RefreshCw className="mr-2 h-4 w-4" />
                 {effectiveLang === 'ar' ? 'مزامنة كميات المنتجات' : 'Sync Product Quantities'}
+              </Link>
+            </Button>
+            <Button asChild variant="outline">
+              <Link href={`/${effectiveLang}/admin/database-backup`}>
+                <Database className="mr-2 h-4 w-4" />
+                {effectiveLang === 'ar' ? 'النسخ الاحتياطي للقاعدة' : 'Database Backup'}
               </Link>
             </Button>
           </div>

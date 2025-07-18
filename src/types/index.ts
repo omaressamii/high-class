@@ -78,7 +78,9 @@ export const PERMISSION_STRINGS = [
   'users_view',
   'users_manage',
   'branches_manage',
-  'view_all_branches'
+  'view_all_branches',
+  'database_backup',
+  'database_restore'
 ] as const;
 
 export type PermissionString = typeof PERMISSION_STRINGS[number];
@@ -280,5 +282,10 @@ export const PERMISSION_GROUPS: PermissionGroup[] = [
     id: 'branches_group',
     nameKey: 'group_branch_management',
     permissions: ['branches_manage'],
+  },
+  {
+    id: 'database_group',
+    nameKey: 'group_database_management',
+    permissions: ['database_backup', 'database_restore'],
   },
 ];

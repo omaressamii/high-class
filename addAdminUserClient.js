@@ -39,7 +39,9 @@ async function addAdminUser() {
       'financials_manage',
       'reports_view',
       'view_all_branches',
-      'branches_manage'
+      'branches_manage',
+      'database_backup',
+      'database_restore'
     ],
     branchId: null,
     branchName: null,
