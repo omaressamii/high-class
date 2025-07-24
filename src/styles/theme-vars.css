@@ -1,0 +1,38 @@
+
+/* Default Theme (Blue) - HSL Components */
+:root {
+  --background-h: 210; --background-s: 20%; --background-l: 98%;
+  --foreground-h: 215; --foreground-s: 25%; --foreground-l: 27%;
+  --card-h: 0; --card-s: 0%; --card-l: 100%;
+  --card-foreground-h: 215; --card-foreground-s: 25%; --card-foreground-l: 27%;
+  --popover-h: 0; --popover-s: 0%; --popover-l: 100%;
+  --popover-foreground-h: 215; --popover-foreground-s: 25%; --popover-foreground-l: 27%;
+  --primary-h: 220; --primary-s: 70%; --primary-l: 55%;
+  --primary-foreground-h: 0; --primary-foreground-s: 0%; --primary-foreground-l: 100%;
+  --secondary-h: 210; --secondary-s: 15%; --secondary-l: 90%;
+  --secondary-foreground-h: 215; --secondary-foreground-s: 20%; --secondary-foreground-l: 35%;
+  --muted-h: 210; --muted-s: 15%; --muted-l: 94%;
+  --muted-foreground-h: 215; --muted-foreground-s: 15%; --muted-foreground-l: 55%;
+  --accent-h: 250; --accent-s: 60%; --accent-l: 60%;
+  --accent-foreground-h: 0; --accent-foreground-s: 0%; --accent-foreground-l: 100%;
+  --destructive-h: 0; --destructive-s: 65%; --destructive-l: 55%;
+  --destructive-foreground-h: 0; --destructive-foreground-s: 0%; --destructive-foreground-l: 100%;
+  --border-h: 210; --border-s: 15%; --border-l: 88%;
+  --input-h: 210; --input-s: 15%; --input-l: 88%;
+  --ring-h: 220; --ring-s: 70%; --ring-l: 55%;
+
+  --chart-1-h: 220; --chart-1-s: 70%; --chart-1-l: 50%;
+  --chart-2-h: 160; --chart-2-s: 60%; --chart-2-l: 45%;
+  --chart-3-h: 30; --chart-3-s: 80%; --chart-3-l: 55%;
+  --chart-4-h: 280; --chart-4-s: 65%; --chart-4-l: 60%;
+  --chart-5-h: 340; --chart-5-s: 75%; --chart-5-l: 55%;
+  
+  --sidebar-background-h: 215; --sidebar-background-s: 30%; --sidebar-background-l: 22%;
+  --sidebar-foreground-h: 0; --sidebar-foreground-s: 0%; --sidebar-foreground-l: 98%;
+  --sidebar-primary-h: 220; --sidebar-primary-s: 80%; --sidebar-primary-l: 75%;
+  --sidebar-primary-foreground-h: 215; --sidebar-primary-foreground-s: 30%; --sidebar-primary-foreground-l: 15%;
+  --sidebar-accent-h: 215; --sidebar-accent-s: 25%; --sidebar-accent-l: 27%;
+  --sidebar-accent-foreground-h: 0; --sidebar-accent-foreground-s: 0%; --sidebar-accent-foreground-l: 98%;
+  --sidebar-border-h: 215; --sidebar-border-s: 20%; --sidebar-border-l: 30%;
+  --sidebar-ring-h: 220; --sidebar-ring-s: 80%; --sidebar-ring-l: 75%;
+}

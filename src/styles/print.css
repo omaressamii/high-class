@@ -1,0 +1,166 @@
+/* Print-specific styles for invoices */
+@media print {
+  /* Hide all non-printable elements */
+  .no-print, .no-print * {
+    display: none !important;
+  }
+
+  /* Hide everything except printable areas */
+  body > *:not(.printable-receipt-area):not(.printable-dialog-content) {
+    display: none !important;
+  }
+  
+  /* Main printable area styling */
+  .printable-receipt-area, .printable-dialog-content {
+    display: block !important;
+    position: static !important;
+    left: auto !important;
+    top: auto !important;
+    width: 100% !important; 
+    max-width: 80mm !important; /* Thermal printer width */
+    margin: 0 !important;
+    padding: 10px !important;
+    box-sizing: border-box !important;
+    background-color: white !important;
+    color: black !important;
+    font-family: 'Courier New', Courier, monospace !important;
+    font-size: 12px !important;
+    line-height: 1.4 !important;
+    -webkit-print-color-adjust: exact !important; 
+    print-color-adjust: exact !important;
+    box-shadow: none !important;
+    border: none !important;
+  }
+
+  /* Reset all child elements */
+  .printable-receipt-area *, .printable-dialog-content * {
+    visibility: visible !important;
+    font-family: inherit !important;
+    color: black !important;
+    background-color: transparent !important;
+    box-shadow: none !important;
+    border-color: black !important;
+  }
+  
+  /* Hide dialog-specific non-printable elements */
+  .printable-dialog-content .no-print-in-dialog,
+  .printable-dialog-content .dialog-footer-no-print, 
+  .printable-dialog-content .dialog-close-no-print {
+    display: none !important;
+  }
+  
+  /* Show print-only elements */
+  .printable-dialog-content .no-screen,
+  .printable-receipt-area .no-screen {
+    display: block !important;
+  }
+
+  /* Receipt header styling */
+  .receipt-header {
+    text-align: center !important;
+    margin-bottom: 15px !important;
+  }
+  
+  .receipt-header h2 {
+    font-size: 16px !important;
+    font-weight: bold !important;
+    margin: 0 0 5px 0 !important;
+    display: block !important;
+  }
+  
+  .receipt-header p {
+    font-size: 12px !important;
+    margin: 2px 0 !important;
+    display: block !important;
+  }
+
+  /* Receipt sections */
+  .receipt-info, .receipt-items, .receipt-summary {
+    margin: 10px 0 !important;
+  }
+
+  .receipt-info h3, .receipt-items h3, .receipt-summary h3 {
+    font-weight: bold !important;
+    font-size: 14px !important;
+    margin: 10px 0 5px 0 !important;
+    border-bottom: 1px dashed black !important;
+    padding-bottom: 2px !important;
+    display: block !important;
+  }
+  
+  /* Receipt lines (label-value pairs) */
+  .receipt-line {
+    display: flex !important;
+    justify-content: space-between !important;
+    width: 100% !important;
+    margin-bottom: 3px !important;
+    align-items: flex-start !important;
+  }
+  
+  .receipt-label {
+    display: inline-block !important;
+    text-align: left !important;
+    font-weight: normal !important;
+    flex-shrink: 0 !important;
+    margin-right: 10px !important;
+  }
+  
+  .receipt-value {
+    display: inline-block !important;
+    text-align: right !important;
+    flex-grow: 1 !important;
+    word-wrap: break-word !important;
+  }
+  
+  .receipt-value.wrap {
+    text-align: left !important;
+    white-space: pre-wrap !important;
+  }
+
+  /* Total line emphasis */
+  .receipt-total .receipt-label,
+  .receipt-total .receipt-value {
+    font-weight: bold !important;
+    font-size: 14px !important;
+  }
+
+  /* Dividers */
+  .receipt-divider {
+    border: none !important;
+    border-top: 1px dashed black !important;
+    margin: 8px 0 !important;
+    height: 1px !important;
+    display: block !important;
+  }
+
+  /* Footer */
+  .receipt-footer {
+    text-align: center !important;
+    margin-top: 15px !important;
+    font-size: 12px !important;
+  }
+  
+  .receipt-footer p {
+    margin: 5px 0 !important;
+    display: block !important;
+  }
+
+  /* Item-specific styling */
+  .receipt-item-name {
+    font-weight: normal !important;
+  }
+  
+  .receipt-item-price {
+    font-weight: normal !important;
+  }
+
+  /* Hide Radix UI dialog overlays */
+  [data-radix-portal] {
+    display: none !important;
+  }
+  
+  [data-radix-portal] .printable-dialog-content {
+    display: block !important;
+    position: static !important;
+  }
+}
