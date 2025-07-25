@@ -121,13 +121,14 @@ export default function EditProductPage() {
     statusLabel: effectiveLang === 'ar' ? 'الحالة' : 'Status',
     initialStockLabel: effectiveLang === 'ar' ? 'الكمية الأولية' : 'Initial Stock',
     priceLabel: effectiveLang === 'ar' ? 'السعر' : 'Price',
+    showImageLabel: effectiveLang === 'ar' ? 'إظهار صورة المنتج' : 'Show Product Image',
+    showImageDescription: effectiveLang === 'ar' ? 'إذا تم تحديده، سيتم عرض صورة للمنتج' : 'If checked, an image will be displayed for the product',
     imageLabel: effectiveLang === 'ar' ? 'صورة المنتج' : 'Product Image',
     selectNewImageButton: effectiveLang === 'ar' ? 'اختيار صورة جديدة' : 'Select New Image',
     changeImageButton: effectiveLang === 'ar' ? 'تغيير الصورة' : 'Change Image',
     currentImage: effectiveLang === 'ar' ? 'الصورة الحالية' : 'Current Image',
     imageUploadInProgress: effectiveLang === 'ar' ? 'جار رفع الصورة...' : 'Uploading image...',
     imageUploadError: effectiveLang === 'ar' ? 'فشل رفع الصورة.' : 'Image upload failed.',
-    imageUrlRequired: effectiveLang === 'ar' ? 'صورة المنتج مطلوبة.' : 'Product image is required.',
 
     notesLabel: effectiveLang === 'ar' ? 'ملاحظات (اختياري)' : 'Notes (Optional)',
     aiHintLabel: effectiveLang === 'ar' ? 'تلميح للصور بالذكاء الاصطناعي (اختياري)' : 'AI Image Hint (Optional)',
@@ -162,7 +163,8 @@ export default function EditProductPage() {
     status: z.enum(productStatusValues, { required_error: t.statusRequired }),
     initialStock: z.coerce.number().int().min(0, { message: t.initialStockMin }),
     price: z.coerce.number().positive({ message: t.pricePositive }).min(0.01, { message: t.priceRequired }),
-    imageUrl: z.string().min(1, { message: t.imageUrlRequired }), // Image is optional on creation, but must exist for edit
+    showImage: z.boolean().default(false),
+    imageUrl: z.string().optional(), // Image is now optional
     notes: z.string().optional(),
     dataAiHint: z.string().optional(),
     branchId: z.string().optional(),
@@ -183,7 +185,7 @@ export default function EditProductPage() {
     resolver: zodResolver(currentFormSchema),
     defaultValues: {
       name: '', type: undefined, category: undefined, size: undefined, status: undefined,
-      initialStock: 0, price: undefined, imageUrl: '',
+      initialStock: 0, price: undefined, showImage: false, imageUrl: '',
       notes: '', dataAiHint: '', branchId: undefined, isGlobalProduct: false,
     },
   });
@@ -246,6 +248,11 @@ export default function EditProductPage() {
           setProduct(fetchedProduct);
           setCurrentImageUrl(fetchedProduct.imageUrl);
           setImagePreview(fetchedProduct.imageUrl);
+          // Check if product has a valid image (not empty and not placeholder)
+          const hasValidImage = fetchedProduct.imageUrl &&
+                                fetchedProduct.imageUrl.trim() !== '' &&
+                                !fetchedProduct.imageUrl.includes('placehold.co');
+
           form.reset({
             name: fetchedProduct.name,
             type: fetchedProduct.type, // This is the type ID
@@ -254,6 +261,7 @@ export default function EditProductPage() {
             status: fetchedProduct.status,
             initialStock: fetchedProduct.initialStock,
             price: fetchedProduct.price,
+            showImage: hasValidImage,
             imageUrl: fetchedProduct.imageUrl,
             notes: fetchedProduct.notes || '',
             dataAiHint: fetchedProduct['data-ai-hint'] || '',
@@ -372,23 +380,33 @@ export default function EditProductPage() {
     setIsSaving(true);
     let finalImageUrl = product.imageUrl;
 
-    if (imageFile) {
-      if (currentImageUrl && currentImageUrl !== imagePreview && imagePreview !== null) {
+    // Handle image based on showImage checkbox
+    if (data.showImage) {
+      // If showImage is checked, handle image upload/update
+      if (imageFile) {
+        if (currentImageUrl && currentImageUrl !== imagePreview && imagePreview !== null) {
+          await deleteOldImage(currentImageUrl);
+        }
+        try {
+          finalImageUrl = await uploadImage(imageFile);
+        } catch (error) {
+          toast({ title: t.imageUploadError, variant: "destructive" });
+          setIsSaving(false);
+          return;
+        }
+      } else if (data.imageUrl) {
+        // Keep existing image
+        finalImageUrl = data.imageUrl;
+      } else {
+        // If showImage is true but no image, use placeholder
+        finalImageUrl = 'https://placehold.co/600x400.png';
+      }
+    } else {
+      // If showImage is false, remove image
+      if (currentImageUrl && currentImageUrl !== '') {
         await deleteOldImage(currentImageUrl);
       }
-      try {
-        finalImageUrl = await uploadImage(imageFile);
-      } catch (error) {
-        toast({ title: t.imageUploadError, variant: "destructive" });
-        setIsSaving(false);
-        return;
-      }
-    } else if (!data.imageUrl && currentImageUrl) {
-        finalImageUrl = product.imageUrl;
-    } else if (!data.imageUrl && !currentImageUrl) {
-        toast({ title: t.imageUrlRequired, variant: "destructive" });
-        setIsSaving(false);
-        return;
+      finalImageUrl = '';
     }
 
     let finalBranchId = data.branchId;
@@ -734,8 +752,36 @@ export default function EditProductPage() {
                 )}
               />
 
-              <FormItem className="md:col-span-2">
-                <FormLabel>{t.imageLabel}</FormLabel>
+              {/* Show Image Checkbox */}
+              <FormField
+                control={form.control}
+                name="showImage"
+                render={({ field }) => (
+                  <FormItem className="md:col-span-2 flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                    <FormControl>
+                      <input
+                        type="checkbox"
+                        checked={field.value}
+                        onChange={field.onChange}
+                        className="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
+                      />
+                    </FormControl>
+                    <div className="space-y-1 leading-none">
+                      <FormLabel className="text-sm font-medium">
+                        {t.showImageLabel}
+                      </FormLabel>
+                      <FormDescription className="text-xs text-muted-foreground">
+                        {t.showImageDescription}
+                      </FormDescription>
+                    </div>
+                  </FormItem>
+                )}
+              />
+
+              {/* Image Upload Section - Only show if showImage is checked */}
+              {form.watch('showImage') && (
+                <FormItem className="md:col-span-2">
+                  <FormLabel>{t.imageLabel}</FormLabel>
                 <FormControl>
                   <div className="flex flex-col items-center space-y-4 rounded-md border border-dashed border-muted-foreground/50 p-6 hover:border-primary transition-colors">
                     {imagePreview ? (
@@ -775,7 +821,8 @@ export default function EditProductPage() {
                     render={({ field }) => ( <Input type="hidden" {...field} /> )}
                   />
                 <FormMessage />
-              </FormItem>
+                </FormItem>
+              )}
 
 
               <FormField
