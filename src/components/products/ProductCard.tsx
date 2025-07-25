@@ -135,28 +135,59 @@ const ProductCard = React.memo(function ProductCard({ product, allProductTypes, 
 
   const availableForOperation = actualCurrentStock - actualRentedQuantity;
 
+  // Check if product has a valid image (not empty and not placeholder)
+  const hasValidImage = product.imageUrl &&
+                        product.imageUrl.trim() !== '' &&
+                        !product.imageUrl.includes('placehold.co');
+
   return (
     <Card className="flex flex-col overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 rounded-lg">
-      <CardHeader className="p-0">
-        <div className="relative w-full h-40 sm:h-48 md:h-56">
-          <Image
-            src={product.imageUrl}
-            alt={product.name}
-            fill
-            sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
-            style={{ objectFit: 'cover' }}
-            data-ai-hint={product['data-ai-hint'] || "fashion item"}
-          />
-           {product.productCode && (
-            <Badge variant="secondary" className="absolute top-1 right-1 sm:top-2 sm:right-2 rtl:right-auto rtl:left-1 sm:rtl:left-2 text-xs">
-              {t.productCode}: {product.productCode}
-            </Badge>
-          )}
-        </div>
-      </CardHeader>
+      {hasValidImage && (
+        <CardHeader className="p-0">
+          <div className="relative w-full h-40 sm:h-48 md:h-56">
+            <Image
+              src={product.imageUrl}
+              alt={product.name}
+              fill
+              sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
+              style={{ objectFit: 'cover' }}
+              data-ai-hint={product['data-ai-hint'] || "fashion item"}
+            />
+             {product.productCode && (
+              <Badge variant="secondary" className="absolute top-1 right-1 sm:top-2 sm:right-2 rtl:right-auto rtl:left-1 sm:rtl:left-2 text-xs">
+                {t.productCode}: {product.productCode}
+              </Badge>
+            )}
+          </div>
+        </CardHeader>
+      )}
+
+      {/* Header for cards without images */}
+      {!hasValidImage && (
+        <CardHeader className="pb-2">
+          <div className="flex justify-between items-start">
+            <CardTitle className="text-lg font-semibold line-clamp-2">{product.name}</CardTitle>
+            {product.productCode && (
+              <Badge variant="secondary" className="text-xs ml-2 rtl:mr-2 rtl:ml-0 flex-shrink-0">
+                {t.productCode}: {product.productCode}
+              </Badge>
+            )}
+          </div>
+        </CardHeader>
+      )}
       <CardContent className="p-3 sm:p-4 flex-grow">
-        <CardTitle className="font-headline text-lg sm:text-xl mb-1 line-clamp-2">{product.name}</CardTitle>
-        <CardDescription className="text-xs text-muted-foreground mb-2">{typeText} - {categoryText}</CardDescription>
+        {/* Only show title and description for cards with images */}
+        {hasValidImage && (
+          <>
+            <CardTitle className="font-headline text-lg sm:text-xl mb-1 line-clamp-2">{product.name}</CardTitle>
+            <CardDescription className="text-xs text-muted-foreground mb-2">{typeText} - {categoryText}</CardDescription>
+          </>
+        )}
+
+        {/* For cards without images, show type and category */}
+        {!hasValidImage && (
+          <CardDescription className="text-xs text-muted-foreground mb-2">{typeText} - {categoryText}</CardDescription>
+        )}
 
         <div className="space-y-1 sm:space-y-2 text-xs sm:text-sm mb-3">
           <div className="flex items-center">

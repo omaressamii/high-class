@@ -142,7 +142,9 @@ export default function AddNewProductPage() {
     pricePlaceholder: effectiveLang === 'ar' ? 'مثال: 250.00' : 'e.g., 250.00',
     priceRequired: effectiveLang === 'ar' ? 'السعر مطلوب' : 'Price is required',
     pricePositive: effectiveLang === 'ar' ? 'يجب أن يكون السعر رقمًا موجبًا' : 'Price must be a positive number',
-    imageLabel: effectiveLang === 'ar' ? 'صورة المنتج (اختياري)' : 'Product Image (Optional)',
+    showImageLabel: effectiveLang === 'ar' ? 'إضافة صورة للمنتج' : 'Add Product Image',
+    showImageDescription: effectiveLang === 'ar' ? 'إذا تم تحديده، يمكنك رفع صورة للمنتج' : 'If checked, you can upload an image for the product',
+    imageLabel: effectiveLang === 'ar' ? 'صورة المنتج' : 'Product Image',
     selectImageButton: effectiveLang === 'ar' ? 'اختر صورة' : 'Select Image',
     changeImageButton: effectiveLang === 'ar' ? 'تغيير الصورة' : 'Change Image',
     imageUploadInProgress: effectiveLang === 'ar' ? 'جار رفع الصورة...' : 'Uploading image...',
@@ -178,6 +180,7 @@ export default function AddNewProductPage() {
     size: z.enum(productSizeValues as [ProductSize, ...ProductSize[]], { required_error: t.sizeRequired }),
     initialStock: z.coerce.number({invalid_type_error: t.initialStockRequired, required_error: t.initialStockRequired}).int().min(0, { message: t.initialStockMin }),
     price: z.coerce.number().positive({ message: t.pricePositive }).min(0.01, { message: t.priceRequired }),
+    showImage: z.boolean().default(false),
     imageUrl: z.string().optional(),
     notes: z.string().optional(),
     dataAiHint: z.string().optional(),
@@ -221,6 +224,7 @@ export default function AddNewProductPage() {
       size: undefined,
       initialStock: 0,
       price: undefined,
+      showImage: false,
       imageUrl: '',
       notes: '',
       dataAiHint: '',
@@ -398,14 +402,15 @@ export default function AddNewProductPage() {
 
   const onSubmit: SubmitHandler<FormData> = async (data) => {
     setIsSaving(true);
-    let finalImageUrl = 'https://placehold.co/600x400.png';
+    let finalImageUrl = '';
 
     // Generate new product ID using push
     const productsRef = ref(database, "products");
     const newProductRef = push(productsRef);
     const newProductIdForPath = newProductRef.key!;
 
-    if (imageFile) {
+    // Only handle image upload if showImage is checked and imageFile exists
+    if (data.showImage && imageFile) {
       try {
         finalImageUrl = await uploadImageLocally(imageFile, newProductIdForPath);
       } catch (error) {
@@ -413,6 +418,12 @@ export default function AddNewProductPage() {
         setIsSaving(false);
         return;
       }
+    } else if (!data.showImage) {
+      // If showImage is false, set empty string for no image
+      finalImageUrl = '';
+    } else {
+      // If showImage is true but no image file, use placeholder
+      finalImageUrl = 'https://placehold.co/600x400.png';
     }
 
     let productDataToSave: Omit<Product, 'id'>;
@@ -784,8 +795,36 @@ export default function AddNewProductPage() {
                 )}
               />
 
-              <FormItem className="md:col-span-2">
-                <FormLabel>{t.imageLabel}</FormLabel>
+              {/* Show Image Checkbox */}
+              <FormField
+                control={form.control}
+                name="showImage"
+                render={({ field }) => (
+                  <FormItem className="md:col-span-2 flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                    <FormControl>
+                      <input
+                        type="checkbox"
+                        checked={field.value}
+                        onChange={field.onChange}
+                        className="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
+                      />
+                    </FormControl>
+                    <div className="space-y-1 leading-none">
+                      <FormLabel className="text-sm font-medium">
+                        {t.showImageLabel}
+                      </FormLabel>
+                      <FormDescription className="text-xs text-muted-foreground">
+                        {t.showImageDescription}
+                      </FormDescription>
+                    </div>
+                  </FormItem>
+                )}
+              />
+
+              {/* Image Upload Section - Only show if showImage is checked */}
+              {form.watch('showImage') && (
+                <FormItem className="md:col-span-2">
+                  <FormLabel>{t.imageLabel}</FormLabel>
                 <FormControl>
                   <div className="flex flex-col items-center space-y-4 rounded-md border border-dashed border-muted-foreground/50 p-6 hover:border-primary transition-colors">
                     {imagePreview ? (
@@ -825,7 +864,8 @@ export default function AddNewProductPage() {
                     render={({ field }) => ( <Input type="hidden" {...field} /> )}
                   />
                 <FormMessage />
-              </FormItem>
+                </FormItem>
+              )}
 
 
               <FormField
