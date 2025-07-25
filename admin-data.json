@@ -17,6 +17,7 @@
         "orders_manage",
         "financials_view",
         "financials_manage",
+        "cashout_manage",
         "reports_view",
         "view_all_branches",
         "branches_manage",

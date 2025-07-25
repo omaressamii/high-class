@@ -7,14 +7,64 @@ import { ClientAuthWrapperForUsersPage } from '@/components/users/ClientAuthWrap
 import { Users as UsersIcon, Search, Filter } from 'lucide-react';
 import { ref, get } from "firebase/database";
 import { database } from "@/lib/firebase";
-import type { User, Branch } from '@/types';
+import type { User, Branch, FinancialTransaction } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useOptimizedAuth } from '@/hooks/use-optimized-auth';
 
 interface UsersPageClientProps {
   initialUsers: User[];
   lang: string;
+}
+
+async function getFinancialTransactionsFromRealtimeDB(): Promise<FinancialTransaction[]> {
+  const transactionsRef = ref(database, "financial_transactions");
+
+  try {
+    const transactionSnapshot = await get(transactionsRef);
+
+    if (!transactionSnapshot.exists()) {
+      return [];
+    }
+
+    const transactionsData = transactionSnapshot.val();
+    const transactionList: FinancialTransaction[] = [];
+
+    Object.entries(transactionsData).forEach(([id, data]: [string, any]) => {
+      try {
+        const transaction: FinancialTransaction = {
+          id: id,
+          date: data.date,
+          type: data.type,
+          transactionCategory: data.transactionCategory,
+          description: data.description,
+          customerName: data.customerName,
+          customerId: data.customerId,
+          sellerName: data.sellerName,
+          sellerId: data.sellerId,
+          processedByUserId: data.processedByUserId,
+          processedByUserName: data.processedByUserName,
+          orderId: data.orderId,
+          orderCode: data.orderCode,
+          amount: Number(data.amount) || 0,
+          paymentMethod: data.paymentMethod,
+          notes: data.notes,
+          branchId: data.branchId,
+          branchName: data.branchName,
+          createdAt: data.createdAt || new Date().toISOString(),
+        };
+        transactionList.push(transaction);
+      } catch (error) {
+        console.error(`Error parsing transaction ${id}:`, error);
+      }
+    });
+
+    return transactionList;
+  } catch (error) {
+    console.error("Error fetching financial transactions:", error);
+    return [];
+  }
 }
 
 async function getUsersFromRealtimeDB(): Promise<User[]> {
@@ -68,8 +118,26 @@ async function getUsersFromRealtimeDB(): Promise<User[]> {
 
 const UsersPageClient = ({ initialUsers, lang }: UsersPageClientProps) => {
   const [users, setUsers] = useState<User[]>(initialUsers);
+  const [transactions, setTransactions] = useState<FinancialTransaction[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+
+  // Get current user
+  const { user: currentUser } = useOptimizedAuth();
+
+  // Load financial transactions on component mount
+  useEffect(() => {
+    const loadTransactions = async () => {
+      try {
+        const fetchedTransactions = await getFinancialTransactionsFromRealtimeDB();
+        setTransactions(fetchedTransactions);
+      } catch (error) {
+        console.error("Error loading financial transactions:", error);
+      }
+    };
+
+    loadTransactions();
+  }, []);
 
   const t = {
     pageTitle: lang === 'ar' ? 'إدارة المستخدمين' : 'User Management',
@@ -107,6 +175,16 @@ const UsersPageClient = ({ initialUsers, lang }: UsersPageClientProps) => {
     }
   };
 
+  const handleCashoutComplete = async () => {
+    try {
+      // Reload financial transactions to reflect the new cashout transaction
+      const updatedTransactions = await getFinancialTransactionsFromRealtimeDB();
+      setTransactions(updatedTransactions);
+    } catch (error) {
+      console.error("Error refreshing transactions after cashout:", error);
+    }
+  };
+
   return (
     <div className="space-y-8">
       <div className="flex justify-between items-center">
@@ -140,7 +218,14 @@ const UsersPageClient = ({ initialUsers, lang }: UsersPageClientProps) => {
       </Card>
 
       {filteredUsers.length > 0 ? (
-        <UserList users={filteredUsers} lang={lang} onUserDeleted={handleUserDeleted} />
+        <UserList
+          users={filteredUsers}
+          lang={lang}
+          transactions={transactions}
+          currentUser={currentUser}
+          onUserDeleted={handleUserDeleted}
+          onCashoutComplete={handleCashoutComplete}
+        />
       ) : users.length > 0 ? (
         <div className="text-center py-12">
           <Search className="mx-auto h-12 w-12 text-muted-foreground" />

@@ -134,6 +134,7 @@ export default function AddNewUserPage() {
     perm_reports_view: effectiveLang === 'ar' ? 'عرض التقارير' : 'View Reports',
     perm_users_view: effectiveLang === 'ar' ? 'عرض المستخدمين' : 'View Users',
     perm_users_manage: effectiveLang === 'ar' ? 'إدارة المستخدمين' : 'Manage Users',
+    perm_cashout_manage: effectiveLang === 'ar' ? 'تفريغ خزائن المستخدمين' : 'Manage User Cashouts',
     perm_branches_manage: effectiveLang === 'ar' ? 'إدارة الفروع' : 'Manage Branches',
 
     group_dashboard_access: effectiveLang === 'ar' ? 'الوصول إلى لوحة التحكم' : 'Dashboard Access',

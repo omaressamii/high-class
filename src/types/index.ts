@@ -77,6 +77,7 @@ export const PERMISSION_STRINGS = [
   'reports_view',
   'users_view',
   'users_manage',
+  'cashout_manage',
   'branches_manage',
   'view_all_branches',
   'database_backup',
@@ -194,13 +195,15 @@ export type FinancialTransactionType =
   | 'Payment Received'
   | 'Refund Issued'
   | 'Expense'
-  | 'Discount Applied';
+  | 'Discount Applied'
+  | 'Cashout';
 
 export const financialTransactionTypeValues: FinancialTransactionType[] = [
   'Initial Sale Value',
   'Initial Rental Value',
   'Payment Received',
   'Discount Applied',
+  'Cashout',
 ];
 
 export interface FinancialTransaction {
@@ -279,7 +282,7 @@ export const PERMISSION_GROUPS: PermissionGroup[] = [
   {
     id: 'users_group',
     nameKey: 'group_user_management',
-    permissions: ['users_view', 'users_manage'],
+    permissions: ['users_view', 'users_manage', 'cashout_manage'],
   },
   {
     id: 'branches_group',

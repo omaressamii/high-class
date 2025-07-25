@@ -1,11 +1,13 @@
 
 import React, { useState } from 'react'; // Import React
-import type { User } from '@/types';
+import type { User, FinancialTransaction } from '@/types';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { UserCircle, Settings, Briefcase, ShieldCheck, ShieldQuestion, Store, Trash2 } from 'lucide-react';
+import { UserCircle, Settings, Briefcase, ShieldCheck, ShieldQuestion, Store, Trash2, Wallet } from 'lucide-react';
 import { Badge } from '../ui/badge';
 import Link from 'next/link';
+import { CashoutDialog } from './CashoutDialog';
+import { calculateUserCashBalance } from '@/lib/utils';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -24,20 +26,39 @@ import { useRouter } from 'next/navigation';
 interface UserCardProps {
   user: User;
   lang: string;
+  transactions?: FinancialTransaction[];
+  currentUser?: User;
   onUserDeleted?: () => void;
+  onCashoutComplete?: () => void;
 }
 
 // Wrap component with React.memo
-const UserCard = React.memo(function UserCard({ user, lang: propLang, onUserDeleted }: UserCardProps) {
+const UserCard = React.memo(function UserCard({
+  user,
+  lang: propLang,
+  transactions = [],
+  currentUser,
+  onUserDeleted,
+  onCashoutComplete
+}: UserCardProps) {
   const lang = propLang === 'en' ? 'en' : 'ar';
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showCashoutDialog, setShowCashoutDialog] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
 
+  // Calculate user's cash balance
+  const cashBalance = calculateUserCashBalance(user.id, transactions);
+
+  // Check if current user has cashout permission
+  const canManageCashout = currentUser?.permissions?.includes('cashout_manage') || false;
+
   const t = {
     manageUser: lang === 'ar' ? 'إدارة المستخدم' : 'Manage User',
     deleteUser: lang === 'ar' ? 'حذف المستخدم' : 'Delete User',
+    cashout: lang === 'ar' ? 'تفريغ الخزنة' : 'Cashout',
+    cashBalance: lang === 'ar' ? 'رصيد الخزنة' : 'Cash Balance',
     username: lang === 'ar' ? 'اسم المستخدم' : 'Username',
     branch: lang === 'ar' ? 'الفرع' : 'Branch',
     seller: lang === 'ar' ? 'بائع (للتتبع)' : 'Seller (Tracking)',
@@ -52,6 +73,7 @@ const UserCard = React.memo(function UserCard({ user, lang: propLang, onUserDele
     delete: lang === 'ar' ? 'حذف' : 'Delete',
     userDeletedSuccess: lang === 'ar' ? 'تم حذف المستخدم بنجاح' : 'User deleted successfully',
     userDeleteError: lang === 'ar' ? 'فشل في حذف المستخدم' : 'Failed to delete user',
+    currencySymbol: lang === 'ar' ? 'ج.م' : 'EGP',
   };
 
   const handleDeleteUser = async () => {
@@ -140,6 +162,18 @@ const UserCard = React.memo(function UserCard({ user, lang: propLang, onUserDele
       </CardHeader>
       <CardContent className="space-y-3 text-sm">
         <p className="text-muted-foreground">ID: {user.id}</p>
+
+        {/* Cash Balance */}
+        <div className="flex items-center justify-between p-2 bg-muted/50 rounded-md">
+          <div className="flex items-center">
+            <Wallet className="h-4 w-4 mr-2 rtl:ml-2 rtl:mr-0 text-muted-foreground" />
+            <span className="font-medium">{t.cashBalance}:</span>
+          </div>
+          <Badge variant={cashBalance > 0 ? "default" : "secondary"} className="text-sm">
+            {cashBalance.toFixed(2)} {t.currencySymbol}
+          </Badge>
+        </div>
+
         {user.branchName && (
           <div className="flex items-center">
             <Store className="h-4 w-4 mr-2 rtl:ml-2 rtl:mr-0 text-muted-foreground" />
@@ -171,6 +205,20 @@ const UserCard = React.memo(function UserCard({ user, lang: propLang, onUserDele
             {t.manageUser}
           </Link>
         </Button>
+
+        {/* Cashout Button - Only show if user has permission and there's a balance */}
+        {canManageCashout && cashBalance > 0 && (
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => setShowCashoutDialog(true)}
+            className="px-3"
+            title={t.cashout}
+          >
+            <Wallet className="h-4 w-4" />
+          </Button>
+        )}
+
         <Button
           variant="destructive"
           size="sm"
@@ -211,6 +259,17 @@ const UserCard = React.memo(function UserCard({ user, lang: propLang, onUserDele
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Cashout Dialog */}
+      <CashoutDialog
+        user={user}
+        transactions={transactions}
+        isOpen={showCashoutDialog}
+        onOpenChange={setShowCashoutDialog}
+        lang={lang}
+        currentUser={currentUser}
+        onCashoutComplete={onCashoutComplete}
+      />
     </Card>
   );
 });
