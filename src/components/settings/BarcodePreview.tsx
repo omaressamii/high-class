@@ -13,6 +13,12 @@ interface BarcodeSettings {
   spacing: number;
   containerWidth: string;
   containerHeight: string;
+  // Element visibility settings
+  showCompanyName: boolean;
+  showProductName: boolean;
+  showBarcode: boolean;
+  showProductCode: boolean;
+  showPrice: boolean;
 }
 
 interface BarcodePreviewProps {
@@ -79,58 +85,68 @@ export function BarcodePreview({ settings, lang }: BarcodePreviewProps) {
             }}
           >
             {/* Company Name */}
-            <div
-              className="font-bold text-gray-800 uppercase tracking-wide"
-              style={{
-                fontSize: '10px',
-                marginBottom: `${settings.spacing}px`
-              }}
-            >
-              {t.companyName}
-            </div>
+            {settings.showCompanyName && (
+              <div
+                className="font-bold text-gray-800 uppercase tracking-wide"
+                style={{
+                  fontSize: '10px',
+                  marginBottom: `${settings.spacing}px`
+                }}
+              >
+                {t.companyName}
+              </div>
+            )}
 
             {/* Product Name */}
-            <div
-              className="font-bold text-gray-600 text-center"
-              style={{
-                fontSize: '8px',
-                marginBottom: `${settings.spacing}px`
-              }}
-            >
-              {t.sampleProduct}
-            </div>
+            {settings.showProductName && (
+              <div
+                className="font-bold text-gray-600 text-center"
+                style={{
+                  fontSize: '8px',
+                  marginBottom: `${settings.spacing}px`
+                }}
+              >
+                {t.sampleProduct}
+              </div>
+            )}
 
             {/* Barcode Canvas */}
-            <canvas
-              ref={canvasRef}
-              className="max-w-full"
-              style={{
-                margin: `${settings.spacing}px 0`
-              }}
-            />
+            {settings.showBarcode && (
+              <canvas
+                ref={canvasRef}
+                className="max-w-full"
+                style={{
+                  margin: `${settings.spacing}px 0`
+                }}
+              />
+            )}
 
             {/* Barcode Number */}
-            <div
-              className="font-mono font-bold text-gray-500"
-              style={{
-                fontSize: '8px',
-                marginTop: `${settings.spacing}px`,
-                marginBottom: `${settings.spacing}px`
-              }}
-            >
-              90000123
-            </div>
+            {settings.showProductCode && (
+              <div
+                className="font-mono font-bold text-gray-500"
+                style={{
+                  fontSize: '8px',
+                  marginTop: `${settings.spacing}px`,
+                  marginBottom: `${settings.spacing}px`
+                }}
+              >
+                90000123
+              </div>
+            )}
 
             {/* Price */}
-            <div
-              className="font-bold text-red-600 px-1 border border-red-600 rounded"
-              style={{
-                fontSize: '10px',
-                marginTop: `${settings.spacing}px`
-              }}
-            >
-              {t.samplePrice}
-            </div>
+            {settings.showPrice && (
+              <div
+                className="font-bold text-red-600 px-1 border border-red-600 rounded"
+                style={{
+                  fontSize: '10px',
+                  marginTop: `${settings.spacing}px`
+                }}
+              >
+                {t.samplePrice}
+              </div>
+            )}
           </div>
         </div>
         

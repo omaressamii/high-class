@@ -24,6 +24,12 @@ interface BarcodeSettings {
   spacing: number;
   containerWidth: string;
   containerHeight: string;
+  // Element visibility settings
+  showCompanyName: boolean;
+  showProductName: boolean;
+  showBarcode: boolean;
+  showProductCode: boolean;
+  showPrice: boolean;
 }
 
 interface SettingsPageProps {
@@ -39,7 +45,13 @@ export default function SettingsPage({ params }: SettingsPageProps) {
     margin: 5,
     spacing: 2,
     containerWidth: '4cm',
-    containerHeight: '2.5cm'
+    containerHeight: '2.5cm',
+    // Element visibility defaults (all enabled by default)
+    showCompanyName: true,
+    showProductName: true,
+    showBarcode: true,
+    showProductCode: true,
+    showPrice: true
   });
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -94,7 +106,15 @@ export default function SettingsPage({ params }: SettingsPageProps) {
     marginHint: effectiveLang === 'ar' ? 'الهامش حول الباركود (0-10)' : 'Margin around barcode (0-10)',
     spacingHint: effectiveLang === 'ar' ? 'المسافات بين عناصر الباركود (0-10)' : 'Spacing between barcode elements (0-10)',
     containerWidthHint: effectiveLang === 'ar' ? 'عرض حاوية الطباعة (مثل: 4cm, 50mm)' : 'Print container width (e.g., 4cm, 50mm)',
-    containerHeightHint: effectiveLang === 'ar' ? 'ارتفاع حاوية الطباعة (مثل: 2.5cm, 30mm)' : 'Print container height (e.g., 2.5cm, 30mm)'
+    containerHeightHint: effectiveLang === 'ar' ? 'ارتفاع حاوية الطباعة (مثل: 2.5cm, 30mm)' : 'Print container height (e.g., 2.5cm, 30mm)',
+    // Element visibility translations
+    elementVisibilityTitle: effectiveLang === 'ar' ? 'عناصر الباركود المرئية' : 'Visible Barcode Elements',
+    elementVisibilityDescription: effectiveLang === 'ar' ? 'اختر العناصر التي تريد إظهارها في الباركود المطبوع' : 'Choose which elements to show in the printed barcode',
+    showCompanyNameLabel: effectiveLang === 'ar' ? 'إظهار اسم الشركة' : 'Show Company Name',
+    showProductNameLabel: effectiveLang === 'ar' ? 'إظهار اسم المنتج' : 'Show Product Name',
+    showBarcodeLabel: effectiveLang === 'ar' ? 'إظهار الباركود' : 'Show Barcode',
+    showProductCodeLabel: effectiveLang === 'ar' ? 'إظهار كود المنتج' : 'Show Product Code',
+    showPriceLabel: effectiveLang === 'ar' ? 'إظهار السعر' : 'Show Price'
   };
 
   // Load settings from Firebase
@@ -113,7 +133,12 @@ export default function SettingsPage({ params }: SettingsPageProps) {
             margin: data.margin || 5,
             spacing: data.spacing || 2,
             containerWidth: data.containerWidth || '4cm',
-            containerHeight: data.containerHeight || '2.5cm'
+            containerHeight: data.containerHeight || '2.5cm',
+            showCompanyName: data.showCompanyName !== undefined ? data.showCompanyName : true,
+            showProductName: data.showProductName !== undefined ? data.showProductName : true,
+            showBarcode: data.showBarcode !== undefined ? data.showBarcode : true,
+            showProductCode: data.showProductCode !== undefined ? data.showProductCode : true,
+            showPrice: data.showPrice !== undefined ? data.showPrice : true
           });
         }
       } catch (error) {
@@ -159,7 +184,12 @@ export default function SettingsPage({ params }: SettingsPageProps) {
       margin: 5,
       spacing: 2,
       containerWidth: '4cm',
-      containerHeight: '2.5cm'
+      containerHeight: '2.5cm',
+      showCompanyName: true,
+      showProductName: true,
+      showBarcode: true,
+      showProductCode: true,
+      showPrice: true
     });
     
     toast({
@@ -168,7 +198,7 @@ export default function SettingsPage({ params }: SettingsPageProps) {
     });
   };
 
-  const handleInputChange = (field: keyof BarcodeSettings, value: string | number) => {
+  const handleInputChange = (field: keyof BarcodeSettings, value: string | number | boolean) => {
     setBarcodeSettings(prev => ({
       ...prev,
       [field]: value
@@ -316,6 +346,88 @@ export default function SettingsPage({ params }: SettingsPageProps) {
 
           <Separator />
 
+          {/* Element Visibility Section */}
+          <div className="space-y-4">
+            <div>
+              <h3 className="text-lg font-semibold">{t.elementVisibilityTitle}</h3>
+              <p className="text-sm text-muted-foreground">{t.elementVisibilityDescription}</p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Show Company Name */}
+              <div className="flex items-center space-x-2 rtl:space-x-reverse">
+                <input
+                  type="checkbox"
+                  id="showCompanyName"
+                  checked={barcodeSettings.showCompanyName}
+                  onChange={(e) => handleInputChange('showCompanyName', e.target.checked)}
+                  className="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
+                />
+                <Label htmlFor="showCompanyName" className="text-sm font-medium">
+                  {t.showCompanyNameLabel}
+                </Label>
+              </div>
+
+              {/* Show Product Name */}
+              <div className="flex items-center space-x-2 rtl:space-x-reverse">
+                <input
+                  type="checkbox"
+                  id="showProductName"
+                  checked={barcodeSettings.showProductName}
+                  onChange={(e) => handleInputChange('showProductName', e.target.checked)}
+                  className="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
+                />
+                <Label htmlFor="showProductName" className="text-sm font-medium">
+                  {t.showProductNameLabel}
+                </Label>
+              </div>
+
+              {/* Show Barcode */}
+              <div className="flex items-center space-x-2 rtl:space-x-reverse">
+                <input
+                  type="checkbox"
+                  id="showBarcode"
+                  checked={barcodeSettings.showBarcode}
+                  onChange={(e) => handleInputChange('showBarcode', e.target.checked)}
+                  className="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
+                />
+                <Label htmlFor="showBarcode" className="text-sm font-medium">
+                  {t.showBarcodeLabel}
+                </Label>
+              </div>
+
+              {/* Show Product Code */}
+              <div className="flex items-center space-x-2 rtl:space-x-reverse">
+                <input
+                  type="checkbox"
+                  id="showProductCode"
+                  checked={barcodeSettings.showProductCode}
+                  onChange={(e) => handleInputChange('showProductCode', e.target.checked)}
+                  className="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
+                />
+                <Label htmlFor="showProductCode" className="text-sm font-medium">
+                  {t.showProductCodeLabel}
+                </Label>
+              </div>
+
+              {/* Show Price */}
+              <div className="flex items-center space-x-2 rtl:space-x-reverse">
+                <input
+                  type="checkbox"
+                  id="showPrice"
+                  checked={barcodeSettings.showPrice}
+                  onChange={(e) => handleInputChange('showPrice', e.target.checked)}
+                  className="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
+                />
+                <Label htmlFor="showPrice" className="text-sm font-medium">
+                  {t.showPriceLabel}
+                </Label>
+              </div>
+            </div>
+          </div>
+
+          <Separator />
+
           <div className="flex flex-col sm:flex-row gap-4 justify-end">
             <Button
               variant="outline"
@@ -348,11 +460,11 @@ export default function SettingsPage({ params }: SettingsPageProps) {
       </Card>
 
         {/* Preview Card */}
-        <BarcodePreview settings={barcodeSettings} lang={effectiveLang} />
+        <BarcodePreview settings={barcodeSettings} lang={effectiveLang as 'ar' | 'en'} />
       </div>
 
       {/* General Settings */}
-      <GeneralSettings lang={effectiveLang} />
+      <GeneralSettings lang={effectiveLang as 'ar' | 'en'} />
     </div>
   );
 }

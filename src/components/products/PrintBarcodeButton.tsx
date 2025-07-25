@@ -119,15 +119,16 @@ export function PrintBarcodeButton({
         </head>
         <body>
           <div class="barcode-container">
-            <div class="company-name">${companyName}</div>
-            ${productName ? `<div class="product-name">${productName}</div>` : ''}
-            <svg id="barcode" class="barcode-svg"></svg>
-            <div class="barcode-number">${productCode}</div>
-            ${priceText ? `<div class="price">${priceText}</div>` : ''}
+            ${barcodeSettings.showCompanyName ? `<div class="company-name">${companyName}</div>` : ''}
+            ${barcodeSettings.showProductName && productName ? `<div class="product-name">${productName}</div>` : ''}
+            ${barcodeSettings.showBarcode ? `<svg id="barcode" class="barcode-svg"></svg>` : ''}
+            ${barcodeSettings.showProductCode ? `<div class="barcode-number">${productCode}</div>` : ''}
+            ${barcodeSettings.showPrice && priceText ? `<div class="price">${priceText}</div>` : ''}
           </div>
 
           <script>
-            // Generate CODE 128 barcode with custom settings
+            // Generate CODE 128 barcode with custom settings only if barcode is visible
+            ${barcodeSettings.showBarcode ? `
             JsBarcode("#barcode", "${barcodeValue}", {
               format: "CODE128",
               width: ${barcodeSettings.width},
@@ -137,7 +138,7 @@ export function PrintBarcodeButton({
               margin: ${barcodeSettings.margin},
               background: "#ffffff",
               lineColor: "#000000"
-            });
+            });` : ''};
 
             // Auto-print when page loads
             window.onload = function() {

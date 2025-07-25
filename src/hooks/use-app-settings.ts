@@ -13,6 +13,12 @@ export interface BarcodeSettings {
   spacing: number;
   containerWidth: string;
   containerHeight: string;
+  // Element visibility settings
+  showCompanyName: boolean;
+  showProductName: boolean;
+  showBarcode: boolean;
+  showProductCode: boolean;
+  showPrice: boolean;
 }
 
 export interface GeneralSettings {
@@ -34,7 +40,13 @@ const DEFAULT_BARCODE_SETTINGS: BarcodeSettings = {
   margin: 5,
   spacing: 2,
   containerWidth: '4cm',
-  containerHeight: '2.5cm'
+  containerHeight: '2.5cm',
+  // Element visibility defaults (all enabled by default)
+  showCompanyName: true,
+  showProductName: true,
+  showBarcode: true,
+  showProductCode: true,
+  showPrice: true
 };
 
 const DEFAULT_GENERAL_SETTINGS: GeneralSettings = {
@@ -67,8 +79,14 @@ export function useBarcodeSettings() {
             height: data.height || DEFAULT_BARCODE_SETTINGS.height,
             fontSize: data.fontSize || DEFAULT_BARCODE_SETTINGS.fontSize,
             margin: data.margin || DEFAULT_BARCODE_SETTINGS.margin,
+            spacing: data.spacing || DEFAULT_BARCODE_SETTINGS.spacing,
             containerWidth: data.containerWidth || DEFAULT_BARCODE_SETTINGS.containerWidth,
-            containerHeight: data.containerHeight || DEFAULT_BARCODE_SETTINGS.containerHeight
+            containerHeight: data.containerHeight || DEFAULT_BARCODE_SETTINGS.containerHeight,
+            showCompanyName: data.showCompanyName !== undefined ? data.showCompanyName : DEFAULT_BARCODE_SETTINGS.showCompanyName,
+            showProductName: data.showProductName !== undefined ? data.showProductName : DEFAULT_BARCODE_SETTINGS.showProductName,
+            showBarcode: data.showBarcode !== undefined ? data.showBarcode : DEFAULT_BARCODE_SETTINGS.showBarcode,
+            showProductCode: data.showProductCode !== undefined ? data.showProductCode : DEFAULT_BARCODE_SETTINGS.showProductCode,
+            showPrice: data.showPrice !== undefined ? data.showPrice : DEFAULT_BARCODE_SETTINGS.showPrice
           });
         }
       } catch (err) {
@@ -90,7 +108,12 @@ export function useBarcodeSettings() {
           margin: data.margin || DEFAULT_BARCODE_SETTINGS.margin,
           spacing: data.spacing || DEFAULT_BARCODE_SETTINGS.spacing,
           containerWidth: data.containerWidth || DEFAULT_BARCODE_SETTINGS.containerWidth,
-          containerHeight: data.containerHeight || DEFAULT_BARCODE_SETTINGS.containerHeight
+          containerHeight: data.containerHeight || DEFAULT_BARCODE_SETTINGS.containerHeight,
+          showCompanyName: data.showCompanyName !== undefined ? data.showCompanyName : DEFAULT_BARCODE_SETTINGS.showCompanyName,
+          showProductName: data.showProductName !== undefined ? data.showProductName : DEFAULT_BARCODE_SETTINGS.showProductName,
+          showBarcode: data.showBarcode !== undefined ? data.showBarcode : DEFAULT_BARCODE_SETTINGS.showBarcode,
+          showProductCode: data.showProductCode !== undefined ? data.showProductCode : DEFAULT_BARCODE_SETTINGS.showProductCode,
+          showPrice: data.showPrice !== undefined ? data.showPrice : DEFAULT_BARCODE_SETTINGS.showPrice
         });
       }
       setIsLoading(false);
