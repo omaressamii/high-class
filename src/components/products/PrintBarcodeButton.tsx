@@ -17,6 +17,7 @@ interface PrintBarcodeButtonProps {
   lang: 'ar' | 'en';
   buttonText: string;
   alertTextTemplate: string; // Changed from (code: string) => string
+  className?: string;
 }
 
 export function PrintBarcodeButton({
@@ -27,6 +28,7 @@ export function PrintBarcodeButton({
   lang,
   buttonText,
   alertTextTemplate,
+  className,
 }: PrintBarcodeButtonProps) {
   const { settings: barcodeSettings } = useBarcodeSettings();
 
@@ -166,7 +168,7 @@ export function PrintBarcodeButton({
   };
 
   return (
-    <Button variant="outline" onClick={handlePrintBarcode}>
+    <Button variant="outline" onClick={handlePrintBarcode} className={className}>
       <Barcode className="mr-2 h-4 w-4 rtl:ml-2 rtl:mr-0" />
       {buttonText}
     </Button>

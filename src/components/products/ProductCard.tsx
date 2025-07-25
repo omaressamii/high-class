@@ -9,9 +9,10 @@ import type { Product, ProductTypeDefinition, Order } from '@/types'; // Added P
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { DollarSign, Tag, Layers, Ruler, Info, Eye, PackageCheck, Package, ShoppingCart, Loader2, ScanBarcode } from 'lucide-react';
+import { DollarSign, Tag, Layers, Ruler, Info, Eye, PackageCheck, Package, ShoppingCart, Loader2, ScanBarcode, Barcode } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useRealtimeOrders } from '@/context/RealtimeDataContext';
+import { PrintBarcodeButton } from './PrintBarcodeButton';
 
 interface ProductCardProps {
   product: Product;
@@ -55,6 +56,8 @@ const ProductCard = React.memo(function ProductCard({ product, allProductTypes, 
     categorySale: lang === 'ar' ? 'بيع' : 'Sale',
     productCode: lang === 'ar' ? 'كود الصنف' : 'Product Code',
     unknownType: lang === 'ar' ? 'نوع غير معروف' : 'Unknown Type',
+    printBarcode: lang === 'ar' ? 'طباعة الباركود' : 'Print Barcode',
+    printBarcodeAlertTemplate: lang === 'ar' ? 'باركود المنتج غير متوفر للطباعة.' : 'Product barcode not available for printing.',
   };
 
   const getProductTypeDisplayName = (typeId: string) => {
@@ -189,32 +192,49 @@ const ProductCard = React.memo(function ProductCard({ product, allProductTypes, 
         </div>
         <p className="text-sm text-foreground line-clamp-3">{product.description}</p>
       </CardContent>
-      <CardFooter className="p-4 border-t flex flex-col sm:flex-row gap-2 items-stretch sm:items-center">
-        {hasPermission('products_view_details') && (
-          <Button asChild variant="outline" className="flex-1 hover:bg-accent hover:text-accent-foreground">
-            <Link href={`/${lang}/products/${product.id}`}>
-              <Eye className="mr-2 rtl:ml-2 rtl:mr-0 h-4 w-4" />
-              {t.viewDetails}
-            </Link>
-          </Button>
-        )}
-        {authIsLoading ? (
-          <Button disabled className="flex-1">
-            <Loader2 className="mr-2 rtl:ml-2 rtl:mr-0 h-4 w-4 animate-spin" />
-            {t.loading}
-          </Button>
-        ) : (
-          <>
-            {hasPermission('orders_add') && (
-              <Button asChild variant="default" className="flex-1">
-                <Link href={`/${lang}/orders/new?productId=${product.id}`}>
-                  <ShoppingCart className="mr-2 rtl:ml-2 rtl:mr-0 h-4 w-4" />
-                  {t.createOrder}
-                </Link>
-              </Button>
-            )}
-          </>
-        )}
+      <CardFooter className="p-4 border-t flex flex-col gap-2">
+        <div className="flex flex-col sm:flex-row gap-2 w-full">
+          {hasPermission('products_view_details') && (
+            <Button asChild variant="outline" className="flex-1 hover:bg-accent hover:text-accent-foreground">
+              <Link href={`/${lang}/products/${product.id}`}>
+                <Eye className="mr-2 rtl:ml-2 rtl:mr-0 h-4 w-4" />
+                {t.viewDetails}
+              </Link>
+            </Button>
+          )}
+
+          {/* Print Barcode Button */}
+          {product.productCode && (
+            <PrintBarcodeButton
+              productId={product.id}
+              productCode={product.productCode}
+              productName={product.name}
+              productPrice={product.price}
+              lang={lang as 'ar' | 'en'}
+              buttonText={t.printBarcode}
+              alertTextTemplate={t.printBarcodeAlertTemplate}
+              className="flex-1"
+            />
+          )}
+
+          {authIsLoading ? (
+            <Button disabled className="flex-1">
+              <Loader2 className="mr-2 rtl:ml-2 rtl:mr-0 h-4 w-4 animate-spin" />
+              {t.loading}
+            </Button>
+          ) : (
+            <>
+              {hasPermission('orders_add') && (
+                <Button asChild variant="default" className="flex-1">
+                  <Link href={`/${lang}/orders/new?productId=${product.id}`}>
+                    <ShoppingCart className="mr-2 rtl:ml-2 rtl:mr-0 h-4 w-4" />
+                    {t.createOrder}
+                  </Link>
+                </Button>
+              )}
+            </>
+          )}
+        </div>
       </CardFooter>
     </Card>
   );
