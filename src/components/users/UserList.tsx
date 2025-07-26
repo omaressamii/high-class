@@ -1,12 +1,13 @@
 
 import React from 'react'; // Import React
-import type { User, FinancialTransaction } from '@/types';
+import type { User, FinancialTransaction, UserCashout } from '@/types';
 import { UserCard } from './UserCard';
 
 interface UserListProps {
   users: User[];
   lang: string;
   transactions?: FinancialTransaction[];
+  cashouts?: UserCashout[];
   currentUser?: User;
   onUserDeleted?: () => void;
   onCashoutComplete?: () => void;
@@ -16,6 +17,7 @@ const UserListComponent = ({
   users,
   lang,
   transactions = [],
+  cashouts = [],
   currentUser,
   onUserDeleted,
   onCashoutComplete
@@ -28,6 +30,7 @@ const UserListComponent = ({
           user={user}
           lang={lang}
           transactions={transactions}
+          cashouts={cashouts}
           currentUser={currentUser}
           onUserDeleted={onUserDeleted}
           onCashoutComplete={onCashoutComplete}

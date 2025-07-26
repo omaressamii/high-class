@@ -13,12 +13,18 @@ import { Wallet, AlertTriangle, CheckCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { ref, push, set } from 'firebase/database';
 import { database } from '@/lib/firebase';
-import type { User, FinancialTransaction } from '@/types';
-import { calculateUserCashBalance, getUserPaymentTransactions, getUserCashTransactions } from '@/lib/utils';
+import type { User, FinancialTransaction, UserCashout } from '@/types';
+import {
+  calculateUserCashBalance,
+  getUserPaymentTransactions,
+  getUserCashTransactions,
+  getLastUserCashout
+} from '@/lib/utils';
 
 interface CashoutDialogProps {
   user: User;
   transactions: FinancialTransaction[];
+  cashouts: UserCashout[];
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   lang: string;
@@ -29,6 +35,7 @@ interface CashoutDialogProps {
 export function CashoutDialog({
   user,
   transactions,
+  cashouts,
   isOpen,
   onOpenChange,
   lang,
@@ -38,12 +45,13 @@ export function CashoutDialog({
   const [isProcessing, setIsProcessing] = useState(false);
   const { toast } = useToast();
 
-  const cashBalance = calculateUserCashBalance(user.id, transactions);
+  const cashBalance = calculateUserCashBalance(user.id, transactions, cashouts);
   const userPaymentTransactions = getUserPaymentTransactions(user.id, transactions);
-  const userCashTransactions = getUserCashTransactions(user.id, transactions);
+  const userCashTransactions = getUserCashTransactions(user.id, transactions, cashouts);
+  const lastCashout = getLastUserCashout(user.id, cashouts);
 
-  // Calculate total payments received (before any cashouts)
-  const totalPaymentsReceived = userPaymentTransactions.reduce((sum, t) => sum + (t.amount || 0), 0);
+  // Calculate total payments received since last cashout
+  const totalPaymentsReceived = userCashTransactions.reduce((sum, t) => sum + (t.amount || 0), 0);
 
   const t = {
     title: lang === 'ar' ? 'تفريغ خزنة المستخدم' : 'User Cashout',
@@ -52,8 +60,10 @@ export function CashoutDialog({
       : 'View cashbox details and confirm cashout operation',
     userLabel: lang === 'ar' ? 'المستخدم' : 'User',
     currentBalance: lang === 'ar' ? 'الرصيد الحالي' : 'Current Balance',
-    totalReceived: lang === 'ar' ? 'إجمالي المبلغ المحصل' : 'Total Amount Collected',
-    transactionCount: lang === 'ar' ? 'عدد المعاملات' : 'Transaction Count',
+    totalReceived: lang === 'ar' ? 'المبلغ المحصل منذ آخر تفريغ' : 'Amount Collected Since Last Cashout',
+    transactionCount: lang === 'ar' ? 'عدد المعاملات منذ آخر تفريغ' : 'Transactions Since Last Cashout',
+    lastCashout: lang === 'ar' ? 'آخر تفريغ' : 'Last Cashout',
+    noCashoutYet: lang === 'ar' ? 'لم يتم التفريغ من قبل' : 'No previous cashout',
     noBalance: lang === 'ar' ? 'لا يوجد رصيد للتفريغ' : 'No balance to cashout',
     confirmCashout: lang === 'ar' ? 'تأكيد التفريغ' : 'Confirm Cashout',
     cancel: lang === 'ar' ? 'إلغاء' : 'Cancel',
@@ -83,32 +93,29 @@ export function CashoutDialog({
     setIsProcessing(true);
 
     try {
-      // Create cashout transaction
-      const cashoutTransaction: Omit<FinancialTransaction, 'id'> = {
-        date: new Date().toISOString().split('T')[0], // YYYY-MM-DD format
-        type: 'Cashout',
-        transactionCategory: 'Cashout',
-        description: lang === 'ar' 
-          ? `تفريغ خزنة المستخدم: ${user.fullName}` 
-          : `User cashout: ${user.fullName}`,
+      // Create cashout record (separate from financial transactions)
+      const cashoutRecord: Omit<UserCashout, 'id'> = {
+        userId: user.id,
+        userName: user.fullName,
+        amount: cashBalance, // Positive amount representing what was cashed out
+        cashoutDate: new Date().toISOString().split('T')[0], // YYYY-MM-DD format
         processedByUserId: currentUser?.id || 'SYSTEM',
         processedByUserName: currentUser?.fullName || 'System',
-        amount: -cashBalance, // Negative amount to reset balance to zero
         branchId: user.branchId || null,
         branchName: user.branchName || null,
-        notes: lang === 'ar' 
-          ? `تفريغ خزنة - إجمالي المبلغ المحصل: ${cashBalance} ${t.currencySymbol}` 
-          : `Cashout - Total collected amount: ${cashBalance} ${t.currencySymbol}`,
+        notes: lang === 'ar'
+          ? `تفريغ خزنة - عدد المعاملات: ${userCashTransactions.length}`
+          : `Cashout - Transaction count: ${userCashTransactions.length}`,
         createdAt: new Date().toISOString(),
       };
 
-      // Save to database
-      const financialTransactionsRef = ref(database, 'financial_transactions');
-      const cleanTransaction = Object.fromEntries(
-        Object.entries(cashoutTransaction).filter(([, value]) => value !== undefined)
+      // Save to user_cashouts table (separate from financial_transactions)
+      const cashoutsRef = ref(database, 'user_cashouts');
+      const cleanCashoutRecord = Object.fromEntries(
+        Object.entries(cashoutRecord).filter(([, value]) => value !== undefined)
       );
-      const newTransactionRef = push(financialTransactionsRef);
-      await set(newTransactionRef, cleanTransaction);
+      const newCashoutRef = push(cashoutsRef);
+      await set(newCashoutRef, cleanCashoutRecord);
 
       toast({
         title: t.successTitle,
@@ -171,7 +178,18 @@ export function CashoutDialog({
           {/* Transaction Count */}
           <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
             <span className="font-medium">{t.transactionCount}:</span>
-            <span>{userPaymentTransactions.length}</span>
+            <span>{userCashTransactions.length}</span>
+          </div>
+
+          {/* Last Cashout Info */}
+          <div className="flex items-center justify-between p-3 bg-gray-50 border border-gray-200 rounded-lg">
+            <span className="font-medium text-gray-700">{t.lastCashout}:</span>
+            <span className="text-sm text-gray-600">
+              {lastCashout
+                ? new Date(lastCashout.createdAt).toLocaleDateString(lang === 'ar' ? 'ar-EG' : 'en-US')
+                : t.noCashoutYet
+              }
+            </span>
           </div>
 
           {/* Warning */}

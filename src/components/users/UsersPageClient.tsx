@@ -7,7 +7,7 @@ import { ClientAuthWrapperForUsersPage } from '@/components/users/ClientAuthWrap
 import { Users as UsersIcon, Search, Filter } from 'lucide-react';
 import { ref, get } from "firebase/database";
 import { database } from "@/lib/firebase";
-import type { User, Branch, FinancialTransaction } from '@/types';
+import type { User, Branch, FinancialTransaction, UserCashout } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -67,6 +67,47 @@ async function getFinancialTransactionsFromRealtimeDB(): Promise<FinancialTransa
   }
 }
 
+async function getUserCashoutsFromRealtimeDB(): Promise<UserCashout[]> {
+  const cashoutsRef = ref(database, "user_cashouts");
+
+  try {
+    const cashoutSnapshot = await get(cashoutsRef);
+
+    if (!cashoutSnapshot.exists()) {
+      return [];
+    }
+
+    const cashoutsData = cashoutSnapshot.val();
+    const cashoutList: UserCashout[] = [];
+
+    Object.entries(cashoutsData).forEach(([id, data]: [string, any]) => {
+      try {
+        const cashout: UserCashout = {
+          id: id,
+          userId: data.userId,
+          userName: data.userName,
+          amount: Number(data.amount) || 0,
+          cashoutDate: data.cashoutDate,
+          processedByUserId: data.processedByUserId,
+          processedByUserName: data.processedByUserName,
+          branchId: data.branchId,
+          branchName: data.branchName,
+          notes: data.notes,
+          createdAt: data.createdAt || new Date().toISOString(),
+        };
+        cashoutList.push(cashout);
+      } catch (error) {
+        console.error(`Error parsing cashout ${id}:`, error);
+      }
+    });
+
+    return cashoutList;
+  } catch (error) {
+    console.error("Error fetching user cashouts:", error);
+    return [];
+  }
+}
+
 async function getUsersFromRealtimeDB(): Promise<User[]> {
   const usersRef = ref(database, "users");
 
@@ -119,24 +160,29 @@ async function getUsersFromRealtimeDB(): Promise<User[]> {
 const UsersPageClient = ({ initialUsers, lang }: UsersPageClientProps) => {
   const [users, setUsers] = useState<User[]>(initialUsers);
   const [transactions, setTransactions] = useState<FinancialTransaction[]>([]);
+  const [cashouts, setCashouts] = useState<UserCashout[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
 
   // Get current user
   const { user: currentUser } = useOptimizedAuth();
 
-  // Load financial transactions on component mount
+  // Load financial transactions and cashouts on component mount
   useEffect(() => {
-    const loadTransactions = async () => {
+    const loadData = async () => {
       try {
-        const fetchedTransactions = await getFinancialTransactionsFromRealtimeDB();
+        const [fetchedTransactions, fetchedCashouts] = await Promise.all([
+          getFinancialTransactionsFromRealtimeDB(),
+          getUserCashoutsFromRealtimeDB()
+        ]);
         setTransactions(fetchedTransactions);
+        setCashouts(fetchedCashouts);
       } catch (error) {
-        console.error("Error loading financial transactions:", error);
+        console.error("Error loading financial data:", error);
       }
     };
 
-    loadTransactions();
+    loadData();
   }, []);
 
   const t = {
@@ -177,11 +223,11 @@ const UsersPageClient = ({ initialUsers, lang }: UsersPageClientProps) => {
 
   const handleCashoutComplete = async () => {
     try {
-      // Reload financial transactions to reflect the new cashout transaction
-      const updatedTransactions = await getFinancialTransactionsFromRealtimeDB();
-      setTransactions(updatedTransactions);
+      // Reload cashouts to reflect the new cashout record
+      const updatedCashouts = await getUserCashoutsFromRealtimeDB();
+      setCashouts(updatedCashouts);
     } catch (error) {
-      console.error("Error refreshing transactions after cashout:", error);
+      console.error("Error refreshing cashouts after cashout:", error);
     }
   };
 
@@ -222,6 +268,7 @@ const UsersPageClient = ({ initialUsers, lang }: UsersPageClientProps) => {
           users={filteredUsers}
           lang={lang}
           transactions={transactions}
+          cashouts={cashouts}
           currentUser={currentUser}
           onUserDeleted={handleUserDeleted}
           onCashoutComplete={handleCashoutComplete}

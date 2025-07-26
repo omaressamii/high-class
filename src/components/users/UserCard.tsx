@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react'; // Import React
-import type { User, FinancialTransaction } from '@/types';
+import type { User, FinancialTransaction, UserCashout } from '@/types';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { UserCircle, Settings, Briefcase, ShieldCheck, ShieldQuestion, Store, Trash2, Wallet } from 'lucide-react';
@@ -27,6 +27,7 @@ interface UserCardProps {
   user: User;
   lang: string;
   transactions?: FinancialTransaction[];
+  cashouts?: UserCashout[];
   currentUser?: User;
   onUserDeleted?: () => void;
   onCashoutComplete?: () => void;
@@ -37,6 +38,7 @@ const UserCard = React.memo(function UserCard({
   user,
   lang: propLang,
   transactions = [],
+  cashouts = [],
   currentUser,
   onUserDeleted,
   onCashoutComplete
@@ -49,7 +51,7 @@ const UserCard = React.memo(function UserCard({
   const router = useRouter();
 
   // Calculate user's cash balance
-  const cashBalance = calculateUserCashBalance(user.id, transactions);
+  const cashBalance = calculateUserCashBalance(user.id, transactions, cashouts);
 
   // Check if current user has cashout permission
   const canManageCashout = currentUser?.permissions?.includes('cashout_manage') || false;
@@ -264,6 +266,7 @@ const UserCard = React.memo(function UserCard({
       <CashoutDialog
         user={user}
         transactions={transactions}
+        cashouts={cashouts}
         isOpen={showCashoutDialog}
         onOpenChange={setShowCashoutDialog}
         lang={lang}

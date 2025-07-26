@@ -195,15 +195,13 @@ export type FinancialTransactionType =
   | 'Payment Received'
   | 'Refund Issued'
   | 'Expense'
-  | 'Discount Applied'
-  | 'Cashout';
+  | 'Discount Applied';
 
 export const financialTransactionTypeValues: FinancialTransactionType[] = [
   'Initial Sale Value',
   'Initial Rental Value',
   'Payment Received',
   'Discount Applied',
-  'Cashout',
 ];
 
 export interface FinancialTransaction {
@@ -234,6 +232,21 @@ export interface FinancialTransaction {
 export interface OrderItemToReturn {
   productId: string;
   productName: string;
+}
+
+// User Cashout interface - separate from financial transactions
+export interface UserCashout {
+  id: string;
+  userId: string;
+  userName: string;
+  amount: number; // Amount cashed out (positive value)
+  cashoutDate: string; // YYYY-MM-DD format
+  processedByUserId: string;
+  processedByUserName: string;
+  branchId?: string;
+  branchName?: string;
+  notes?: string;
+  createdAt: string; // ISO timestamp
 }
 
 // Permission Groups
