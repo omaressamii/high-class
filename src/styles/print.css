@@ -158,9 +158,29 @@
   [data-radix-portal] {
     display: none !important;
   }
-  
+
   [data-radix-portal] .printable-dialog-content {
     display: block !important;
     position: static !important;
+  }
+
+  /* Tailor receipt specific print styles - match invoice design exactly */
+  .tailor-receipt-print {
+    font-family: 'Courier New', Courier, monospace !important;
+    font-size: 16px !important;
+    font-weight: bold !important;
+    line-height: 1.5 !important;
+    color: black !important;
+    background: white !important;
+    width: 80mm !important;
+    margin: 0 auto !important;
+    padding: 10px !important;
+  }
+
+  /* Ensure tailor receipt prints with same thermal printer settings */
+  .printable-dialog-content.tailor-receipt {
+    max-width: 80mm !important;
+    font-family: 'Courier New', Courier, monospace !important;
+    font-size: 12px !important;
   }
 }

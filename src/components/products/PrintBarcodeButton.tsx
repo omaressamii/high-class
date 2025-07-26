@@ -5,7 +5,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Barcode } from 'lucide-react';
 import JsBarcode from 'jsbarcode';
-import { useBarcodeSettings } from '@/hooks/use-app-settings';
+import { useBarcodeSettings, useGeneralSettings } from '@/hooks/use-app-settings';
 
 // CODE 128 can handle alphanumeric characters, so no conversion needed
 
@@ -31,6 +31,7 @@ export function PrintBarcodeButton({
   className,
 }: PrintBarcodeButtonProps) {
   const { settings: barcodeSettings } = useBarcodeSettings();
+  const { settings: generalSettings } = useGeneralSettings();
 
   const handlePrintBarcode = () => {
     console.log(`Printing barcode for product ID: ${productId}, Code: ${productCode}`);
@@ -41,7 +42,7 @@ export function PrintBarcodeButton({
 
       const currencySymbol = lang === 'ar' ? 'ج.م' : 'EGP';
       const priceText = productPrice ? `${productPrice} ${currencySymbol}` : '';
-      const companyName = lang === 'ar' ? 'هاي كلاس' : 'High Class';
+      const companyName = lang === 'ar' ? generalSettings.companyNameAr : generalSettings.companyName;
 
       // Use original product code for CODE 128 (no conversion needed)
       const barcodeValue = productCode;

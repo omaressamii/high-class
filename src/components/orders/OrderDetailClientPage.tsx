@@ -29,6 +29,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ApplyDiscountDialog } from './ApplyDiscountDialog';
 import { AddPaymentDialog } from './AddPaymentDialog';
+import { useGeneralSettings } from '@/hooks/use-app-settings';
 
 
 export type OrderDetailsData = {
@@ -49,7 +50,10 @@ export function OrderDetailClientPage({ initialOrderDetails, lang, orderId }: Or
   const { hasPermission, isLoading: authIsLoading, currentUser } = useAuth();
   const { toast } = useToast();
   const router = useRouter();
-  const effectiveLang = lang; 
+  const effectiveLang = lang;
+
+  // Get company settings
+  const { settings: generalSettings, isLoading: settingsLoading } = useGeneralSettings();
 
   const [orderDetails, setOrderDetails] = useState<OrderDetailsData | null>(initialOrderDetails);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -123,7 +127,7 @@ export function OrderDetailClientPage({ initialOrderDetails, lang, orderId }: Or
     unknownProduct: effectiveLang === 'ar' ? 'منتج غير معروف' : 'Unknown Product',
     unknownCustomer: effectiveLang === 'ar' ? 'عميل غير معروف' : 'Unknown Customer',
     unknownBranch: effectiveLang === 'ar' ? 'فرع غير محدد' : 'Unassigned Branch',
-    shopName: effectiveLang === 'ar' ? 'هاي كلاس' : 'Clasic',
+    shopName: effectiveLang === 'ar' ? generalSettings.companyNameAr : generalSettings.companyName,
     thankYou: effectiveLang === 'ar' ? 'شكراً لتعاملكم معنا!' : 'Thank you for your business!',
     loadingPage: effectiveLang === 'ar' ? 'جار تحميل الصفحة...' : 'Loading page...',
   };
