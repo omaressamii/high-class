@@ -50,8 +50,8 @@ const UserCard = React.memo(function UserCard({
   const { toast } = useToast();
   const router = useRouter();
 
-  // Calculate user's cash balance
-  const cashBalance = calculateUserCashBalance(user.id, transactions, cashouts);
+  // Calculate user's cash balance using user's full name (matches Financial page logic)
+  const cashBalance = calculateUserCashBalance(user.fullName, transactions, cashouts);
 
   // Check if current user has cashout permission
   const canManageCashout = currentUser?.permissions?.includes('cashout_manage') || false;

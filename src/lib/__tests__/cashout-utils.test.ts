@@ -1,11 +1,12 @@
 /**
  * Test file for cashout utility functions
  * This file tests the improved cashout system to ensure accuracy
+ * Updated to match Financial page logic using userName instead of userId
  */
 
-import { 
-  calculateUserCashBalance, 
-  getUserPaymentTransactions, 
+import {
+  calculateUserCashBalance,
+  getUserPaymentTransactions,
   getUserCashTransactions,
   getLastUserCashout,
   getTotalUserCashouts
@@ -77,30 +78,30 @@ describe('Cashout Utility Functions', () => {
   
   describe('calculateUserCashBalance', () => {
     test('should calculate balance correctly without any cashouts', () => {
-      const balance = calculateUserCashBalance('user2', mockTransactions, []);
+      const balance = calculateUserCashBalance('User Two', mockTransactions, []);
       expect(balance).toBe(300); // Only tx4
     });
 
     test('should calculate balance correctly after cashout', () => {
-      const balance = calculateUserCashBalance('user1', mockTransactions, mockCashouts);
-      expect(balance).toBe(150); // Only tx3 after cashout
+      const balance = calculateUserCashBalance('User One', mockTransactions, mockCashouts);
+      expect(balance).toBe(150); // Total 450 (tx1+tx2+tx3) minus 300 cashout = 150
     });
 
     test('should return 0 for user with no transactions', () => {
-      const balance = calculateUserCashBalance('user3', mockTransactions, mockCashouts);
+      const balance = calculateUserCashBalance('User Three', mockTransactions, mockCashouts);
       expect(balance).toBe(0);
     });
   });
 
   describe('getUserCashTransactions', () => {
     test('should return transactions since last cashout', () => {
-      const transactions = getUserCashTransactions('user1', mockTransactions, mockCashouts);
+      const transactions = getUserCashTransactions('User One', mockTransactions, mockCashouts);
       expect(transactions).toHaveLength(1);
       expect(transactions[0].id).toBe('tx3');
     });
 
     test('should return all transactions if no cashouts', () => {
-      const transactions = getUserCashTransactions('user2', mockTransactions, mockCashouts);
+      const transactions = getUserCashTransactions('User Two', mockTransactions, mockCashouts);
       expect(transactions).toHaveLength(1);
       expect(transactions[0].id).toBe('tx4');
     });
@@ -108,41 +109,41 @@ describe('Cashout Utility Functions', () => {
 
   describe('getLastUserCashout', () => {
     test('should return the last cashout for user', () => {
-      const lastCashout = getLastUserCashout('user1', mockCashouts);
+      const lastCashout = getLastUserCashout('User One', mockCashouts);
       expect(lastCashout).not.toBeNull();
       expect(lastCashout?.id).toBe('co1');
     });
 
     test('should return null if no cashouts', () => {
-      const lastCashout = getLastUserCashout('user2', mockCashouts);
+      const lastCashout = getLastUserCashout('User Two', mockCashouts);
       expect(lastCashout).toBeNull();
     });
   });
 
   describe('getTotalUserCashouts', () => {
     test('should calculate total cashouts correctly', () => {
-      const total = getTotalUserCashouts('user1', mockCashouts);
+      const total = getTotalUserCashouts('User One', mockCashouts);
       expect(total).toBe(300);
     });
 
     test('should return 0 if no cashouts', () => {
-      const total = getTotalUserCashouts('user2', mockCashouts);
+      const total = getTotalUserCashouts('User Two', mockCashouts);
       expect(total).toBe(0);
     });
   });
 
   describe('Integration Test - Complete Cashout Cycle', () => {
-    test('should handle complete cashout cycle correctly', () => {
-      // Initial state: user1 has 3 transactions totaling 450
-      const initialBalance = calculateUserCashBalance('user1', mockTransactions, []);
+    test('should handle complete cashout cycle correctly with new logic', () => {
+      // Initial state: User One has 3 transactions totaling 450
+      const initialBalance = calculateUserCashBalance('User One', mockTransactions, []);
       expect(initialBalance).toBe(450); // tx1 + tx2 + tx3
 
-      // After first cashout of 300 (tx1 + tx2)
-      const balanceAfterCashout = calculateUserCashBalance('user1', mockTransactions, mockCashouts);
-      expect(balanceAfterCashout).toBe(150); // Only tx3 remains
+      // After first cashout of 300: total 450 minus 300 cashout = 150
+      const balanceAfterCashout = calculateUserCashBalance('User One', mockTransactions, mockCashouts);
+      expect(balanceAfterCashout).toBe(150); // 450 - 300 = 150
 
       // Verify transactions since last cashout
-      const transactionsSinceCashout = getUserCashTransactions('user1', mockTransactions, mockCashouts);
+      const transactionsSinceCashout = getUserCashTransactions('User One', mockTransactions, mockCashouts);
       expect(transactionsSinceCashout).toHaveLength(1);
       expect(transactionsSinceCashout[0].amount).toBe(150);
     });
@@ -151,22 +152,22 @@ describe('Cashout Utility Functions', () => {
 
 // Manual test function for console testing
 export function runManualCashoutTests() {
-  console.log('=== Manual Cashout System Tests ===');
-  
-  console.log('1. User1 initial balance (no cashouts):', 
-    calculateUserCashBalance('user1', mockTransactions, []));
-  
-  console.log('2. User1 balance after cashout:', 
-    calculateUserCashBalance('user1', mockTransactions, mockCashouts));
-  
-  console.log('3. User1 transactions since last cashout:', 
-    getUserCashTransactions('user1', mockTransactions, mockCashouts).length);
-  
-  console.log('4. User2 balance (no cashouts):', 
-    calculateUserCashBalance('user2', mockTransactions, mockCashouts));
-  
-  console.log('5. Last cashout for user1:', 
-    getLastUserCashout('user1', mockCashouts)?.amount);
-  
+  console.log('=== Manual Cashout System Tests (Updated) ===');
+
+  console.log('1. User One initial balance (no cashouts):',
+    calculateUserCashBalance('User One', mockTransactions, []));
+
+  console.log('2. User One balance after cashout:',
+    calculateUserCashBalance('User One', mockTransactions, mockCashouts));
+
+  console.log('3. User One transactions since last cashout:',
+    getUserCashTransactions('User One', mockTransactions, mockCashouts).length);
+
+  console.log('4. User Two balance (no cashouts):',
+    calculateUserCashBalance('User Two', mockTransactions, mockCashouts));
+
+  console.log('5. Last cashout for User One:',
+    getLastUserCashout('User One', mockCashouts)?.amount);
+
   console.log('=== Tests Complete ===');
 }

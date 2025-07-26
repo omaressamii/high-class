@@ -45,10 +45,10 @@ export function CashoutDialog({
   const [isProcessing, setIsProcessing] = useState(false);
   const { toast } = useToast();
 
-  const cashBalance = calculateUserCashBalance(user.id, transactions, cashouts);
-  const userPaymentTransactions = getUserPaymentTransactions(user.id, transactions);
-  const userCashTransactions = getUserCashTransactions(user.id, transactions, cashouts);
-  const lastCashout = getLastUserCashout(user.id, cashouts);
+  const cashBalance = calculateUserCashBalance(user.fullName, transactions, cashouts);
+  const userPaymentTransactions = getUserPaymentTransactions(user.fullName, transactions);
+  const userCashTransactions = getUserCashTransactions(user.fullName, transactions, cashouts);
+  const lastCashout = getLastUserCashout(user.fullName, cashouts);
 
   // Calculate total payments received since last cashout
   const totalPaymentsReceived = userCashTransactions.reduce((sum, t) => sum + (t.amount || 0), 0);
