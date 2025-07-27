@@ -21,16 +21,18 @@ interface TailorReceiptDialogProps {
 }
 
 export function TailorReceiptDialog({ isOpen, setIsOpen, order, lang }: TailorReceiptDialogProps) {
-  // Initialize special instructions with order notes if available
-  const [specialInstructions, setSpecialInstructions] = useState(order.notes || '');
+  // Initialize special instructions as empty for user input
+  const [specialInstructions, setSpecialInstructions] = useState('');
 
   // Get company settings
   const { settings: generalSettings, isLoading: settingsLoading } = useGeneralSettings();
 
-  // Update special instructions when order changes
+  // Reset special instructions when dialog opens/closes
   useEffect(() => {
-    setSpecialInstructions(order.notes || '');
-  }, [order.notes]);
+    if (isOpen) {
+      setSpecialInstructions('');
+    }
+  }, [isOpen]);
 
   const t = {
     dialogTitle: lang === 'ar' ? 'وصل تفاصيل المقاسات للخياط' : 'Tailor Measurements Receipt',
