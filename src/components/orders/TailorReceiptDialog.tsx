@@ -98,35 +98,36 @@ export function TailorReceiptDialog({ isOpen, setIsOpen, order, lang }: TailorRe
             padding-bottom: 10px;
           }
           .header h1 {
-            font-size: 24px;
-            font-weight: bold;
-            margin-bottom: 8px;
-          }
-          .header p {
-            font-size: 16px;
-            font-weight: bold;
-            margin: 3px 0;
-          }
-          .section {
-            margin: 10px 0;
-          }
-          .section h3 {
             font-size: 18px;
             font-weight: bold;
+            margin-bottom: 6px;
+          }
+          .header p {
+            font-size: 12px;
+            font-weight: bold;
+            margin: 2px 0;
+          }
+          .section {
             margin: 8px 0;
+          }
+          .section h3 {
+            font-size: 14px;
+            font-weight: bold;
+            margin: 6px 0;
             border-bottom: 2px dashed black;
-            padding-bottom: 4px;
+            padding-bottom: 3px;
           }
           .line {
             display: flex;
             justify-content: space-between;
-            margin-bottom: 5px;
+            margin-bottom: 3px;
             align-items: flex-start;
             font-weight: bold;
+            font-size: 11px;
           }
           .line .label {
             flex-shrink: 0;
-            margin-right: 10px;
+            margin-right: 8px;
             font-weight: bold;
           }
           .line .value {
@@ -135,6 +136,18 @@ export function TailorReceiptDialog({ isOpen, setIsOpen, order, lang }: TailorRe
             word-wrap: break-word;
             font-weight: bold;
           }
+          .products-section {
+            margin: 8px 0;
+          }
+          .product-item {
+            margin-bottom: 4px;
+            padding: 3px 0;
+            border-bottom: 1px dotted #ccc;
+            font-size: 11px;
+          }
+          .product-item:last-child {
+            border-bottom: none;
+          }
           .divider {
             border-top: 1px dashed black;
             margin: 8px 0;
@@ -142,21 +155,21 @@ export function TailorReceiptDialog({ isOpen, setIsOpen, order, lang }: TailorRe
           }
           .footer {
             text-align: center;
-            margin-top: 20px;
-            font-size: 16px;
+            margin-top: 15px;
+            font-size: 12px;
             font-weight: bold;
-            border-top: 3px solid black;
-            padding-top: 15px;
+            border-top: 2px solid black;
+            padding-top: 10px;
           }
           .notes {
             white-space: pre-line;
             word-wrap: break-word;
-            margin: 8px 0;
+            margin: 6px 0;
             text-align: right;
             direction: rtl;
             font-weight: bold;
-            line-height: 1.6;
-            font-size: 14px;
+            line-height: 1.4;
+            font-size: 11px;
           }
           .note-item {
             margin-bottom: 4px;
@@ -194,13 +207,31 @@ export function TailorReceiptDialog({ isOpen, setIsOpen, order, lang }: TailorRe
             <span class="value">${order.customerPhoneNumber || t.notAvailable}</span>
           </div>
           <div class="line">
-            <span class="label">${t.product}:</span>
-            <span class="value">${order.productName || t.notAvailable}</span>
-          </div>
-          <div class="line">
             <span class="label">${t.deliveryDate}:</span>
             <span class="value">${formatReceiptDate(order.deliveryDate)}</span>
           </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="section products-section">
+          <h3>${lang === 'ar' ? 'المنتجات:' : 'Products:'}</h3>
+          ${order.items && order.items.length > 0
+            ? order.items.map((item, index) => `
+              <div class="product-item">
+                <div class="line">
+                  <span class="label">${index + 1}. ${item.productName || item.productCode || t.notAvailable}</span>
+                  <span class="value">${lang === 'ar' ? 'الكمية:' : 'Qty:'} ${item.quantity}</span>
+                </div>
+              </div>
+            `).join('')
+            : `<div class="product-item">
+                <div class="line">
+                  <span class="label">${order.productName || t.notAvailable}</span>
+                  <span class="value">${lang === 'ar' ? 'كمية: 1' : 'Qty: 1'}</span>
+                </div>
+              </div>`
+          }
         </div>
 
         <div class="divider"></div>
@@ -258,10 +289,6 @@ export function TailorReceiptDialog({ isOpen, setIsOpen, order, lang }: TailorRe
                 <span>{order.customerPhoneNumber || t.notAvailable}</span>
               </div>
               <div className="flex justify-between">
-                <span className="font-medium">{t.product}:</span>
-                <span>{order.productName || t.notAvailable}</span>
-              </div>
-              <div className="flex justify-between">
                 <span className="font-medium">{t.deliveryDate}:</span>
                 <span>{order.deliveryDate}</span>
               </div>
@@ -269,6 +296,26 @@ export function TailorReceiptDialog({ isOpen, setIsOpen, order, lang }: TailorRe
                 <div className="flex justify-between">
                   <span className="font-medium">{t.branch}:</span>
                   <span>{order.branchName}</span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Products Section */}
+          <div className="space-y-3 border rounded-lg p-4">
+            <h3 className="text-lg font-semibold mb-3">{lang === 'ar' ? 'المنتجات' : 'Products'}</h3>
+            <div className="space-y-2">
+              {order.items && order.items.length > 0 ? (
+                order.items.map((item, index) => (
+                  <div key={index} className="flex justify-between text-sm border-b pb-1">
+                    <span className="font-medium">{index + 1}. {item.productName || item.productCode || t.notAvailable}</span>
+                    <span>{lang === 'ar' ? 'الكمية:' : 'Qty:'} {item.quantity}</span>
+                  </div>
+                ))
+              ) : (
+                <div className="flex justify-between text-sm">
+                  <span className="font-medium">{order.productName || t.notAvailable}</span>
+                  <span>{lang === 'ar' ? 'كمية: 1' : 'Qty: 1'}</span>
                 </div>
               )}
             </div>
