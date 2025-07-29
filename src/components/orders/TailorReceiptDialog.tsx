@@ -16,23 +16,24 @@ interface TailorReceiptDialogProps {
     customerName?: string;
     customerPhoneNumber?: string;
     branchName?: string;
+    measurementNotes?: string;
   };
   lang: 'ar' | 'en';
 }
 
 export function TailorReceiptDialog({ isOpen, setIsOpen, order, lang }: TailorReceiptDialogProps) {
-  // Initialize special instructions as empty for user input
+  // Initialize special instructions from order's measurement notes
   const [specialInstructions, setSpecialInstructions] = useState('');
 
   // Get company settings
   const { settings: generalSettings, isLoading: settingsLoading } = useGeneralSettings();
 
-  // Reset special instructions when dialog opens/closes
+  // Set special instructions from order's measurement notes when dialog opens
   useEffect(() => {
     if (isOpen) {
-      setSpecialInstructions('');
+      setSpecialInstructions(order.measurementNotes || '');
     }
-  }, [isOpen]);
+  }, [isOpen, order.measurementNotes]);
 
   const t = {
     dialogTitle: lang === 'ar' ? 'وصل تفاصيل المقاسات للخياط' : 'Tailor Measurements Receipt',
@@ -279,7 +280,7 @@ export function TailorReceiptDialog({ isOpen, setIsOpen, order, lang }: TailorRe
             <Textarea
               value={specialInstructions}
               onChange={(e) => setSpecialInstructions(e.target.value)}
-              placeholder={lang === 'ar' ? 'أدخل التعليمات الخاصة للخياط...' : 'Enter special instructions for the tailor...'}
+              placeholder={lang === 'ar' ? 'ملاحظات المقاسات والتعليمات الخاصة للخياط...' : 'Measurement notes and special instructions for the tailor...'}
               className="min-h-[120px] resize-none"
               dir={lang === 'ar' ? 'rtl' : 'ltr'}
             />

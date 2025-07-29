@@ -112,6 +112,8 @@ export default function AddNewOrderPage() {
     remainingAmountLabel: effectiveLang === 'ar' ? 'المبلغ المتبقي' : 'Remaining Amount',
     notesLabel: effectiveLang === 'ar' ? 'ملاحظات (اختياري)' : 'Notes (Optional)',
     notesPlaceholder: effectiveLang === 'ar' ? 'أي ملاحظات إضافية عن الطلب...' : 'Any additional notes about the order...',
+    measurementNotesLabel: effectiveLang === 'ar' ? 'ملاحظات المقاسات (للخياط)' : 'Measurement Notes (for Tailor)',
+    measurementNotesPlaceholder: effectiveLang === 'ar' ? 'ملاحظات خاصة بالمقاسات والتعديلات للخياط...' : 'Special notes about measurements and alterations for the tailor...',
     currencySymbol: effectiveLang === 'ar' ? 'ج.م' : 'EGP',
     errorFetchingSellers: effectiveLang === 'ar' ? 'خطأ في جلب البائعين' : 'Error fetching sellers',
     errorFetchingCustomers: effectiveLang === 'ar' ? 'خطأ في جلب العملاء' : 'Error fetching customers',
@@ -160,6 +162,7 @@ export default function AddNewOrderPage() {
     branchId: z.string().optional(),
     paymentMethod: z.enum(paymentMethodValues).optional(),
     notes: z.string().optional(),
+    measurementNotes: z.string().optional(),
   }).refine(data => {
     if (data.orderDate && data.deliveryDate) {
       const orderD = dateFnsStartOfDay(data.orderDate);
@@ -217,6 +220,7 @@ export default function AddNewOrderPage() {
       branchId: currentHasPermission('view_all_branches') ? undefined : currentUser?.branchId,
       paymentMethod: undefined,
       notes: '',
+      measurementNotes: '',
     },
   });
 
@@ -663,6 +667,7 @@ export default function AddNewOrderPage() {
         remainingAmount: calculatedTotalPrice - (formData.paidAmount || 0),
         status: 'Ongoing',
         notes: orderNotes || null,
+        measurementNotes: formData.measurementNotes || null,
         branchId: orderBranchIdForSaving || null,
         branchName: orderBranchNameForSaving || null,
         createdAt: new Date().toISOString(),
@@ -1212,6 +1217,19 @@ export default function AddNewOrderPage() {
                     <FormLabel>{t.notesLabel}</FormLabel>
                     <FormControl>
                       <Textarea placeholder={t.notesPlaceholder} rows={3} {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="measurementNotes"
+                render={({ field }) => (
+                  <FormItem className="md:col-span-2">
+                    <FormLabel>{t.measurementNotesLabel}</FormLabel>
+                    <FormControl>
+                      <Textarea placeholder={t.measurementNotesPlaceholder} rows={4} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

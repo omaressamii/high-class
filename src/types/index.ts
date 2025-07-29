@@ -166,6 +166,7 @@ export interface Order {
   remainingAmount: number;
   status: OrderStatus;
   notes?: string;
+  measurementNotes?: string;
   returnCondition?: ProductReturnCondition;
   returnNotes?: string;
   createdAt?: any;
