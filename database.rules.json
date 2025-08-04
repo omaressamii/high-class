@@ -4,7 +4,7 @@
     ".write": "auth != null",
     
     "users": {
-      ".indexOn": ["username", "branchId"],
+      ".indexOn": ["username", "branchId", "isActive"],
       "$userId": {
         ".read": "auth != null",
         ".write": "auth != null"

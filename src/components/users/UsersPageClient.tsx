@@ -11,6 +11,7 @@ import type { User, Branch, FinancialTransaction, UserCashout } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useOptimizedAuth } from '@/hooks/use-optimized-auth';
 
 interface UsersPageClientProps {
@@ -140,6 +141,7 @@ async function getUsersFromRealtimeDB(): Promise<User[]> {
         username: data.username || '',
         fullName: data.fullName || 'N/A',
         isSeller: data.isSeller || false,
+        isActive: data.isActive !== false, // Default to true if not set
         permissions: data.permissions || [],
         branchId: data.branchId,
         branchName: branchName,
@@ -163,6 +165,7 @@ const UsersPageClient = ({ initialUsers, lang }: UsersPageClientProps) => {
   const [cashouts, setCashouts] = useState<UserCashout[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
 
   // Get current user
   const { user: currentUser } = useOptimizedAuth();
@@ -192,22 +195,37 @@ const UsersPageClient = ({ initialUsers, lang }: UsersPageClientProps) => {
     filterUsers: lang === 'ar' ? 'فلترة المستخدمين' : 'Filter Users',
     searchLabel: lang === 'ar' ? 'البحث' : 'Search',
     searchPlaceholder: lang === 'ar' ? 'ابحث بالاسم أو اسم المستخدم أو الفرع...' : 'Search by name, username, or branch...',
+    statusFilter: lang === 'ar' ? 'فلترة حسب الحالة' : 'Filter by Status',
+    allUsers: lang === 'ar' ? 'جميع المستخدمين' : 'All Users',
+    activeUsers: lang === 'ar' ? 'المستخدمين المفعلين' : 'Active Users',
+    inactiveUsers: lang === 'ar' ? 'المستخدمين المعطلين' : 'Inactive Users',
   };
 
-  // Filter users based on search term
+  // Filter users based on search term and status
   const filteredUsers = useMemo(() => {
-    if (!searchTerm.trim()) {
-      return users;
+    let filtered = users;
+
+    // Filter by status
+    if (statusFilter !== 'all') {
+      filtered = filtered.filter(user => {
+        const isActive = user.isActive !== false; // Default to true if not set
+        return statusFilter === 'active' ? isActive : !isActive;
+      });
     }
 
-    const searchLower = searchTerm.toLowerCase().trim();
-    return users.filter(user =>
-      user.fullName.toLowerCase().includes(searchLower) ||
-      user.username.toLowerCase().includes(searchLower) ||
-      (user.branchName && user.branchName.toLowerCase().includes(searchLower)) ||
-      user.id.toLowerCase().includes(searchLower)
-    );
-  }, [users, searchTerm]);
+    // Filter by search term
+    if (searchTerm.trim()) {
+      const searchLower = searchTerm.toLowerCase().trim();
+      filtered = filtered.filter(user =>
+        user.fullName.toLowerCase().includes(searchLower) ||
+        user.username.toLowerCase().includes(searchLower) ||
+        (user.branchName && user.branchName.toLowerCase().includes(searchLower)) ||
+        user.id.toLowerCase().includes(searchLower)
+      );
+    }
+
+    return filtered;
+  }, [users, searchTerm, statusFilter]);
 
   const handleUserDeleted = async () => {
     setIsLoading(true);
@@ -247,17 +265,32 @@ const UsersPageClient = ({ initialUsers, lang }: UsersPageClientProps) => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-1">
-            <Label htmlFor="userSearch">{t.searchLabel}</Label>
-            <div className="relative">
-              <Search className="absolute left-3 rtl:right-3 rtl:left-auto top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                id="userSearch"
-                placeholder={t.searchPlaceholder}
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="bg-card pl-10 rtl:pr-10 rtl:pl-3"
-              />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-1">
+              <Label htmlFor="userSearch">{t.searchLabel}</Label>
+              <div className="relative">
+                <Search className="absolute left-3 rtl:right-3 rtl:left-auto top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="userSearch"
+                  placeholder={t.searchPlaceholder}
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="bg-card pl-10 rtl:pr-10 rtl:pl-3"
+                />
+              </div>
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="statusFilter">{t.statusFilter}</Label>
+              <Select value={statusFilter} onValueChange={(value: 'all' | 'active' | 'inactive') => setStatusFilter(value)}>
+                <SelectTrigger id="statusFilter" className="bg-card">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{t.allUsers}</SelectItem>
+                  <SelectItem value="active">{t.activeUsers}</SelectItem>
+                  <SelectItem value="inactive">{t.inactiveUsers}</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
         </CardContent>

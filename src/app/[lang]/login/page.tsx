@@ -52,11 +52,15 @@ export default function LoginPage() {
     event.preventDefault();
     setError(null);
     setIsSubmitting(true);
-    const success = await login(username, password);
-    if (success) {
+    const result = await login(username, password);
+    if (result.success) {
       router.push(`/${effectiveLang}`); // Redirect to dashboard
     } else {
-      setError(t.loginErrorMessage);
+      if (result.error === 'account_deactivated') {
+        setError(effectiveLang === 'ar' ? 'تم تعطيل حسابك. يرجى التواصل مع الإدارة.' : 'Your account has been deactivated. Please contact administration.');
+      } else {
+        setError(t.loginErrorMessage);
+      }
     }
     setIsSubmitting(false);
   };

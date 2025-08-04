@@ -9,7 +9,7 @@ import { database } from '@/lib/firebase';
 
 interface AuthContextType {
   currentUser: User | null;
-  login: (username: string, passwordAttempt: string) => Promise<boolean>;
+  login: (username: string, passwordAttempt: string) => Promise<{ success: boolean; error?: 'invalid_credentials' | 'account_deactivated' }>;
   logout: () => void;
   isLoading: boolean;
   permissions: UserPermissionsArray | null;
@@ -120,7 +120,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [isLoading, currentUser, pathname, lang, router]);
 
 
-  const login = async (usernameInput: string, passwordAttempt: string): Promise<boolean> => {
+  const login = async (usernameInput: string, passwordAttempt: string): Promise<{ success: boolean; error?: 'invalid_credentials' | 'account_deactivated' }> => {
     setIsLoading(true);
     try {
       const usersRef = ref(database, "users");
@@ -131,7 +131,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setCurrentUser(null);
         localStorage.removeItem('currentUser');
         setIsLoading(false);
-        return false;
+        return { success: false, error: 'invalid_credentials' };
       }
 
       // Find user with matching username (removed isSeller restriction)
@@ -150,7 +150,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setCurrentUser(null);
         localStorage.removeItem('currentUser');
         setIsLoading(false);
-        return false;
+        return { success: false, error: 'invalid_credentials' };
       }
 
       // TypeScript assertion: foundUser is guaranteed to be User at this point
@@ -159,14 +159,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const passwordMatch = user.password === passwordAttempt;
 
       if (usernameMatch && passwordMatch) {
+        // Check if user account is active (defaults to true if not set)
+        const isUserActive = user.isActive !== false;
+
+        if (!isUserActive) {
+          // User account is deactivated
+          setCurrentUser(null);
+          localStorage.removeItem('currentUser');
+          setIsLoading(false);
+          return { success: false, error: 'account_deactivated' };
+        }
+
         await updateUserSession(user);
         router.push(`/${lang}/dashboard`); // Redirect to the new dashboard on successful login
+        setIsLoading(false);
+        return { success: true };
       } else {
         setCurrentUser(null);
         localStorage.removeItem('currentUser');
+        setIsLoading(false);
+        return { success: false, error: 'invalid_credentials' };
       }
-      setIsLoading(false);
-      return usernameMatch && passwordMatch;
 
     } catch (error) {
       console.error("AuthContext LOGIN - Error during login:", error);
@@ -177,7 +190,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setCurrentUser(null);
       localStorage.removeItem('currentUser');
       setIsLoading(false);
-      return false;
+      return { success: false, error: 'invalid_credentials' };
     }
   };
 

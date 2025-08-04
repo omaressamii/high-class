@@ -10,6 +10,7 @@ import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
@@ -104,6 +105,9 @@ export default function EditUserPage() {
 
     isSellerLabel: effectiveLang === 'ar' ? 'هل هذا المستخدم بائع؟' : 'Is this user a salesperson?',
     isSellerDescription: effectiveLang === 'ar' ? 'إذا تم تحديده، سيتم تصنيف هذا المستخدم كبائع ويمكن اختياره في الطلبات. يمكن للبائعين تسجيل الدخول والحصول على صلاحيات مثل المستخدمين العاديين.' : 'If checked, this user will be classified as a salesperson and can be selected in orders. Sellers can log in and have permissions like regular users.',
+
+    isActiveLabel: effectiveLang === 'ar' ? 'تفعيل الحساب' : 'Account Active',
+    isActiveDescription: effectiveLang === 'ar' ? 'إذا تم إلغاء التحديد، لن يتمكن المستخدم من تسجيل الدخول إلى النظام.' : 'If unchecked, the user will not be able to log into the system.',
     
     accessAllBranchesLabel: effectiveLang === 'ar' ? 'منح صلاحية الوصول لجميع الفروع؟' : 'Grant access to all branches?',
     accessAllBranchesDescription: effectiveLang === 'ar' ? 'إذا تم تحديده، سيتمكن هذا المستخدم من رؤية بيانات جميع الفروع والتصرف نيابة عنها. سيتم تجاهل اختيار الفرع المحدد إذا كان هذا الخيار مفعلًا.' : 'If checked, user can view data from all branches and act on their behalf. Specific branch selection will be ignored if this is active.',
@@ -153,6 +157,7 @@ export default function EditUserPage() {
     password: z.string().optional().refine(val => !val || val.length >= 6, { message: t.passwordMinLength }),
     branchId: z.string().optional(),
     isSeller: z.boolean().default(false),
+    isActive: z.boolean().default(true),
     accessAllBranches: z.boolean().default(false),
     permissions: z.array(z.string()).default([]),
   }).superRefine((data, ctx) => {
@@ -173,6 +178,7 @@ export default function EditUserPage() {
       password: '',
       branchId: undefined,
       isSeller: false,
+      isActive: true,
       accessAllBranches: false,
       permissions: [],
     },
@@ -193,6 +199,7 @@ export default function EditUserPage() {
             password: '',
             branchId: userData.branchId || undefined,
             isSeller: userData.isSeller || false,
+            isActive: userData.isActive !== false, // Default to true if not set
             accessAllBranches: userData.permissions?.includes('view_all_branches') || false,
             permissions: userData.permissions || [],
           });
@@ -243,6 +250,7 @@ export default function EditUserPage() {
     const userDataToUpdate: Partial<User> & { updatedAt?: any } = {
       fullName: data.fullName.trim(),
       isSeller: data.isSeller,
+      isActive: data.isActive,
       branchId: data.accessAllBranches ? null : (data.branchId || null),
       branchName: data.accessAllBranches ? null : (selectedBranch?.name || null),
       permissions: uniqueFinalPermissions,
@@ -275,6 +283,7 @@ export default function EditUserPage() {
             password: '',
             branchId: updatedUserData.branchId || undefined,
             isSeller: updatedUserData.isSeller || false,
+            isActive: updatedUserData.isActive !== false, // Default to true if not set
             accessAllBranches: updatedUserData.permissions?.includes('view_all_branches') || false,
             permissions: updatedUserData.permissions || [],
         });
@@ -385,6 +394,27 @@ export default function EditUserPage() {
                         {existingUser?.isSeller && <span className="block text-destructive text-xs">{effectiveLang === 'ar' ? 'لا يمكن تغيير هذا الحقل لمستخدم بائع حالي.' : 'This field cannot be changed for an existing seller user.'}</span>}
                       </FormDescription>
                     </div>
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="isActive"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center justify-between rounded-md border p-4">
+                    <div className="space-y-0.5">
+                      <FormLabel className="text-base">{t.isActiveLabel}</FormLabel>
+                      <FormDescription>
+                        {t.isActiveDescription}
+                      </FormDescription>
+                    </div>
+                    <FormControl>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                        className="data-[state=checked]:bg-green-600"
+                      />
+                    </FormControl>
                   </FormItem>
                 )}
               />

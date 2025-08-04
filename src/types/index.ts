@@ -97,6 +97,7 @@ export interface User {
   password?: string;
   fullName: string;
   isSeller?: boolean;
+  isActive?: boolean; // User activation status - defaults to true
   permissions: UserPermissionsArray;
   branchId?: string;
   branchName?: string;

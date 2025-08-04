@@ -43,6 +43,7 @@ async function getUsersFromRealtimeDB(): Promise<User[]> {
         username: data.username || '',
         fullName: data.fullName || 'N/A',
         isSeller: data.isSeller || false,
+        isActive: data.isActive !== false, // Default to true if not set
         permissions: data.permissions || [],
         branchId: data.branchId,
         branchName: branchName, // Use fetched or existing branchName

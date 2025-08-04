@@ -3,7 +3,8 @@ import React, { useState } from 'react'; // Import React
 import type { User, FinancialTransaction, UserCashout } from '@/types';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { UserCircle, Settings, Briefcase, ShieldCheck, ShieldQuestion, Store, Trash2, Wallet } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { UserCircle, Settings, Briefcase, ShieldCheck, ShieldQuestion, Store, Trash2, Wallet, UserCheck, UserX } from 'lucide-react';
 import { Badge } from '../ui/badge';
 import Link from 'next/link';
 import { CashoutDialog } from './CashoutDialog';
@@ -19,7 +20,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useToast } from '@/hooks/use-toast';
-import { ref, remove } from "firebase/database";
+import { ref, remove, update } from "firebase/database";
 import { database } from "@/lib/firebase";
 import { useRouter } from 'next/navigation';
 
@@ -47,6 +48,7 @@ const UserCard = React.memo(function UserCard({
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showCashoutDialog, setShowCashoutDialog] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
 
@@ -55,6 +57,9 @@ const UserCard = React.memo(function UserCard({
 
   // Check if current user has cashout permission
   const canManageCashout = currentUser?.permissions?.includes('cashout_manage') || false;
+
+  // Check if current user can manage users
+  const canManageUsers = currentUser?.permissions?.includes('users_manage') || false;
 
   const t = {
     manageUser: lang === 'ar' ? 'إدارة المستخدم' : 'Manage User',
@@ -76,6 +81,12 @@ const UserCard = React.memo(function UserCard({
     userDeletedSuccess: lang === 'ar' ? 'تم حذف المستخدم بنجاح' : 'User deleted successfully',
     userDeleteError: lang === 'ar' ? 'فشل في حذف المستخدم' : 'Failed to delete user',
     currencySymbol: lang === 'ar' ? 'ج.م' : 'EGP',
+    userStatus: lang === 'ar' ? 'حالة المستخدم' : 'User Status',
+    active: lang === 'ar' ? 'نشط' : 'Active',
+    inactive: lang === 'ar' ? 'معطل' : 'Inactive',
+    userStatusUpdated: lang === 'ar' ? 'تم تحديث حالة المستخدم' : 'User status updated',
+    userStatusUpdateError: lang === 'ar' ? 'فشل في تحديث حالة المستخدم' : 'Failed to update user status',
+    noPermissionToManage: lang === 'ar' ? 'ليس لديك صلاحية لإدارة المستخدمين' : 'You do not have permission to manage users',
   };
 
   const handleDeleteUser = async () => {
@@ -104,6 +115,44 @@ const UserCard = React.memo(function UserCard({
       });
     } finally {
       setIsDeleting(false);
+    }
+  };
+
+  const handleToggleUserStatus = async (newStatus: boolean) => {
+    if (!canManageUsers) {
+      toast({
+        title: t.noPermissionToManage,
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsUpdatingStatus(true);
+    try {
+      const userRef = ref(database, `users/${user.id}`);
+      await update(userRef, {
+        isActive: newStatus,
+        updatedAt: new Date().toISOString()
+      });
+
+      toast({
+        title: t.userStatusUpdated,
+        description: `${user.fullName} ${lang === 'ar' ? 'تم تحديث حالته إلى' : 'status updated to'} ${newStatus ? t.active : t.inactive}`,
+      });
+
+      // Call the callback to refresh the user list
+      if (onUserDeleted) {
+        onUserDeleted();
+      }
+    } catch (error) {
+      console.error("Error updating user status:", error);
+      toast({
+        title: t.userStatusUpdateError,
+        description: (error as Error).message,
+        variant: "destructive"
+      });
+    } finally {
+      setIsUpdatingStatus(false);
     }
   };
 
@@ -164,6 +213,33 @@ const UserCard = React.memo(function UserCard({
       </CardHeader>
       <CardContent className="space-y-3 text-sm">
         <p className="text-muted-foreground">ID: {user.id}</p>
+
+        {/* User Status */}
+        <div className="flex items-center justify-between p-2 bg-muted/50 rounded-md">
+          <div className="flex items-center">
+            {user.isActive !== false ? (
+              <UserCheck className="h-4 w-4 mr-2 rtl:ml-2 rtl:mr-0 text-green-600" />
+            ) : (
+              <UserX className="h-4 w-4 mr-2 rtl:ml-2 rtl:mr-0 text-red-600" />
+            )}
+            <span className="font-medium">{t.userStatus}:</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Badge variant={user.isActive !== false ? "default" : "secondary"} className="text-sm">
+              {user.isActive !== false ? t.active : t.inactive}
+            </Badge>
+            <Switch
+              checked={user.isActive !== false}
+              onCheckedChange={handleToggleUserStatus}
+              disabled={isUpdatingStatus || !canManageUsers}
+              className="data-[state=checked]:bg-green-600"
+              title={canManageUsers ?
+                (lang === 'ar' ? 'اضغط لتغيير حالة المستخدم' : 'Click to toggle user status') :
+                (lang === 'ar' ? 'ليس لديك صلاحية لتغيير حالة المستخدم' : 'You do not have permission to change user status')
+              }
+            />
+          </div>
+        </div>
 
         {/* Cash Balance */}
         <div className="flex items-center justify-between p-2 bg-muted/50 rounded-md">

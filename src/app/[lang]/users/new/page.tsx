@@ -230,6 +230,7 @@ export default function AddNewUserPage() {
       username: finalUsername,
       password: data.password,
       isSeller: data.isSeller,
+      isActive: true, // New users are active by default
       branchId: data.accessAllBranches ? null : (data.branchId || null),
       branchName: data.accessAllBranches ? null : (selectedBranch?.name || null),
       permissions: finalPermissions,
