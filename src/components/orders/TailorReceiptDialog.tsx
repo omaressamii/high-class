@@ -5,7 +5,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogC
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Scissors, User, Package, Calendar, Phone, MapPin } from 'lucide-react';
-import type { Order } from '@/types';
+import type { Order, Branch } from '@/types';
+import { ref, get } from 'firebase/database';
+import { database } from '@/lib/firebase';
 import { useGeneralSettings } from '@/hooks/use-app-settings';
 
 interface TailorReceiptDialogProps {
@@ -24,6 +26,7 @@ interface TailorReceiptDialogProps {
 export function TailorReceiptDialog({ isOpen, setIsOpen, order, lang }: TailorReceiptDialogProps) {
   // Initialize special instructions from order's measurement notes
   const [specialInstructions, setSpecialInstructions] = useState('');
+  const [branchDetails, setBranchDetails] = useState<Branch | null>(null);
 
   // Get company settings
   const { settings: generalSettings, isLoading: settingsLoading } = useGeneralSettings();
@@ -34,6 +37,35 @@ export function TailorReceiptDialog({ isOpen, setIsOpen, order, lang }: TailorRe
       setSpecialInstructions(order.measurementNotes || '');
     }
   }, [isOpen, order.measurementNotes]);
+
+  // Fetch branch details when dialog opens
+  useEffect(() => {
+    const fetchBranchDetails = async () => {
+      if (isOpen && order.branchId) {
+        try {
+          const branchRef = ref(database, `branches/${order.branchId}`);
+          const branchSnap = await get(branchRef);
+          if (branchSnap.exists()) {
+            const branchData = branchSnap.val();
+            setBranchDetails({
+              id: order.branchId,
+              name: branchData.name,
+              address: branchData.address,
+              phoneNumber: branchData.phoneNumber,
+              notes: branchData.notes,
+              createdAt: branchData.createdAt,
+              createdByUserId: branchData.createdByUserId,
+              updatedAt: branchData.updatedAt,
+            });
+          }
+        } catch (error) {
+          console.error('Error fetching branch details:', error);
+        }
+      }
+    };
+
+    fetchBranchDetails();
+  }, [isOpen, order.branchId]);
 
   const t = {
     dialogTitle: lang === 'ar' ? 'وصل تفاصيل المقاسات للخياط' : 'Tailor Measurements Receipt',

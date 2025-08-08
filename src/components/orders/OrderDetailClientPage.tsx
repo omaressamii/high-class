@@ -11,7 +11,7 @@ import { CalendarDays, ShoppingBag, User, DollarSign, ArrowLeft, Edit3, Trash2, 
 import { format, startOfDay } from 'date-fns'; 
 import { arSA, enUS } from 'date-fns/locale'; 
 import Link from 'next/link';
-import type { Order, Product, Customer, User as AppUser, OrderStatus, TransactionType, OrderItem } from '@/types';
+import type { Order, Product, Customer, User as AppUser, OrderStatus, TransactionType, OrderItem, Branch } from '@/types';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -59,10 +59,40 @@ export function OrderDetailClientPage({ initialOrderDetails, lang, orderId }: Or
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showDiscountDialog, setShowDiscountDialog] = useState(false);
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
+  const [branchDetails, setBranchDetails] = useState<Branch | null>(null);
   
   useEffect(() => {
     setOrderDetails(initialOrderDetails);
   }, [initialOrderDetails]);
+
+  // Fetch branch details when order details are loaded
+  useEffect(() => {
+    const fetchBranchDetails = async () => {
+      if (orderDetails?.order?.branchId) {
+        try {
+          const branchRef = ref(database, `branches/${orderDetails.order.branchId}`);
+          const branchSnap = await get(branchRef);
+          if (branchSnap.exists()) {
+            const branchData = branchSnap.val();
+            setBranchDetails({
+              id: orderDetails.order.branchId,
+              name: branchData.name,
+              address: branchData.address,
+              phoneNumber: branchData.phoneNumber,
+              notes: branchData.notes,
+              createdAt: branchData.createdAt,
+              createdByUserId: branchData.createdByUserId,
+              updatedAt: branchData.updatedAt,
+            });
+          }
+        } catch (error) {
+          console.error('Error fetching branch details:', error);
+        }
+      }
+    };
+
+    fetchBranchDetails();
+  }, [orderDetails?.order?.branchId]);
 
 
   useEffect(() => {
@@ -435,6 +465,7 @@ export function OrderDetailClientPage({ initialOrderDetails, lang, orderId }: Or
             (order.transactionType === 'Rental' ? 'Rental Invoice' : 'Sale Invoice')
           }</p>
           ${order.branchName ? `<p>${t.branchLabel}: ${order.branchName}</p>` : ''}
+          ${branchDetails?.phoneNumber ? `<p>${effectiveLang === 'ar' ? 'هاتف:' : 'Phone:'} ${branchDetails.phoneNumber}</p>` : ''}
         </div>
 
         <div class="section">
