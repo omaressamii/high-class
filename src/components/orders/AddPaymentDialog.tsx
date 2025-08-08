@@ -242,16 +242,35 @@ export function AddPaymentDialog({
               {/* Payment Amount Input */}
               <div className="space-y-2">
                 <Label htmlFor="paymentAmount">{t.paymentAmountLabel} ({t.currencySymbol})</Label>
-                <Input
-                  id="paymentAmount"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  max={remainingAmount}
-                  value={paymentAmount || ''}
-                  onChange={(e) => setPaymentAmount(parseFloat(e.target.value) || 0)}
-                  placeholder="0.00"
-                />
+                <div className="flex gap-2">
+                  <Input
+                    id="paymentAmount"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    max={remainingAmount}
+                    value={paymentAmount || ''}
+                    onChange={(e) => setPaymentAmount(parseFloat(e.target.value) || 0)}
+                    placeholder="0.00"
+                    className="flex-1"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setPaymentAmount(remainingAmount);
+                      toast({
+                        title: lang === 'ar' ? 'تم تعبئة المبلغ الكامل' : 'Full Amount Filled',
+                        description: `${lang === 'ar' ? 'المبلغ المتبقي' : 'Remaining amount'}: ${remainingAmount.toFixed(2)} ${lang === 'ar' ? 'ج.م' : 'EGP'}`,
+                      });
+                    }}
+                    disabled={remainingAmount <= 0}
+                    className="whitespace-nowrap"
+                  >
+                    {lang === 'ar' ? 'المبلغ الكامل' : 'Full Amount'}
+                  </Button>
+                </div>
               </div>
 
               {/* Payment Method */}
