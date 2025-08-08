@@ -8,7 +8,11 @@ import { OrderList } from '@/components/orders/OrderList';
 import { OrderFilters } from '@/components/orders/OrderFilters';
 import { Button } from '@/components/ui/button';
 import { RealtimeStatus } from '@/components/shared/RealtimeStatus';
-import { useRealtimeOrders } from '@/context/RealtimeDataContext';
+import { useRealtimeData } from '@/context/RealtimeDataContext';
+import { usePagination } from '@/hooks/use-pagination';
+import { Pagination } from '@/components/ui/pagination';
+import { useDebouncedValue } from '@/hooks/use-debounced-value';
+import { OrderListSkeleton } from '@/components/orders/OrderListSkeleton';
 import type { Order, TransactionType, OrderStatus, Product, Customer, User as AppUser, Branch } from '@/types';
 import { PlusCircle, Loader, AlertCircle, ListChecks, RefreshCw } from 'lucide-react';
 import React from 'react';
@@ -40,10 +44,11 @@ export function OrdersPageClientContent({
   pageTitleText
 }: OrdersPageClientContentProps) {
   const { isLoading: authIsLoading, hasPermission, currentUser } = useAuth();
-  const { orders: realtimeOrders, isLoading: realtimeLoading, connectionStatus } = useRealtimeOrders();
+  const { orders: realtimeOrders, branches: realtimeBranches, isLoading: realtimeLoading, connectionStatus } = useRealtimeData();
 
   // Use real-time data if available, otherwise fallback to server data
   const allOrdersState = realtimeOrders.length > 0 ? realtimeOrders as OrderWithDetails[] : initialOrders;
+  const allBranchesState = realtimeBranches.length > 0 ? realtimeBranches.map(b => ({ id: b.id, name: b.name })) : allBranches;
 
   const [filters, setFilters] = useState<{
     searchTerm: string;
@@ -57,6 +62,9 @@ export function OrdersPageClientContent({
     branchId: 'all',
   });
 
+  // Debounce search term to improve performance
+  const debouncedSearchTerm = useDebouncedValue(filters.searchTerm, 300);
+
   const filteredOrders = useMemo(() => {
     let orders = allOrdersState;
     if (!hasPermission('view_all_branches') && currentUser?.branchId) {
@@ -65,27 +73,58 @@ export function OrdersPageClientContent({
         orders = orders.filter(order => order.branchId === filters.branchId);
     }
 
-    return orders.filter((order) => { 
-      const searchTermLower = filters.searchTerm.toLowerCase();
+    return orders.filter((order) => {
+      const searchTermLower = debouncedSearchTerm.toLowerCase();
       // Check primary fields and also first item's product name if available
       const firstItemName = order.items[0]?.productName?.toLowerCase() || '';
-      const searchTermMatch = order.id.toLowerCase().includes(searchTermLower) ||
+      const searchTermMatch = debouncedSearchTerm === '' ||
+                              order.id.toLowerCase().includes(searchTermLower) ||
                               firstItemName.includes(searchTermLower) || // Search in first item name
                               (order.orderCode && order.orderCode.toLowerCase().includes(searchTermLower)) ||
                               (order.customerName && order.customerName.toLowerCase().includes(searchTermLower)) ||
                               (order.sellerName && order.sellerName.toLowerCase().includes(searchTermLower)) ||
                               (order.processedByUserName && order.processedByUserName.toLowerCase().includes(searchTermLower)) ||
-                              (order.customerPhoneNumber && order.customerPhoneNumber.includes(filters.searchTerm)); 
+                              (order.customerPhoneNumber && order.customerPhoneNumber.includes(debouncedSearchTerm));
       const typeMatch = filters.transactionType === 'all' || order.transactionType === filters.transactionType;
       const statusMatch = filters.status === 'all' || order.status === filters.status;
       return searchTermMatch && typeMatch && statusMatch;
     });
-  }, [filters, allOrdersState, currentUser, hasPermission]);
-  
+  }, [debouncedSearchTerm, filters.transactionType, filters.status, filters.branchId, allOrdersState, currentUser, hasPermission]);
+
+  // Pagination configuration
+  const ITEMS_PER_PAGE = 20; // 20 orders per page
+  const pagination = usePagination(filteredOrders, {
+    itemsPerPage: ITEMS_PER_PAGE,
+    initialPage: 1,
+  });
+
+  // Reset to first page when filters change
+  useEffect(() => {
+    pagination.goToFirstPage();
+  }, [debouncedSearchTerm, filters.transactionType, filters.status, filters.branchId]);
+
   const t = {
     noOrdersMatch: lang === 'ar' ? 'لا توجد طلبات تطابق الفلاتر الحالية.' : 'No orders match your current filters.',
     tryAdjustingFilters: lang === 'ar' ? 'حاول تعديل معايير البحث أو الفلترة.' : 'Try adjusting your search or filter criteria.',
+    loadingOrders: lang === 'ar' ? 'جاري تحميل الطلبات...' : 'Loading orders...',
+    loadingRealtime: lang === 'ar' ? 'جاري تحميل تحديث البيانات...' : 'Loading real-time data...',
   };
+
+  // Show loading state for real-time data if no fallback data
+  if (realtimeLoading && initialOrders.length === 0) {
+    return (
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <h1 className="text-2xl font-bold">{pageTitleText}</h1>
+        </div>
+        <div className="flex justify-center items-center py-8">
+          <RefreshCw className="h-6 w-6 animate-spin text-primary" />
+          <p className="ml-4 rtl:mr-4 text-sm text-muted-foreground">{t.loadingRealtime}</p>
+        </div>
+        <OrderListSkeleton count={20} />
+      </div>
+    );
+  }
   
   if (authIsLoading && !currentUser) {
     return (
@@ -131,7 +170,7 @@ export function OrdersPageClientContent({
         filters={filters} 
         setFilters={setFilters} 
         lang={lang}
-        branches={allBranches}
+        branches={allBranchesState}
         showBranchFilter={hasPermission('view_all_branches')}
       />
 
@@ -141,7 +180,38 @@ export function OrdersPageClientContent({
           <p className="text-xl text-muted-foreground mt-4">{noOrdersYetText}</p>
         </div>
       ) : filteredOrders.length > 0 ? (
-        <OrderList orders={filteredOrders} lang={lang} />
+        <div className="space-y-6">
+          <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+            <span>{lang === 'ar' ? 'إجمالي الطلبات:' : 'Total Orders:'}</span>
+            <span className="font-medium">{allOrdersState.length}</span>
+            {filteredOrders.length !== allOrdersState.length && (
+              <>
+                <span>|</span>
+                <span>{lang === 'ar' ? 'مفلترة:' : 'Filtered:'}</span>
+                <span className="font-medium">{filteredOrders.length}</span>
+              </>
+            )}
+            <span>|</span>
+            <span>{lang === 'ar' ? 'عرض:' : 'Showing:'}</span>
+            <span className="font-medium">{pagination.paginatedItems.length}</span>
+          </div>
+          <OrderList orders={pagination.paginatedItems} lang={lang} />
+          <Pagination
+            currentPage={pagination.currentPage}
+            totalPages={pagination.totalPages}
+            totalItems={pagination.totalItems}
+            itemsPerPage={pagination.itemsPerPage}
+            onPageChange={pagination.goToPage}
+            onNextPage={pagination.goToNextPage}
+            onPreviousPage={pagination.goToPreviousPage}
+            onFirstPage={pagination.goToFirstPage}
+            onLastPage={pagination.goToLastPage}
+            getPageNumbers={pagination.getPageNumbers}
+            hasNextPage={pagination.hasNextPage}
+            hasPreviousPage={pagination.hasPreviousPage}
+            lang={lang as 'ar' | 'en'}
+          />
+        </div>
       ) : (
          <div className="text-center py-12">
           <p className="text-xl text-muted-foreground">{t.noOrdersMatch}</p>
