@@ -6,11 +6,16 @@ import type { Product, ProductTypeDefinition, ProductCategory, ProductStatus, Pr
 import { ProductFilters } from '@/components/products/ProductFilters';
 import { ProductList } from '@/components/products/ProductList';
 import { useAuth } from '@/context/AuthContext';
-import { useRealtimeProducts } from '@/context/RealtimeDataContext';
+import { useRealtimeProducts, useRealtimeData } from '@/context/RealtimeDataContext';
 import { RealtimeStatus } from '@/components/shared/RealtimeStatus';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { Loader, RefreshCw } from 'lucide-react';
+import { usePagination } from '@/hooks/use-pagination';
+import { Pagination } from '@/components/ui/pagination';
+import { useDebouncedValue } from '@/hooks/use-debounced-value';
+import { ProductsPerformanceInfo } from '@/components/products/ProductsPerformanceInfo';
+import { ProductListSkeleton } from '@/components/products/ProductListSkeleton';
 
 interface ProductFiltersClientWrapperProps {
   allProducts: Product[]; // Fallback data from server
@@ -18,14 +23,15 @@ interface ProductFiltersClientWrapperProps {
   lang: string;
 }
 
-export function ProductFiltersClientWrapper({ allProducts: fallbackProducts, allProductTypes, lang }: ProductFiltersClientWrapperProps) {
+export function ProductFiltersClientWrapper({ allProducts: fallbackProducts, allProductTypes: fallbackProductTypes, lang }: ProductFiltersClientWrapperProps) {
   const { isLoading: authIsLoading, hasPermission, currentUser } = useAuth();
-  const { products: realtimeProducts, isLoading: realtimeLoading, connectionStatus } = useRealtimeProducts();
+  const { products: realtimeProducts, productTypes: realtimeProductTypes, isLoading: realtimeLoading, connectionStatus } = useRealtimeData();
   const { toast } = useToast();
   const router = useRouter();
 
   // Use real-time data if available, otherwise fallback to server data
   const allProducts = realtimeProducts.length > 0 ? realtimeProducts : fallbackProducts;
+  const allProductTypes = realtimeProductTypes.length > 0 ? realtimeProductTypes : fallbackProductTypes;
 
   const [filters, setFilters] = React.useState<{
     searchTerm: string;
@@ -41,12 +47,16 @@ export function ProductFiltersClientWrapper({ allProducts: fallbackProducts, all
     size: 'all',
   });
 
+  // Debounce search term to improve performance
+  const debouncedSearchTerm = useDebouncedValue(filters.searchTerm, 300);
+
   const filteredProducts = React.useMemo(() => {
     if (!allProducts) return [];
     return allProducts.filter((product: Product) => {
-      const searchTermMatch = product.name.toLowerCase().includes(filters.searchTerm.toLowerCase()) ||
-                              (product.description && product.description.toLowerCase().includes(filters.searchTerm.toLowerCase())) ||
-                              (product.productCode && product.productCode.toLowerCase().includes(filters.searchTerm.toLowerCase()));
+      const searchTermMatch = debouncedSearchTerm === '' ||
+                              product.name.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
+                              (product.description && product.description.toLowerCase().includes(debouncedSearchTerm.toLowerCase())) ||
+                              (product.productCode && product.productCode.toLowerCase().includes(debouncedSearchTerm.toLowerCase()));
       const typeMatch = filters.type === 'all' || product.type === filters.type; // product.type is now ID
       const categoryMatch = filters.category === 'all' || product.category === filters.category;
       const statusMatch = filters.status === 'all' || product.status === filters.status;
@@ -63,7 +73,19 @@ export function ProductFiltersClientWrapper({ allProducts: fallbackProducts, all
 
       return searchTermMatch && typeMatch && categoryMatch && statusMatch && sizeMatch && branchVisibilityMatch;
     });
-  }, [filters, allProducts, currentUser, hasPermission]);
+  }, [debouncedSearchTerm, filters.type, filters.category, filters.status, filters.size, allProducts, currentUser, hasPermission]);
+
+  // Pagination configuration
+  const ITEMS_PER_PAGE = 16; // 4x4 grid on desktop, responsive on mobile
+  const pagination = usePagination(filteredProducts, {
+    itemsPerPage: ITEMS_PER_PAGE,
+    initialPage: 1,
+  });
+
+  // Reset to first page when filters change
+  React.useEffect(() => {
+    pagination.goToFirstPage();
+  }, [debouncedSearchTerm, filters.type, filters.category, filters.status, filters.size]);
 
   const t_wrapper = {
     loadingProducts: lang === 'ar' ? 'جاري تحميل المنتجات...' : 'Loading products...',
@@ -94,9 +116,12 @@ export function ProductFiltersClientWrapper({ allProducts: fallbackProducts, all
   // Show loading state for real-time data if no fallback data
   if (realtimeLoading && fallbackProducts.length === 0) {
     return (
-      <div className="flex justify-center items-center min-h-[calc(100vh-20rem)]">
-        <RefreshCw className="h-10 w-10 animate-spin text-primary" />
-        <p className="ml-4 rtl:mr-4">{t_wrapper.loadingRealtime}</p>
+      <div className="space-y-6">
+        <div className="flex justify-center items-center py-8">
+          <RefreshCw className="h-6 w-6 animate-spin text-primary" />
+          <p className="ml-4 rtl:mr-4 text-sm text-muted-foreground">{t_wrapper.loadingRealtime}</p>
+        </div>
+        <ProductListSkeleton count={16} />
       </div>
     );
   }
@@ -126,7 +151,32 @@ export function ProductFiltersClientWrapper({ allProducts: fallbackProducts, all
           <p className="text-xl text-muted-foreground">{t_wrapper.noProductsYet}</p>
         </div>
       ) : filteredProducts.length > 0 ? (
-        <ProductList products={filteredProducts} allProductTypes={allProductTypes} lang={lang} />
+        <div className="space-y-6">
+          <ProductsPerformanceInfo
+            totalProducts={allProducts.length}
+            filteredProducts={filteredProducts.length}
+            currentPageItems={pagination.paginatedItems.length}
+            currentPage={pagination.currentPage}
+            totalPages={pagination.totalPages}
+            lang={lang as 'ar' | 'en'}
+          />
+          <ProductList products={pagination.paginatedItems} allProductTypes={allProductTypes} lang={lang} />
+          <Pagination
+            currentPage={pagination.currentPage}
+            totalPages={pagination.totalPages}
+            totalItems={pagination.totalItems}
+            itemsPerPage={pagination.itemsPerPage}
+            onPageChange={pagination.goToPage}
+            onNextPage={pagination.goToNextPage}
+            onPreviousPage={pagination.goToPreviousPage}
+            onFirstPage={pagination.goToFirstPage}
+            onLastPage={pagination.goToLastPage}
+            getPageNumbers={pagination.getPageNumbers}
+            hasNextPage={pagination.hasNextPage}
+            hasPreviousPage={pagination.hasPreviousPage}
+            lang={lang as 'ar' | 'en'}
+          />
+        </div>
       ) : (
         <div className="text-center py-12">
           <p className="text-xl text-muted-foreground">{t_wrapper.noProductsMatch}</p>

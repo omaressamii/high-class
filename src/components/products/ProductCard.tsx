@@ -3,7 +3,7 @@
  * @file src/components/products/ProductCard.tsx
  */
 import React from 'react';
-import Image from 'next/image';
+import { ImageWithFallback } from '@/components/ui/image-with-fallback';
 import Link from 'next/link';
 import type { Product, ProductTypeDefinition, Order } from '@/types'; // Added ProductTypeDefinition and Order
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -145,13 +145,16 @@ const ProductCard = React.memo(function ProductCard({ product, allProductTypes, 
       {hasValidImage && (
         <CardHeader className="p-0">
           <div className="relative w-full h-40 sm:h-48 md:h-56">
-            <Image
+            <ImageWithFallback
               src={product.imageUrl}
               alt={product.name}
               fill
               sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
               style={{ objectFit: 'cover' }}
-              data-ai-hint={product['data-ai-hint'] || "fashion item"}
+              loading="lazy"
+              priority={false}
+              quality={75}
+              showSkeleton={true}
             />
              {product.productCode && (
               <Badge variant="secondary" className="absolute top-1 right-1 sm:top-2 sm:right-2 rtl:right-auto rtl:left-1 sm:rtl:left-2 text-xs">
