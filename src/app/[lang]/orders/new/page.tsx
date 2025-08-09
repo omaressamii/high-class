@@ -17,7 +17,7 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { PageTitle } from '@/components/shared/PageTitle';
 import { DatePicker } from '@/components/shared/DatePicker';
 import { ProductSelector } from '@/components/orders/ProductSelector';
-import { SearchableCustomerFilter } from '@/components/orders/SearchableCustomerFilter';
+import { CustomerSelectorWithAdd } from '@/components/orders/CustomerSelectorWithAdd';
 import { SearchableSellerFilter } from '@/components/orders/SearchableSellerFilter';
 import { ArrowLeft, PlusCircle, Save, ShoppingBag, Loader, Info, Store, Trash2 } from 'lucide-react';
 import type { TransactionType, Product, User, Order, Customer, FinancialTransaction, Branch, PaymentMethod, OrderItem } from '@/types';
@@ -53,6 +53,11 @@ export default function AddNewOrderPage() {
   const [overallTotalPrice, setOverallTotalPrice] = useState<number>(0);
   const [remainingAmount, setRemainingAmount] = useState<number>(0);
   const [initialProductIdFromUrl, setInitialProductIdFromUrl] = useState<string | null>(null);
+
+  // Function to handle when a new customer is added
+  const handleCustomerAdded = useCallback((newCustomer: Customer) => {
+    setAvailableCustomers(prev => [...prev, newCustomer]);
+  }, []);
 
   const t = {
     pageTitle: effectiveLang === 'ar' ? 'إضافة طلب جديد' : 'Add New Order',
@@ -883,14 +888,16 @@ export default function AddNewOrderPage() {
                       </div>
                     ) : (
                       <FormControl>
-                        <SearchableCustomerFilter
+                        <CustomerSelectorWithAdd
                           value={field.value || ''}
                           onValueChange={field.onChange}
                           availableCustomers={availableCustomers}
+                          branches={branches}
                           lang={effectiveLang}
                           placeholder={availableCustomers.length === 0 ? t.noCustomersAvailable : t.customerIdPlaceholder}
                           disabled={availableCustomers.length === 0}
                           allowEmpty={false}
+                          onCustomerAdded={handleCustomerAdded}
                         />
                       </FormControl>
                     )}
