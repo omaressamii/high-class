@@ -15,9 +15,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Progress } from '@/components/ui/progress';
 import { PageTitle } from '@/components/shared/PageTitle';
-import { ArrowLeft, PlusCircle, Save, PackagePlus, Loader, UploadCloud, Image as ImageIcon, Globe, Settings } from 'lucide-react';
+import { ArrowLeft, PlusCircle, Save, PackagePlus, Loader, Globe, Settings } from 'lucide-react';
 import type { ProductTypeDefinition, ProductCategory, ProductSize, Product, ProductStatus, Branch } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/AuthContext';
@@ -36,10 +35,7 @@ export default function AddNewProductPage() {
   const pageLang = params.lang as 'ar' | 'en';
   const effectiveLang = pageLang === 'en' ? 'en' : 'ar';
 
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [uploadProgress, setUploadProgress] = useState<number | null>(null);
-  const [isUploading, setIsUploading] = useState(false);
+
 
   const [availableBranches, setAvailableBranches] = useState<Branch[]>([]);
   const [branchesLoading, setBranchesLoading] = useState(true);
@@ -147,8 +143,7 @@ export default function AddNewProductPage() {
     imageLabel: effectiveLang === 'ar' ? 'صورة المنتج' : 'Product Image',
     selectImageButton: effectiveLang === 'ar' ? 'اختر صورة' : 'Select Image',
     changeImageButton: effectiveLang === 'ar' ? 'تغيير الصورة' : 'Change Image',
-    imageUploadInProgress: effectiveLang === 'ar' ? 'جار رفع الصورة...' : 'Uploading image...',
-    imageUploadError: effectiveLang === 'ar' ? 'فشل رفع الصورة.' : 'Image upload failed.',
+
 
     notesLabel: effectiveLang === 'ar' ? 'ملاحظات (اختياري)' : 'Notes (Optional)',
     notesPlaceholder: effectiveLang === 'ar' ? 'أي ملاحظات إضافية...' : 'Any additional notes...',
@@ -277,64 +272,7 @@ export default function AddNewProductPage() {
   }, [watchedName, isAutoMerging]);
 
 
-  const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      setImageFile(file);
-      setImagePreview(URL.createObjectURL(file));
-      form.setValue('imageUrl', 'file_selected');
-      form.clearErrors('imageUrl');
-    } else {
-      setImageFile(null);
-      setImagePreview(null);
-      form.setValue('imageUrl', '');
-    }
-  };
 
-  const uploadImageLocally = async (file: File, productIdForPath: string): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      setIsUploading(true);
-      setUploadProgress(0);
-
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('productId', productIdForPath);
-
-      // Simulate upload progress
-      let progress = 0;
-      const progressInterval = setInterval(() => {
-        progress += 10;
-        setUploadProgress(progress);
-        if (progress >= 90) {
-          clearInterval(progressInterval);
-        }
-      }, 100);
-
-      fetch('/api/upload-image', {
-        method: 'POST',
-        body: formData,
-      })
-      .then(response => response.json())
-      .then(data => {
-        clearInterval(progressInterval);
-        setUploadProgress(100);
-        setIsUploading(false);
-        setUploadProgress(null);
-
-        if (data.success) {
-          resolve(data.imageUrl);
-        } else {
-          reject(new Error(data.error || 'Upload failed'));
-        }
-      })
-      .catch(error => {
-        clearInterval(progressInterval);
-        setIsUploading(false);
-        setUploadProgress(null);
-        reject(error);
-      });
-    });
-  };
 
 
   const [isSaving, setIsSaving] = React.useState(false);
@@ -402,29 +340,13 @@ export default function AddNewProductPage() {
 
   const onSubmit: SubmitHandler<FormData> = async (data) => {
     setIsSaving(true);
-    let finalImageUrl = '';
 
     // Generate new product ID using push
     const productsRef = ref(database, "products");
     const newProductRef = push(productsRef);
-    const newProductIdForPath = newProductRef.key!;
 
-    // Only handle image upload if showImage is checked and imageFile exists
-    if (data.showImage && imageFile) {
-      try {
-        finalImageUrl = await uploadImageLocally(imageFile, newProductIdForPath);
-      } catch (error) {
-        toast({ title: t.imageUploadError, variant: "destructive" });
-        setIsSaving(false);
-        return;
-      }
-    } else if (!data.showImage) {
-      // If showImage is false, set empty string for no image
-      finalImageUrl = '';
-    } else {
-      // If showImage is true but no image file, use placeholder
-      finalImageUrl = 'https://placehold.co/600x400.png';
-    }
+    // Set image URL based on showImage checkbox
+    const finalImageUrl = data.showImage ? (data.imageUrl || 'https://placehold.co/600x400.png') : '';
 
     let productDataToSave: Omit<Product, 'id'>;
 
@@ -821,51 +743,7 @@ export default function AddNewProductPage() {
                 )}
               />
 
-              {/* Image Upload Section - Only show if showImage is checked */}
-              {form.watch('showImage') && (
-                <FormItem className="md:col-span-2">
-                  <FormLabel>{t.imageLabel}</FormLabel>
-                <FormControl>
-                  <div className="flex flex-col items-center space-y-4 rounded-md border border-dashed border-muted-foreground/50 p-6 hover:border-primary transition-colors">
-                    {imagePreview ? (
-                      <div className="relative w-40 h-40 group">
-                        <Image src={imagePreview} alt="Preview" layout="fill" objectFit="cover" className="rounded-md" data-ai-hint="product preview" />
-                        <Button variant="outline" size="sm" type="button" onClick={() => document.getElementById('imageUploadInput')?.click()} className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                          {t.changeImageButton}
-                        </Button>
-                      </div>
-                    ) : (
-                      <div className="flex flex-col items-center text-center">
-                        <UploadCloud className="w-12 h-12 text-muted-foreground mb-2" />
-                        <Button type="button" variant="outline" onClick={() => document.getElementById('imageUploadInput')?.click()}>
-                          <ImageIcon className="mr-2 h-4 w-4" /> {t.selectImageButton}
-                        </Button>
-                        <p className="text-xs text-muted-foreground mt-1">{effectiveLang === 'ar' ? 'اسحب وأفلت أو انقر للاختيار' : 'Drag & drop or click to select'}</p>
-                      </div>
-                    )}
-                    <Input
-                      id="imageUploadInput"
-                      type="file"
-                      accept="image/*"
-                      onChange={handleImageChange}
-                      className="hidden"
-                    />
-                  </div>
-                </FormControl>
-                {uploadProgress !== null && (
-                  <div className="mt-2 space-y-1">
-                    <Progress value={uploadProgress} className="h-2" />
-                    <p className="text-xs text-muted-foreground text-center">{t.imageUploadInProgress} {uploadProgress.toFixed(0)}%</p>
-                  </div>
-                )}
-                 <FormField
-                    control={form.control}
-                    name="imageUrl"
-                    render={({ field }) => ( <Input type="hidden" {...field} /> )}
-                  />
-                <FormMessage />
-                </FormItem>
-              )}
+
 
 
               <FormField
@@ -942,11 +820,11 @@ export default function AddNewProductPage() {
               )}
             </CardContent>
             <CardFooter>
-              <Button type="submit" disabled={isSaving || isUploading || productTypesLoading}>
-                {isSaving || isUploading ? (
+              <Button type="submit" disabled={isSaving || productTypesLoading}>
+                {isSaving ? (
                   <>
                     <Loader className={`animate-spin ${effectiveLang === 'ar' ? 'ml-2' : 'mr-2'} h-4 w-4`} />
-                    {isUploading ? t.imageUploadInProgress.split('...')[0] : t.saving}
+                    {t.saving}
                   </>
                 ) : (
                   <>

@@ -15,9 +15,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Progress } from '@/components/ui/progress';
 import { PageTitle } from '@/components/shared/PageTitle';
-import { ArrowLeft, Save, Loader, Edit3, UploadCloud, Image as ImageIcon, ScanBarcode, Globe, Settings } from 'lucide-react';
+import { ArrowLeft, Save, Loader, Edit3, ScanBarcode, Globe, Settings } from 'lucide-react';
 import type { ProductTypeDefinition, ProductCategory, ProductSize, Product, ProductStatus, Branch } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/AuthContext';
@@ -41,11 +40,7 @@ export default function EditProductPage() {
   const [isLoadingData, setIsLoadingData] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
 
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [uploadProgress, setUploadProgress] = useState<number | null>(null);
-  const [isUploading, setIsUploading] = useState(false);
-  const [currentImageUrl, setCurrentImageUrl] = useState<string | null>(null);
+
 
   const [availableBranches, setAvailableBranches] = useState<Branch[]>([]);
   const [branchesLoading, setBranchesLoading] = useState(true);
@@ -127,8 +122,7 @@ export default function EditProductPage() {
     selectNewImageButton: effectiveLang === 'ar' ? 'اختيار صورة جديدة' : 'Select New Image',
     changeImageButton: effectiveLang === 'ar' ? 'تغيير الصورة' : 'Change Image',
     currentImage: effectiveLang === 'ar' ? 'الصورة الحالية' : 'Current Image',
-    imageUploadInProgress: effectiveLang === 'ar' ? 'جار رفع الصورة...' : 'Uploading image...',
-    imageUploadError: effectiveLang === 'ar' ? 'فشل رفع الصورة.' : 'Image upload failed.',
+
 
     notesLabel: effectiveLang === 'ar' ? 'ملاحظات (اختياري)' : 'Notes (Optional)',
     aiHintLabel: effectiveLang === 'ar' ? 'تلميح للصور بالذكاء الاصطناعي (اختياري)' : 'AI Image Hint (Optional)',
@@ -246,8 +240,7 @@ export default function EditProductPage() {
           const data = docSnap.val() as Omit<Product, 'id'>;
           const fetchedProduct: Product = { id: productId, productCode: String(data.productCode || ''), ...data };
           setProduct(fetchedProduct);
-          setCurrentImageUrl(fetchedProduct.imageUrl);
-          setImagePreview(fetchedProduct.imageUrl);
+
           // Check if product has a valid image (not empty and not placeholder)
           const hasValidImage = fetchedProduct.imageUrl &&
                                 fetchedProduct.imageUrl.trim() !== '' &&
@@ -288,126 +281,15 @@ export default function EditProductPage() {
     }
   }, [isGlobalProductWatcher, form, hasPermission]);
 
-  const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      setImageFile(file);
-      setImagePreview(URL.createObjectURL(file));
-      form.setValue('imageUrl', 'new_file_selected');
-      form.clearErrors('imageUrl');
-    } else {
-      setImageFile(null);
-      setImagePreview(currentImageUrl);
-      if (currentImageUrl) {
-        form.setValue('imageUrl', currentImageUrl);
-      } else {
-        form.setValue('imageUrl', '');
-      }
-    }
-  };
 
-  const uploadImage = async (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      setIsUploading(true);
-      setUploadProgress(0);
-
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('productId', productId);
-
-      // Simulate upload progress
-      let progress = 0;
-      const progressInterval = setInterval(() => {
-        progress += 10;
-        setUploadProgress(progress);
-        if (progress >= 90) {
-          clearInterval(progressInterval);
-        }
-      }, 100);
-
-      fetch('/api/upload-image', {
-        method: 'POST',
-        body: formData,
-      })
-      .then(response => response.json())
-      .then(data => {
-        clearInterval(progressInterval);
-        setUploadProgress(100);
-        setIsUploading(false);
-        setUploadProgress(null);
-
-        if (data.success) {
-          resolve(data.imageUrl);
-        } else {
-          reject(new Error(data.error || 'Upload failed'));
-        }
-      })
-      .catch(error => {
-        clearInterval(progressInterval);
-        setIsUploading(false);
-        setUploadProgress(null);
-        reject(error);
-      });
-    });
-  };
-
-  const deleteOldImage = async (imageUrlToDelete: string) => {
-    // For GitHub storage, we can delete the old image
-    if (imageUrlToDelete && imageUrlToDelete.includes('raw.githubusercontent.com')) {
-      try {
-        const response = await fetch('/api/delete-image', {
-          method: 'DELETE',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ imageUrl: imageUrlToDelete }),
-        });
-
-        if (!response.ok) {
-          console.warn("Failed to delete old image from GitHub:", imageUrlToDelete);
-        }
-      } catch (error) {
-        console.warn("Error deleting old image:", error);
-      }
-    } else if (imageUrlToDelete && imageUrlToDelete.startsWith('/uploads/')) {
-      console.log("Old local image should be cleaned up:", imageUrlToDelete);
-    }
-  };
 
 
   const onSubmit: SubmitHandler<FormData> = async (data) => {
     if (!product) return;
     setIsSaving(true);
-    let finalImageUrl = product.imageUrl;
 
-    // Handle image based on showImage checkbox
-    if (data.showImage) {
-      // If showImage is checked, handle image upload/update
-      if (imageFile) {
-        if (currentImageUrl && currentImageUrl !== imagePreview && imagePreview !== null) {
-          await deleteOldImage(currentImageUrl);
-        }
-        try {
-          finalImageUrl = await uploadImage(imageFile);
-        } catch (error) {
-          toast({ title: t.imageUploadError, variant: "destructive" });
-          setIsSaving(false);
-          return;
-        }
-      } else if (data.imageUrl) {
-        // Keep existing image
-        finalImageUrl = data.imageUrl;
-      } else {
-        // If showImage is true but no image, use placeholder
-        finalImageUrl = 'https://placehold.co/600x400.png';
-      }
-    } else {
-      // If showImage is false, remove image
-      if (currentImageUrl && currentImageUrl !== '') {
-        await deleteOldImage(currentImageUrl);
-      }
-      finalImageUrl = '';
-    }
+    // Set image URL based on showImage checkbox
+    const finalImageUrl = data.showImage ? (data.imageUrl || 'https://placehold.co/600x400.png') : '';
 
     let finalBranchId = data.branchId;
     let finalBranchName = product.branchName;
@@ -463,8 +345,7 @@ export default function EditProductPage() {
         title: t.productUpdatedSuccess,
         description: `${data.name} ${effectiveLang === 'ar' ? 'تم تحديثه.' : 'has been updated.'}`,
       });
-      setImageFile(null);
-      setCurrentImageUrl(finalImageUrl);
+
       const updatedDocSnap = await get(productRef);
       if (updatedDocSnap.exists()) {
         const updatedProductData = { id: product.id, productCode: String(updatedDocSnap.val().productCode || ''), ...updatedDocSnap.val() } as Product;
@@ -778,51 +659,7 @@ export default function EditProductPage() {
                 )}
               />
 
-              {/* Image Upload Section - Only show if showImage is checked */}
-              {form.watch('showImage') && (
-                <FormItem className="md:col-span-2">
-                  <FormLabel>{t.imageLabel}</FormLabel>
-                <FormControl>
-                  <div className="flex flex-col items-center space-y-4 rounded-md border border-dashed border-muted-foreground/50 p-6 hover:border-primary transition-colors">
-                    {imagePreview ? (
-                      <div className="relative w-40 h-40 group">
-                        <Image src={imagePreview} alt={t.currentImage} layout="fill" objectFit="cover" className="rounded-md" data-ai-hint="product preview"/>
-                         <Button variant="outline" size="sm" type="button" onClick={() => document.getElementById('imageUploadInputEdit')?.click()} className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                          {t.changeImageButton}
-                        </Button>
-                      </div>
-                    ) : (
-                       <div className="flex flex-col items-center text-center">
-                        <UploadCloud className="w-12 h-12 text-muted-foreground mb-2" />
-                        <Button type="button" variant="outline" onClick={() => document.getElementById('imageUploadInputEdit')?.click()}>
-                          <ImageIcon className="mr-2 h-4 w-4" /> {t.selectNewImageButton}
-                        </Button>
-                        <p className="text-xs text-muted-foreground mt-1">{effectiveLang === 'ar' ? 'اسحب وأفلت أو انقر للاختيار' : 'Drag & drop or click to select'}</p>
-                      </div>
-                    )}
-                     <Input
-                      id="imageUploadInputEdit"
-                      type="file"
-                      accept="image/*"
-                      onChange={handleImageChange}
-                      className="hidden"
-                    />
-                  </div>
-                </FormControl>
-                {uploadProgress !== null && (
-                  <div className="mt-2 space-y-1">
-                    <Progress value={uploadProgress} className="h-2" />
-                    <p className="text-xs text-muted-foreground text-center">{t.imageUploadInProgress} {uploadProgress.toFixed(0)}%</p>
-                  </div>
-                )}
-                 <FormField
-                    control={form.control}
-                    name="imageUrl"
-                    render={({ field }) => ( <Input type="hidden" {...field} /> )}
-                  />
-                <FormMessage />
-                </FormItem>
-              )}
+
 
 
               <FormField
@@ -849,10 +686,10 @@ export default function EditProductPage() {
               />
             </CardContent>
             <CardFooter>
-              <Button type="submit" disabled={isSaving || isUploading || productTypesLoading}>
-                {isSaving || isUploading ? (
+              <Button type="submit" disabled={isSaving || productTypesLoading}>
+                {isSaving ? (
                   <><Loader className={`animate-spin ${effectiveLang === 'ar' ? 'ml-2' : 'mr-2'} h-4 w-4`} />
-                  {isUploading ? t.imageUploadInProgress.split('...')[0] : t.saving}</>
+                  {t.saving}</>
                 ) : (
                   <><Save className={`${effectiveLang === 'ar' ? 'ml-2' : 'mr-2'} h-4 w-4`} /> {t.saveChanges}</>
                 )}
