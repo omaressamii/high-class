@@ -1,11 +1,12 @@
 
 'use client';
 
-import React, { createContext, useContext, useState, ReactNode, useEffect, useCallback, useMemo } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect, useCallback, useMemo, useRef } from 'react';
 import type { User, UserPermissionsArray, PermissionString, Branch } from '@/types';
 import { useRouter, useParams, usePathname } from 'next/navigation';
-import { ref, get, query, orderByChild, equalTo } from 'firebase/database';
+import { ref, get, query, orderByChild, equalTo, onValue, off, DatabaseReference } from 'firebase/database';
 import { database } from '@/lib/firebase';
+import { useToast } from '@/hooks/use-toast';
 
 interface AuthContextType {
   currentUser: User | null;
@@ -24,10 +25,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
   const params = useParams();
   const lang = params.lang as string || 'ar';
-  const pathname = usePathname(); 
+  const pathname = usePathname();
+  const { toast } = useToast();
 
   // Cache for branch names to avoid repeated Firebase calls
   const branchNameCache = useMemo(() => new Map<string, string>(), []);
+
+  // Ref to store the current user listener
+  const userListenerRef = useRef<DatabaseReference | null>(null);
 
   const updateUserSession = useCallback(async (userData: User) => {
     let effectiveUser = { ...userData };
@@ -63,6 +68,72 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }));
   }, [branchNameCache]);
 
+  const logout = useCallback(() => {
+    // Clean up user listener if it exists
+    if (userListenerRef.current) {
+      off(userListenerRef.current);
+      userListenerRef.current = null;
+    }
+
+    setCurrentUser(null);
+    localStorage.removeItem('currentUser');
+    router.push(`/${lang}`); // Redirect to the new splash page on logout
+  }, [router, lang]);
+
+  // Setup realtime listener for current user's status
+  const setupUserStatusListener = useCallback((userId: string) => {
+    // Clean up existing listener
+    if (userListenerRef.current) {
+      off(userListenerRef.current);
+    }
+
+    const userRef = ref(database, `users/${userId}`);
+    userListenerRef.current = userRef;
+
+    const listener = onValue(userRef, (snapshot) => {
+      if (snapshot.exists()) {
+        const userData = { id: userId, ...snapshot.val() } as User;
+
+        // Check if user account is still active
+        const isUserActive = userData.isActive !== false;
+
+        if (!isUserActive) {
+          // User account has been deactivated - force logout
+          toast({
+            title: lang === 'ar' ? 'تم تعطيل حسابك' : 'Account Deactivated',
+            description: lang === 'ar' ? 'تم تعطيل حسابك من قبل الإدارة. سيتم تسجيل خروجك الآن.' : 'Your account has been deactivated by administration. You will be logged out now.',
+            variant: "destructive",
+            duration: 5000,
+          });
+
+          // Force logout after a short delay to allow user to see the message
+          setTimeout(() => {
+            logout();
+          }, 2000);
+        } else {
+          // Update user session with latest data
+          updateUserSession(userData);
+        }
+      } else {
+        // User has been deleted - force logout
+        toast({
+          title: lang === 'ar' ? 'تم حذف حسابك' : 'Account Deleted',
+          description: lang === 'ar' ? 'تم حذف حسابك من النظام. سيتم تسجيل خروجك الآن.' : 'Your account has been deleted from the system. You will be logged out now.',
+          variant: "destructive",
+          duration: 5000,
+        });
+
+        setTimeout(() => {
+          logout();
+        }, 2000);
+      }
+    }, (error) => {
+      console.error("Error listening to user status changes:", error);
+    });
+
+    return listener;
+  }, [lang, toast, logout, updateUserSession]);
+
 
   useEffect(() => {
     setIsLoading(true);
@@ -77,7 +148,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             .then(async snapshot => {
               if (snapshot.exists()) {
                 const userDataFromDb = { id: storedUser.id, ...snapshot.val() } as User;
+
+                // Check if user is still active
+                const isUserActive = userDataFromDb.isActive !== false;
+                if (!isUserActive) {
+                  // User has been deactivated - don't restore session
+                  localStorage.removeItem('currentUser');
+                  setCurrentUser(null);
+                  setIsLoading(false);
+                  return;
+                }
+
                 await updateUserSession(userDataFromDb);
+                // Setup realtime listener for user status changes
+                setupUserStatusListener(storedUser.id);
               } else {
                 localStorage.removeItem('currentUser');
                 setCurrentUser(null);
@@ -106,7 +190,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setCurrentUser(null);
       setIsLoading(false); 
     }
-  }, []); 
+  }, [updateUserSession, setupUserStatusListener]);
 
   useEffect(() => {
     if (!isLoading && !currentUser) {
@@ -171,6 +255,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
 
         await updateUserSession(user);
+        // Setup realtime listener for user status changes
+        setupUserStatusListener(foundUserId!);
         router.push(`/${lang}/dashboard`); // Redirect to the new dashboard on successful login
         setIsLoading(false);
         return { success: true };
@@ -194,11 +280,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const logout = () => {
-    setCurrentUser(null);
-    localStorage.removeItem('currentUser');
-    router.push(`/${lang}`); // Redirect to the new splash page on logout
-  };
+
 
   const permissions = currentUser ? currentUser.permissions : null;
 
@@ -211,6 +293,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     return memoizedPermissions.includes(permissionToCheck);
   }, [isLoading, currentUser, memoizedPermissions]);
+
+  // Cleanup listener on unmount
+  useEffect(() => {
+    return () => {
+      if (userListenerRef.current) {
+        off(userListenerRef.current);
+        userListenerRef.current = null;
+      }
+    };
+  }, []);
 
   // Memoize context value to prevent unnecessary re-renders
   const contextValue = useMemo(() => ({
@@ -241,6 +333,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       </div>
     );
   }
+
+
 
   return (
     <AuthContext.Provider value={contextValue}>

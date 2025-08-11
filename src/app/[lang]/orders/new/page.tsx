@@ -305,7 +305,7 @@ export default function AddNewOrderPage() {
           const usersData = usersSnapshot.val();
           fetchedSellers = Object.entries(usersData)
             .map(([id, data]: [string, any]) => ({ id, ...data } as User))
-            .filter(user => user.isSeller === true)
+            .filter(user => user.isSeller === true && user.isActive !== false) // Only active sellers
             .sort((a, b) => (a.fullName || '').localeCompare(b.fullName || ''));
         }
 
