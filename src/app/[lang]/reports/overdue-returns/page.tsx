@@ -10,17 +10,26 @@ import { arSA, enUS } from 'date-fns/locale';
 import { getOverdueReturnsData } from '@/lib/reports-data';
 
 export default async function OverdueReturnsPage({
-  params: routeParams
+  params: routeParams,
+  searchParams
 }: {
-  params: Promise<{ lang: string }>
+  params: Promise<{ lang: string }>,
+  searchParams?: Promise<{ startDate?: string, endDate?: string, branch?: string }>
 }) {
   const { lang } = await routeParams;
   const effectiveLang = lang as 'ar' | 'en';
+  const searchParamsResolved = await searchParams;
+
+  const filters = {
+    startDate: searchParamsResolved?.startDate,
+    endDate: searchParamsResolved?.endDate,
+    branchId: searchParamsResolved?.branch || 'all'
+  };
   const locale = effectiveLang === 'ar' ? arSA : enUS;
 
   const t = {
     pageTitle: effectiveLang === 'ar' ? 'تفاصيل المرتجعات المتأخرة' : 'Overdue Returns Details',
-    allTimeDataNote: effectiveLang === 'ar' ? 'البيانات المعروضة تشمل الإيجارات النشطة المتأخرة عن موعد الإرجاع.' : 'Data shown includes active rentals that are past their return date.',
+    allTimeDataNote: effectiveLang === 'ar' ? 'البيانات المعروضة تشمل الإيجارات النشطة المتأخرة عن موعد الإرجاع في الفترة المحددة.' : 'Data shown includes active rentals that are past their return date within the selected date range.',
     backToDashboard: effectiveLang === 'ar' ? 'العودة إلى التقارير' : 'Back to Reports',
     orderId: effectiveLang === 'ar' ? 'رقم الطلب' : 'Order ID',
     productName: effectiveLang === 'ar' ? 'اسم المنتج' : 'Product Name',
@@ -42,7 +51,7 @@ export default async function OverdueReturnsPage({
   let error = false;
 
   try {
-    overdueReturns = await getOverdueReturnsData(effectiveLang);
+    overdueReturns = await getOverdueReturnsData(effectiveLang, filters);
   } catch (err) {
     console.error("Error in OverdueReturnsPage:", err);
     error = true;

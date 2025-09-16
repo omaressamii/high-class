@@ -80,12 +80,38 @@ function enrichOrderData(order: Order, products: Product[], customers: Customer[
 /**
  * Get active rentals data
  */
-export async function getActiveRentalsData(lang: 'ar' | 'en') {
+export async function getActiveRentalsData(lang: 'ar' | 'en', filters?: {
+  startDate?: string;
+  endDate?: string;
+  branchId?: string;
+}) {
   try {
     const { orders, products, customers, users } = await fetchAllData();
 
+    // Filter orders by date range and branch
+    let filteredOrders = orders;
+
+    if (filters?.startDate || filters?.endDate || filters?.branchId) {
+      filteredOrders = orders.filter(order => {
+        // Date filtering
+        if (filters.startDate && order.orderDate < filters.startDate) {
+          return false;
+        }
+        if (filters.endDate && order.orderDate > filters.endDate) {
+          return false;
+        }
+
+        // Branch filtering
+        if (filters.branchId && filters.branchId !== 'all' && order.branchId !== filters.branchId) {
+          return false;
+        }
+
+        return true;
+      });
+    }
+
     // Filter active rentals and enrich with related data
-    const activeRentals = orders
+    const activeRentals = filteredOrders
       .filter(order => order.transactionType === 'Rental' && order.status === 'Ongoing')
       .map(order => enrichOrderData(order, products, customers, users, lang))
       .sort((a, b) => new Date(b.orderDate).getTime() - new Date(a.orderDate).getTime());
@@ -100,12 +126,38 @@ export async function getActiveRentalsData(lang: 'ar' | 'en') {
 /**
  * Get sales data
  */
-export async function getSalesData(lang: 'ar' | 'en') {
+export async function getSalesData(lang: 'ar' | 'en', filters?: {
+  startDate?: string;
+  endDate?: string;
+  branchId?: string;
+}) {
   try {
     const { orders, products, customers, users } = await fetchAllData();
 
+    // Filter orders by date range and branch
+    let filteredOrders = orders;
+
+    if (filters?.startDate || filters?.endDate || filters?.branchId) {
+      filteredOrders = orders.filter(order => {
+        // Date filtering
+        if (filters.startDate && order.orderDate < filters.startDate) {
+          return false;
+        }
+        if (filters.endDate && order.orderDate > filters.endDate) {
+          return false;
+        }
+
+        // Branch filtering
+        if (filters.branchId && filters.branchId !== 'all' && order.branchId !== filters.branchId) {
+          return false;
+        }
+
+        return true;
+      });
+    }
+
     // Filter sales and enrich with related data
-    const salesOrders = orders
+    const salesOrders = filteredOrders
       .filter(order => order.transactionType === 'Sale')
       .map(order => enrichOrderData(order, products, customers, users, lang))
       .sort((a, b) => new Date(b.orderDate).getTime() - new Date(a.orderDate).getTime());
@@ -120,20 +172,46 @@ export async function getSalesData(lang: 'ar' | 'en') {
 /**
  * Get upcoming returns data (rentals due within the next 7 days)
  */
-export async function getUpcomingReturnsData(lang: 'ar' | 'en') {
+export async function getUpcomingReturnsData(lang: 'ar' | 'en', filters?: {
+  startDate?: string;
+  endDate?: string;
+  branchId?: string;
+}) {
   try {
     const { orders, products, customers, users } = await fetchAllData();
+
+    // Filter orders by date range and branch
+    let filteredOrders = orders;
+
+    if (filters?.startDate || filters?.endDate || filters?.branchId) {
+      filteredOrders = orders.filter(order => {
+        // Date filtering
+        if (filters.startDate && order.orderDate < filters.startDate) {
+          return false;
+        }
+        if (filters.endDate && order.orderDate > filters.endDate) {
+          return false;
+        }
+
+        // Branch filtering
+        if (filters.branchId && filters.branchId !== 'all' && order.branchId !== filters.branchId) {
+          return false;
+        }
+
+        return true;
+      });
+    }
 
     const today = new Date();
     const nextWeek = addDays(today, 7);
 
     // Filter upcoming returns (rentals with return dates within the next 7 days)
-    const upcomingReturns = orders
+    const upcomingReturns = filteredOrders
       .filter(order => {
         if (order.transactionType !== 'Rental' || order.status !== 'Ongoing' || !order.returnDate) {
           return false;
         }
-        
+
         const returnDate = new Date(order.returnDate);
         return isWithinInterval(returnDate, { start: today, end: nextWeek });
       })
@@ -150,14 +228,40 @@ export async function getUpcomingReturnsData(lang: 'ar' | 'en') {
 /**
  * Get overdue returns data (rentals past their return date)
  */
-export async function getOverdueReturnsData(lang: 'ar' | 'en') {
+export async function getOverdueReturnsData(lang: 'ar' | 'en', filters?: {
+  startDate?: string;
+  endDate?: string;
+  branchId?: string;
+}) {
   try {
     const { orders, products, customers, users } = await fetchAllData();
+
+    // Filter orders by date range and branch
+    let filteredOrders = orders;
+
+    if (filters?.startDate || filters?.endDate || filters?.branchId) {
+      filteredOrders = orders.filter(order => {
+        // Date filtering
+        if (filters.startDate && order.orderDate < filters.startDate) {
+          return false;
+        }
+        if (filters.endDate && order.orderDate > filters.endDate) {
+          return false;
+        }
+
+        // Branch filtering
+        if (filters.branchId && filters.branchId !== 'all' && order.branchId !== filters.branchId) {
+          return false;
+        }
+
+        return true;
+      });
+    }
 
     const today = new Date();
 
     // Filter overdue returns
-    const overdueReturns = orders
+    const overdueReturns = filteredOrders
       .filter(order => {
         if (order.transactionType !== 'Rental' || order.status !== 'Ongoing' || !order.returnDate) {
           return false;

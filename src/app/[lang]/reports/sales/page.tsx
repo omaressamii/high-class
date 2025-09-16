@@ -13,17 +13,26 @@ import { getSalesData } from '@/lib/reports-data';
 
 
 export default async function SalesDetailsPage({
-  params: routeParams
+  params: routeParams,
+  searchParams
 }: {
-  params: Promise<{ lang: string }>
+  params: Promise<{ lang: string }>,
+  searchParams?: Promise<{ startDate?: string, endDate?: string, branch?: string }>
 }) {
   const { lang } = await routeParams;
   const effectiveLang = lang as 'ar' | 'en';
+  const searchParamsResolved = await searchParams;
+
+  const filters = {
+    startDate: searchParamsResolved?.startDate,
+    endDate: searchParamsResolved?.endDate,
+    branchId: searchParamsResolved?.branch || 'all'
+  };
   const locale = effectiveLang === 'ar' ? arSA : enUS;
 
   const t = {
     pageTitle: effectiveLang === 'ar' ? 'تفاصيل المبيعات' : 'Sales Details',
-    allTimeDataNote: effectiveLang === 'ar' ? 'البيانات المعروضة تشمل جميع المبيعات المسجلة. التصفية حسب الفترة ستتوفر مستقبلاً.' : 'Data shown includes all recorded sales. Period filtering will be available in a future update.',
+    allTimeDataNote: effectiveLang === 'ar' ? 'البيانات المعروضة مصفاة حسب الفترة المحددة.' : 'Data shown is filtered by the selected date range.',
     backToDashboard: effectiveLang === 'ar' ? 'العودة إلى التقارير' : 'Back to Reports',
     orderId: effectiveLang === 'ar' ? 'رقم الطلب' : 'Order ID',
     productName: effectiveLang === 'ar' ? 'اسم المنتج' : 'Product Name',
@@ -44,7 +53,7 @@ export default async function SalesDetailsPage({
   let error = false;
 
   try {
-    salesOrders = await getSalesData(effectiveLang);
+    salesOrders = await getSalesData(effectiveLang, filters);
   } catch (err) {
     console.error("Error in SalesDetailsPage:", err);
     error = true;

@@ -13,17 +13,26 @@ import { getActiveRentalsData } from '@/lib/reports-data';
 
 
 export default async function ActiveRentalsPage({
-  params: routeParams
+  params: routeParams,
+  searchParams
 }: {
-  params: Promise<{ lang: string }>
+  params: Promise<{ lang: string }>,
+  searchParams?: Promise<{ startDate?: string, endDate?: string, branch?: string }>
 }) {
   const { lang } = await routeParams;
   const effectiveLang = lang as 'ar' | 'en';
+  const searchParamsResolved = await searchParams;
+
+  const filters = {
+    startDate: searchParamsResolved?.startDate,
+    endDate: searchParamsResolved?.endDate,
+    branchId: searchParamsResolved?.branch || 'all'
+  };
   const locale = effectiveLang === 'ar' ? arSA : enUS;
 
   const t = {
     pageTitle: effectiveLang === 'ar' ? 'تفاصيل الإيجارات النشطة' : 'Active Rentals Details',
-    allTimeDataNote: effectiveLang === 'ar' ? 'البيانات المعروضة تشمل جميع الإيجارات النشطة حاليًا. التصفية حسب الفترة ستتوفر مستقبلاً.' : 'Data shown includes all currently active rentals. Period filtering will be available in a future update.',
+    allTimeDataNote: effectiveLang === 'ar' ? 'البيانات المعروضة مصفاة حسب الفترة المحددة.' : 'Data shown is filtered by the selected date range.',
     backToDashboard: effectiveLang === 'ar' ? 'العودة إلى التقارير' : 'Back to Reports',
     orderId: effectiveLang === 'ar' ? 'رقم الطلب' : 'Order ID',
     productName: effectiveLang === 'ar' ? 'اسم المنتج' : 'Product Name',
@@ -44,7 +53,7 @@ export default async function ActiveRentalsPage({
   let error = false;
 
   try {
-    activeRentals = await getActiveRentalsData(effectiveLang);
+    activeRentals = await getActiveRentalsData(effectiveLang, filters);
   } catch (err) {
     console.error("Error in ActiveRentalsPage:", err);
     error = true;

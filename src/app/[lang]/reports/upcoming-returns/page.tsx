@@ -13,17 +13,26 @@ import { getUpcomingReturnsData } from '@/lib/reports-data';
 
 
 export default async function UpcomingReturnsPage({
-  params: routeParams
+  params: routeParams,
+  searchParams
 }: {
-  params: Promise<{ lang: string }>
+  params: Promise<{ lang: string }>,
+  searchParams?: Promise<{ startDate?: string, endDate?: string, branch?: string }>
 }) {
   const { lang } = await routeParams;
   const effectiveLang = lang as 'ar' | 'en';
+  const searchParamsResolved = await searchParams;
+
+  const filters = {
+    startDate: searchParamsResolved?.startDate,
+    endDate: searchParamsResolved?.endDate,
+    branchId: searchParamsResolved?.branch || 'all'
+  };
   const locale = effectiveLang === 'ar' ? arSA : enUS;
 
   const t = {
     pageTitle: effectiveLang === 'ar' ? 'تفاصيل المرتجعات القادمة' : 'Upcoming Returns Details',
-    allTimeDataNote: effectiveLang === 'ar' ? 'البيانات المعروضة تشمل الإيجارات النشطة المطلوب إرجاعها خلال الأسبوع القادم.' : 'Data shown includes active rentals due for return within the next week.',
+    allTimeDataNote: effectiveLang === 'ar' ? 'البيانات المعروضة تشمل الإيجارات النشطة المطلوب إرجاعها خلال الفترة المحددة.' : 'Data shown includes active rentals due for return within the selected date range.',
     backToDashboard: effectiveLang === 'ar' ? 'العودة إلى التقارير' : 'Back to Reports',
     orderId: effectiveLang === 'ar' ? 'رقم الطلب' : 'Order ID',
     productName: effectiveLang === 'ar' ? 'اسم المنتج' : 'Product Name',
@@ -43,7 +52,7 @@ export default async function UpcomingReturnsPage({
   let error = false;
 
   try {
-    upcomingReturns = await getUpcomingReturnsData(effectiveLang);
+    upcomingReturns = await getUpcomingReturnsData(effectiveLang, filters);
   } catch (err) {
     console.error("Error in UpcomingReturnsPage:", err);
     error = true;

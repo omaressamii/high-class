@@ -9,7 +9,9 @@ import { ref, get, query, orderByChild } from "firebase/database";
 import { database } from "@/lib/firebase";
 import { ReportChartsClient, type ReportDataItem, type OverallSalesSummary } from '@/components/reports/ReportChartsClient';
 import { ReportBranchFilterClient } from '@/components/reports/ReportBranchFilterClient';
+import { DateRangeFilterClient } from '@/components/reports/DateRangeFilterClient';
 import { PERMISSION_STRINGS } from '@/types';
+import { parseISO, isValid } from 'date-fns';
 
 interface ReportsData {
   mostSoldProductsData: ReportDataItem[];
@@ -33,6 +35,45 @@ function serializeTimestamp(ts: any): string | undefined {
   }
   console.warn("Unrecognized or unsupported timestamp format encountered during serialization:", ts);
   return undefined; // Or return ts if it's expected to be a pre-formatted string in some cases
+}
+
+// Helper function to safely parse dates, accommodating strings and numbers
+function safeParseDate(dateInput: any): Date | null {
+  if (!dateInput) return null;
+  if (typeof dateInput === 'string') {
+    try {
+      let parsed = parseISO(dateInput);
+      if (isValid(parsed)) {
+        return parsed;
+      }
+      const parts = dateInput.split('-');
+      if (parts.length === 3) {
+        const year = parseInt(parts[0], 10);
+        const month = parseInt(parts[1], 10) - 1;
+        const day = parseInt(parts[2], 10);
+        parsed = new Date(Date.UTC(year, month, day));
+        if (isValid(parsed)) {
+            return new Date(parsed.getUTCFullYear(), parsed.getUTCMonth(), parsed.getUTCDate());
+        }
+      }
+    } catch (e) {
+      return null;
+    }
+  }
+  if (typeof dateInput === 'number') {
+    try {
+      const parsed = new Date(dateInput);
+      if (isValid(parsed)) {
+        return parsed;
+      }
+    } catch (e) {
+      return null;
+    }
+  }
+  if (dateInput instanceof Date && isValid(dateInput)) {
+      return dateInput;
+  }
+  return null;
 }
 
 async function getAllBranches(): Promise<Branch[]> {
@@ -64,7 +105,7 @@ async function getAllBranches(): Promise<Branch[]> {
 }
 
 
-async function getReportsData(lang: 'ar' | 'en', selectedBranchId?: string): Promise<ReportsData> {
+async function getReportsData(lang: 'ar' | 'en', selectedBranchId?: string, startDate?: Date, endDate?: Date): Promise<ReportsData> {
   // Fetch all necessary data
   const ordersRef = ref(database, "orders");
   const productsRef = ref(database, "products");
@@ -90,6 +131,24 @@ async function getReportsData(lang: 'ar' | 'en', selectedBranchId?: string): Pro
   // Filter orders by selectedBranchId if provided and not 'all'
   if (selectedBranchId && selectedBranchId !== 'all') {
     orders = orders.filter(order => order.branchId === selectedBranchId);
+  }
+
+  // Filter orders by date range if provided
+  if (startDate || endDate) {
+    orders = orders.filter(order => {
+      const orderDate = safeParseDate(order.orderDate);
+      if (!orderDate) return false;
+
+      if (startDate && orderDate < startDate) return false;
+      if (endDate) {
+        // Set end date to end of day for inclusive filtering
+        const endOfDay = new Date(endDate);
+        endOfDay.setHours(23, 59, 59, 999);
+        if (orderDate > endOfDay) return false;
+      }
+
+      return true;
+    });
   }
 
   const productsMap = new Map();
@@ -293,17 +352,39 @@ export default async function ReportsPage({
   searchParams
 }: {
   params: Promise<{ lang: string }>,
-  searchParams?: Promise<{ branch?: string }>
+  searchParams?: Promise<{ branch?: string, startDate?: string, endDate?: string }>
 }) {
   const { lang } = await routeParams;
   const effectiveLang = lang as 'ar' | 'en';
   const searchParamsResolved = await searchParams;
   const selectedBranchId = searchParamsResolved?.branch || 'all'; // Default to 'all' if no query param
 
+  // Parse date range parameters
+  let startDate: Date | undefined;
+  let endDate: Date | undefined;
+
+  if (searchParamsResolved?.startDate) {
+    try {
+      startDate = new Date(searchParamsResolved.startDate);
+      if (isNaN(startDate.getTime())) startDate = undefined;
+    } catch {
+      startDate = undefined;
+    }
+  }
+
+  if (searchParamsResolved?.endDate) {
+    try {
+      endDate = new Date(searchParamsResolved.endDate);
+      if (isNaN(endDate.getTime())) endDate = undefined;
+    } catch {
+      endDate = undefined;
+    }
+  }
+
   let reportsData: ReportsData;
   let branches: Branch[] = [];
   try {
-      reportsData = await getReportsData(effectiveLang, selectedBranchId);
+      reportsData = await getReportsData(effectiveLang, selectedBranchId, startDate, endDate);
       branches = await getAllBranches();
   } catch (error) {
       console.error("Failed to fetch reports data or branches:", error);
@@ -337,7 +418,7 @@ export default async function ReportsPage({
     productName: effectiveLang === 'ar' ? 'اسم المنتج' : 'Product Name',
     sellerName: effectiveLang === 'ar' ? 'اسم البائع' : 'Seller Name',
     currencySymbol: effectiveLang === 'ar' ? 'ج.م' : 'EGP',
-    allTimeDataNote: effectiveLang === 'ar' ? 'ملاحظة: تعرض هذه التقارير البيانات لجميع الأوقات من قاعدة البيانات الحية، مفلترة حسب الفرع المختار (إن وجد).' : 'Note: These reports show all-time data from the live database, filtered by the selected branch (if any).',
+    allTimeDataNote: effectiveLang === 'ar' ? 'ملاحظة: تعرض هذه التقارير البيانات من قاعدة البيانات الحية، مفلترة حسب الفرع والنطاق الزمني المختارين (إن وجدا).' : 'Note: These reports show data from the live database, filtered by the selected branch and date range (if any).',
     loadingPage: effectiveLang === 'ar' ? 'جار تحميل التقارير...' : 'Loading reports...',
     errorFetchingData: effectiveLang === 'ar' ? 'حدث خطأ أثناء تحميل بيانات التقارير.' : 'An error occurred while loading report data.',
   };
@@ -354,6 +435,13 @@ export default async function ReportsPage({
             filterLabelText={t.filterByBranch}
         />
       </div>
+
+      <DateRangeFilterClient
+        lang={effectiveLang}
+        startDate={startDate}
+        endDate={endDate}
+      />
+
       <p className="text-sm text-muted-foreground">{t.allTimeDataNote}</p>
 
       <Card className="shadow-lg rounded-lg border-primary/20 bg-gradient-to-br from-primary/5 via-card to-primary/10">

@@ -3,7 +3,7 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { BarChart as RechartsBarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer } from 'recharts';
+import { BarChart as RechartsBarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip } from 'recharts';
 import { ChartContainer, type ChartConfig } from "@/components/ui/chart";
 import { BarChartBig, TrendingUp, DollarSign, Users as UsersIcon, Package } from 'lucide-react';
 
@@ -108,21 +108,25 @@ export function ReportChartsClient({ reportsData, translations: t, lang }: Repor
         </CardHeader>
         <CardContent>
           <ChartContainer config={soldChartConfig} className="h-[350px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <RechartsBarChart data={reportsData.mostSoldProductsData} layout="vertical" margin={{ right: 20, left: lang === 'ar' ? 10 : 120, top: 5, bottom: 5 }}>
-                 <defs>
-                  <linearGradient id="fillSalesChart" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="hsl(var(--chart-1))" stopOpacity={0.8}/>
-                      <stop offset="95%" stopColor="hsl(var(--chart-1))" stopOpacity={0.1}/>
-                  </linearGradient>
-                </defs>
-                <CartesianGrid horizontal={false} strokeDasharray="3 3" />
-                <YAxis dataKey="name" type="category" tickLine={false} axisLine={false} stroke="hsl(var(--muted-foreground))" className="text-xs truncate" width={lang === 'ar' ? 80 : 120} interval={0} />
-                <XAxis dataKey="value" type="number" tickLine={false} axisLine={false} stroke="hsl(var(--muted-foreground))" />
-                <RechartsTooltip cursor={{ fill: 'hsl(var(--muted))' }} content={<CustomTooltip chartType="sales" />} />
-                <Bar dataKey="value" fill="url(#fillSalesChart)" radius={4} barSize={20} />
-              </RechartsBarChart>
-            </ResponsiveContainer>
+            <RechartsBarChart
+              data={reportsData.mostSoldProductsData}
+              layout="vertical"
+              width={593}
+              height={350}
+              margin={{ right: 20, left: lang === 'ar' ? 10 : 120, top: 5, bottom: 5 }}
+            >
+              <defs>
+                <linearGradient id="fillSalesChart" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="hsl(var(--chart-1))" stopOpacity={0.8}/>
+                    <stop offset="95%" stopColor="hsl(var(--chart-1))" stopOpacity={0.1}/>
+                </linearGradient>
+              </defs>
+              <CartesianGrid horizontal={false} strokeDasharray="3 3" />
+              <YAxis dataKey="name" type="category" tickLine={false} axisLine={false} stroke="hsl(var(--muted-foreground))" className="text-xs truncate" width={lang === 'ar' ? 80 : 120} interval={0} />
+              <XAxis dataKey="value" type="number" tickLine={false} axisLine={false} stroke="hsl(var(--muted-foreground))" />
+              <RechartsTooltip cursor={{ fill: 'hsl(var(--muted))' }} content={<CustomTooltip chartType="sales" />} />
+              <Bar dataKey="value" fill="url(#fillSalesChart)" radius={4} barSize={20} />
+            </RechartsBarChart>
           </ChartContainer>
         </CardContent>
       </Card>
@@ -136,21 +140,25 @@ export function ReportChartsClient({ reportsData, translations: t, lang }: Repor
         </CardHeader>
         <CardContent>
           <ChartContainer config={rentedChartConfig} className="h-[350px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <RechartsBarChart data={reportsData.mostRentedProductsData} layout="vertical" margin={{ right: 20, left: lang === 'ar' ? 10 : 120, top: 5, bottom: 5 }}>
-                <defs>
-                    <linearGradient id="fillRentalsChart" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="hsl(var(--chart-2))" stopOpacity={0.8}/>
-                      <stop offset="95%" stopColor="hsl(var(--chart-2))" stopOpacity={0.1}/>
-                    </linearGradient>
-                  </defs>
-                <CartesianGrid horizontal={false} strokeDasharray="3 3" />
-                <YAxis dataKey="name" type="category" tickLine={false} axisLine={false} stroke="hsl(var(--muted-foreground))" className="text-xs truncate" width={lang === 'ar' ? 80 : 120} interval={0} />
-                <XAxis dataKey="value" type="number" tickLine={false} axisLine={false} stroke="hsl(var(--muted-foreground))" />
-                <RechartsTooltip cursor={{ fill: 'hsl(var(--muted))' }} content={<CustomTooltip chartType="rentals" />} />
-                <Bar dataKey="value" fill="url(#fillRentalsChart)" radius={4} barSize={20} />
-              </RechartsBarChart>
-            </ResponsiveContainer>
+            <RechartsBarChart
+              data={reportsData.mostRentedProductsData}
+              layout="vertical"
+              width={593}
+              height={350}
+              margin={{ right: 20, left: lang === 'ar' ? 10 : 120, top: 5, bottom: 5 }}
+            >
+              <defs>
+                  <linearGradient id="fillRentalsChart" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="hsl(var(--chart-2))" stopOpacity={0.8}/>
+                    <stop offset="95%" stopColor="hsl(var(--chart-2))" stopOpacity={0.1}/>
+                  </linearGradient>
+                </defs>
+              <CartesianGrid horizontal={false} strokeDasharray="3 3" />
+              <YAxis dataKey="name" type="category" tickLine={false} axisLine={false} stroke="hsl(var(--muted-foreground))" className="text-xs truncate" width={lang === 'ar' ? 80 : 120} interval={0} />
+              <XAxis dataKey="value" type="number" tickLine={false} axisLine={false} stroke="hsl(var(--muted-foreground))" />
+              <RechartsTooltip cursor={{ fill: 'hsl(var(--muted))' }} content={<CustomTooltip chartType="rentals" />} />
+              <Bar dataKey="value" fill="url(#fillRentalsChart)" radius={4} barSize={20} />
+            </RechartsBarChart>
           </ChartContainer>
         </CardContent>
       </Card>
@@ -164,21 +172,25 @@ export function ReportChartsClient({ reportsData, translations: t, lang }: Repor
         </CardHeader>
         <CardContent>
           <ChartContainer config={profitableChartConfig} className="h-[350px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <RechartsBarChart data={reportsData.mostProfitableRentalsData} layout="vertical" margin={{ right: 20, left: lang === 'ar' ? 10 : 120, top: 5, bottom: 5 }}>
-                <defs>
-                    <linearGradient id="fillRevenueChart" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="hsl(var(--chart-3))" stopOpacity={0.8}/>
-                      <stop offset="95%" stopColor="hsl(var(--chart-3))" stopOpacity={0.1}/>
-                    </linearGradient>
-                  </defs>
-                <CartesianGrid horizontal={false} strokeDasharray="3 3" />
-                <YAxis dataKey="name" type="category" tickLine={false} axisLine={false} stroke="hsl(var(--muted-foreground))" className="text-xs truncate" width={lang === 'ar' ? 80 : 120} interval={0} />
-                <XAxis dataKey="value" type="number" tickLine={false} axisLine={false} stroke="hsl(var(--muted-foreground))" tickFormatter={(value) => `${t.currencySymbol}${value}`} />
-                <RechartsTooltip cursor={{ fill: 'hsl(var(--muted))' }} content={<CustomTooltip chartType="revenue" />} />
-                <Bar dataKey="value" fill="url(#fillRevenueChart)" radius={4} barSize={20} />
-              </RechartsBarChart>
-            </ResponsiveContainer>
+            <RechartsBarChart
+              data={reportsData.mostProfitableRentalsData}
+              layout="vertical"
+              width={593}
+              height={350}
+              margin={{ right: 20, left: lang === 'ar' ? 10 : 120, top: 5, bottom: 5 }}
+            >
+              <defs>
+                  <linearGradient id="fillRevenueChart" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="hsl(var(--chart-3))" stopOpacity={0.8}/>
+                    <stop offset="95%" stopColor="hsl(var(--chart-3))" stopOpacity={0.1}/>
+                  </linearGradient>
+                </defs>
+              <CartesianGrid horizontal={false} strokeDasharray="3 3" />
+              <YAxis dataKey="name" type="category" tickLine={false} axisLine={false} stroke="hsl(var(--muted-foreground))" className="text-xs truncate" width={lang === 'ar' ? 80 : 120} interval={0} />
+              <XAxis dataKey="value" type="number" tickLine={false} axisLine={false} stroke="hsl(var(--muted-foreground))" tickFormatter={(value) => `${t.currencySymbol}${value}`} />
+              <RechartsTooltip cursor={{ fill: 'hsl(var(--muted))' }} content={<CustomTooltip chartType="revenue" />} />
+              <Bar dataKey="value" fill="url(#fillRevenueChart)" radius={4} barSize={20} />
+            </RechartsBarChart>
           </ChartContainer>
         </CardContent>
       </Card>
@@ -192,21 +204,25 @@ export function ReportChartsClient({ reportsData, translations: t, lang }: Repor
         </CardHeader>
         <CardContent>
           <ChartContainer config={salespersonsChartConfig} className="h-[350px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <RechartsBarChart data={reportsData.mostActiveSalespersonsData} layout="vertical" margin={{ right: 20, left: lang === 'ar' ? 10 : 120, top: 5, bottom: 5 }}>
-                <defs>
-                    <linearGradient id="fillSalespersonsChart" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="hsl(var(--chart-4))" stopOpacity={0.8}/>
-                      <stop offset="95%" stopColor="hsl(var(--chart-4))" stopOpacity={0.1}/>
-                    </linearGradient>
-                  </defs>
-                <CartesianGrid horizontal={false} strokeDasharray="3 3" />
-                <YAxis dataKey="name" type="category" tickLine={false} axisLine={false} stroke="hsl(var(--muted-foreground))" className="text-xs truncate" width={lang === 'ar' ? 80 : 120} interval={0} />
-                <XAxis dataKey="value" type="number" tickLine={false} axisLine={false} stroke="hsl(var(--muted-foreground))" />
-                <RechartsTooltip cursor={{ fill: 'hsl(var(--muted))' }} content={<CustomTooltip chartType="salespersons" />} />
-                <Bar dataKey="value" fill="url(#fillSalespersonsChart)" radius={4} barSize={20} />
-              </RechartsBarChart>
-            </ResponsiveContainer>
+            <RechartsBarChart
+              data={reportsData.mostActiveSalespersonsData}
+              layout="vertical"
+              width={593}
+              height={350}
+              margin={{ right: 20, left: lang === 'ar' ? 10 : 120, top: 5, bottom: 5 }}
+            >
+              <defs>
+                  <linearGradient id="fillSalespersonsChart" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="hsl(var(--chart-4))" stopOpacity={0.8}/>
+                    <stop offset="95%" stopColor="hsl(var(--chart-4))" stopOpacity={0.1}/>
+                  </linearGradient>
+                </defs>
+              <CartesianGrid horizontal={false} strokeDasharray="3 3" />
+              <YAxis dataKey="name" type="category" tickLine={false} axisLine={false} stroke="hsl(var(--muted-foreground))" className="text-xs truncate" width={lang === 'ar' ? 80 : 120} interval={0} />
+              <XAxis dataKey="value" type="number" tickLine={false} axisLine={false} stroke="hsl(var(--muted-foreground))" />
+              <RechartsTooltip cursor={{ fill: 'hsl(var(--muted))' }} content={<CustomTooltip chartType="salespersons" />} />
+              <Bar dataKey="value" fill="url(#fillSalespersonsChart)" radius={4} barSize={20} />
+            </RechartsBarChart>
           </ChartContainer>
         </CardContent>
       </Card>
@@ -222,21 +238,25 @@ export function ReportChartsClient({ reportsData, translations: t, lang }: Repor
         </CardHeader>
         <CardContent>
           <ChartContainer config={productTypesChartConfig} className="h-[350px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <RechartsBarChart data={reportsData.productTypesData} layout="vertical" margin={{ right: 20, left: lang === 'ar' ? 10 : 120, top: 5, bottom: 5 }}>
-                <defs>
-                  <linearGradient id="fillProductTypesChart" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="hsl(var(--chart-5))" stopOpacity={0.8}/>
-                    <stop offset="95%" stopColor="hsl(var(--chart-5))" stopOpacity={0.1}/>
-                  </linearGradient>
-                </defs>
-                <CartesianGrid horizontal={false} strokeDasharray="3 3" />
-                <YAxis dataKey="name" type="category" tickLine={false} axisLine={false} stroke="hsl(var(--muted-foreground))" className="text-xs truncate" width={lang === 'ar' ? 80 : 120} interval={0} />
-                <XAxis dataKey="value" type="number" tickLine={false} axisLine={false} stroke="hsl(var(--muted-foreground))" tickFormatter={(value) => `${t.currencySymbol}${value}`} />
-                <RechartsTooltip cursor={{ fill: 'hsl(var(--muted))' }} content={<CustomTooltip chartType="productTypes" />} />
-                <Bar dataKey="value" fill="url(#fillProductTypesChart)" radius={4} barSize={20} />
-              </RechartsBarChart>
-            </ResponsiveContainer>
+            <RechartsBarChart
+              data={reportsData.productTypesData}
+              layout="vertical"
+              width={593}
+              height={350}
+              margin={{ right: 20, left: lang === 'ar' ? 10 : 120, top: 5, bottom: 5 }}
+            >
+              <defs>
+                <linearGradient id="fillProductTypesChart" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="hsl(var(--chart-5))" stopOpacity={0.8}/>
+                  <stop offset="95%" stopColor="hsl(var(--chart-5))" stopOpacity={0.1}/>
+                </linearGradient>
+              </defs>
+              <CartesianGrid horizontal={false} strokeDasharray="3 3" />
+              <YAxis dataKey="name" type="category" tickLine={false} axisLine={false} stroke="hsl(var(--muted-foreground))" className="text-xs truncate" width={lang === 'ar' ? 80 : 120} interval={0} />
+              <XAxis dataKey="value" type="number" tickLine={false} axisLine={false} stroke="hsl(var(--muted-foreground))" tickFormatter={(value) => `${t.currencySymbol}${value}`} />
+              <RechartsTooltip cursor={{ fill: 'hsl(var(--muted))' }} content={<CustomTooltip chartType="productTypes" />} />
+              <Bar dataKey="value" fill="url(#fillProductTypesChart)" radius={4} barSize={20} />
+            </RechartsBarChart>
           </ChartContainer>
         </CardContent>
       </Card>
