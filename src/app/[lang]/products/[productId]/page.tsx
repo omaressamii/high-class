@@ -11,6 +11,7 @@ import { ArrowLeft, ShoppingBag, DollarSign, Tag, Layers, Ruler, Info, Package, 
 import { ref, get, query, orderByChild, equalTo } from 'firebase/database';
 import { database } from '@/lib/firebase';
 import { EditProductButton } from '@/components/products/EditProductButton';
+import { DeleteProductButton } from '@/components/products/DeleteProductButton';
 import { ProductOrderHistoryTable } from '@/components/products/ProductOrderHistoryTable';
 import { PrintBarcodeButton } from '@/components/products/PrintBarcodeButton';
 import { ProductDetailsAuthWrapper } from '@/components/products/ProductDetailsAuthWrapper';
@@ -240,6 +241,7 @@ export default async function ProductDetailsPage({ params: routeParams }: { para
               className="w-full sm:w-auto"
             />
             <EditProductButton productId={productId} lang={effectiveLang} className="w-full sm:w-auto" />
+            <DeleteProductButton productId={productId} lang={effectiveLang} className="w-full sm:w-auto" />
             <Button asChild variant="outline" className="w-full sm:w-auto">
             <Link href={`/${effectiveLang}/products`}>
                 <ArrowLeft className="mr-2 h-4 w-4 rtl:ml-2 rtl:mr-0" />
