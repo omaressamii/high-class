@@ -1,4 +1,5 @@
 // Script to add an admin user to Firebase Realtime Database
+require('dotenv').config();
 const admin = require('firebase-admin');
 
 // Initialize Firebase Admin SDK
@@ -7,7 +8,7 @@ try {
   
   admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
-    databaseURL: "https://highclass-d5aac-default-rtdb.firebaseio.com/"
+    databaseURL: process.env.FIREBASE_DATABASE_URL || process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL || 'https://high-class-b8f26-default-rtdb.firebaseio.com/'
   });
 } catch (error) {
   console.error('Error initializing Firebase Admin SDK:', error.message);
@@ -107,7 +108,7 @@ async function initializeCounters() {
 
 async function main() {
   console.log('🚀 Setting up Firebase Realtime Database with admin user...');
-  console.log('Database URL: https://highclass-d5aac-default-rtdb.firebaseio.com/');
+  console.log('Database URL:', process.env.FIREBASE_DATABASE_URL || process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL);
   console.log('');
   
   try {

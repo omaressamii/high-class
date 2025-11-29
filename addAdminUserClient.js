@@ -1,16 +1,17 @@
 
+require('dotenv').config();
 const { initializeApp } = require('firebase/app');
 const { getDatabase, ref, set } = require('firebase/database');
 
 // Firebase configuration - you need to fill in your actual values
 const firebaseConfig = {
-  apiKey: "your_api_key_here", // Replace with your actual API key
-  authDomain: "your_project_id.firebaseapp.com", // Replace with your actual auth domain
-  databaseURL: "https://highclass-d5aac-default-rtdb.firebaseio.com/",
-  projectId: "your_project_id", // Replace with your actual project ID
-  storageBucket: "your_project_id.appspot.com", // Replace with your actual storage bucket
-  messagingSenderId: "your_messaging_sender_id", // Replace with your actual sender ID
-  appId: "your_app_id" // Replace with your actual app ID
+  apiKey: process.env.FIREBASE_API_KEY || process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.FIREBASE_AUTH_DOMAIN || process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  databaseURL: process.env.FIREBASE_DATABASE_URL || process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL,
+  projectId: process.env.FIREBASE_PROJECT_ID || process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.FIREBASE_STORAGE_BUCKET || process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.FIREBASE_MESSAGING_SENDER_ID || process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.FIREBASE_APP_ID || process.env.NEXT_PUBLIC_FIREBASE_APP_ID
 };
 
 // Initialize Firebase
@@ -108,12 +109,12 @@ async function initializeCounters() {
 
 async function main() {
   console.log('🚀 Setting up Firebase Realtime Database with admin user...');
-  console.log('Database URL: https://highclass-d5aac-default-rtdb.firebaseio.com/');
+  console.log('Database URL:', firebaseConfig.databaseURL);
   console.log('');
   
   // Check if configuration is filled
-  if (firebaseConfig.apiKey === "your_api_key_here") {
-    console.log('❌ Please update the Firebase configuration in this script with your actual values!');
+  if (!firebaseConfig.apiKey) {
+    console.log('❌ Please set FIREBASE_API_KEY or NEXT_PUBLIC_FIREBASE_API_KEY in your environment (.env.local)');
     console.log('You can find these values in your Firebase Console > Project Settings > General tab');
     process.exit(1);
   }

@@ -3,6 +3,7 @@
  * Run this script to identify and repair duplicate order codes
  */
 
+require('dotenv').config();
 const admin = require('firebase-admin');
 const path = require('path');
 
@@ -12,7 +13,7 @@ try {
   
   admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
-    databaseURL: "https://highclass-d5aac-default-rtdb.firebaseio.com/"
+    databaseURL: process.env.FIREBASE_DATABASE_URL || process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL || 'https://high-class-b8f26-default-rtdb.firebaseio.com/'
   });
 } catch (error) {
   console.error('Error initializing Firebase Admin SDK:', error.message);

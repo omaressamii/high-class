@@ -1,4 +1,5 @@
 
+require('dotenv').config();
 // Import the Firebase Admin SDK
 const admin = require('firebase-admin');
 
@@ -9,7 +10,7 @@ const serviceAccount = require('./serviceAccountKey.json'); // Adjust path if ne
 // Initialize the Firebase Admin SDK
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
-  databaseURL: "https://highclass-d5aac-default-rtdb.firebaseio.com/"
+  databaseURL: process.env.FIREBASE_DATABASE_URL || process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL || 'https://high-class-b8f26-default-rtdb.firebaseio.com/'
 });
 
 const db = admin.database();
