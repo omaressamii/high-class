@@ -180,8 +180,13 @@ export default function AddNewUserPage() {
   });
 
   const [isSaving, setIsSaving] = React.useState(false);
+  const [mounted, setMounted] = useState(false);
   const isSellerWatcher = form.watch('isSeller');
   const accessAllBranchesWatcher = form.watch('accessAllBranches');
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   React.useEffect(() => {
     if (accessAllBranchesWatcher) {
@@ -231,9 +236,9 @@ export default function AddNewUserPage() {
       password: data.password,
       isSeller: data.isSeller,
       isActive: true, // New users are active by default
-      branchId: data.accessAllBranches ? null : (data.branchId || null),
-      branchName: data.accessAllBranches ? null : (selectedBranch?.name || null),
-      permissions: finalPermissions,
+      branchId: data.accessAllBranches ? undefined : (data.branchId || undefined),
+      branchName: data.accessAllBranches ? undefined : (selectedBranch?.name || undefined),
+      permissions: finalPermissions as PermissionString[],
       createdAt: new Date().toISOString(), // Use ISO string instead of serverTimestamp for Realtime DB
     };
 
@@ -275,7 +280,7 @@ export default function AddNewUserPage() {
   };
 
 
-  if (authIsLoading || !currentHasPermission('users_manage')) {
+  if (!mounted || authIsLoading || !currentHasPermission('users_manage')) {
     return (
       <div className="flex justify-center items-center min-h-[calc(100vh-10rem)]">
         <Loader className="h-10 w-10 animate-spin text-primary" />
@@ -476,7 +481,6 @@ export default function AddNewUserPage() {
                 ))}
               </CardContent>
             </Card>
-          )}
 
           <div className="pt-6">
             <Button type="submit" disabled={isSaving}>

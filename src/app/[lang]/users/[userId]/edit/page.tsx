@@ -215,8 +215,13 @@ export default function EditUserPage() {
 
 
   const [isSaving, setIsSaving] = React.useState(false);
+  const [mounted, setMounted] = useState(false);
   const isSellerWatcher = form.watch('isSeller');
   const accessAllBranchesWatcher = form.watch('accessAllBranches');
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     if (accessAllBranchesWatcher) {
@@ -251,9 +256,9 @@ export default function EditUserPage() {
       fullName: data.fullName.trim(),
       isSeller: data.isSeller,
       isActive: data.isActive,
-      branchId: data.accessAllBranches ? null : (data.branchId || null),
-      branchName: data.accessAllBranches ? null : (selectedBranch?.name || null),
-      permissions: uniqueFinalPermissions,
+      branchId: data.accessAllBranches ? undefined : (data.branchId || undefined),
+      branchName: data.accessAllBranches ? undefined : (selectedBranch?.name || undefined),
+      permissions: uniqueFinalPermissions as PermissionString[],
       updatedAt: new Date().toISOString(), // Use ISO string instead of serverTimestamp for Realtime DB
     };
 
@@ -302,7 +307,7 @@ export default function EditUserPage() {
   };
 
 
-  if (authIsLoading || !loggedInUserPermissions || userLoading || branchesLoading) {
+  if (!mounted || authIsLoading || !loggedInUserPermissions || userLoading || branchesLoading) {
     return (
       <div className="flex justify-center items-center min-h-[calc(100vh-10rem)]">
         <Loader className="h-10 w-10 animate-spin text-primary" />
@@ -542,7 +547,6 @@ export default function EditUserPage() {
                 ))}
               </CardContent>
             </Card>
-          )}
 
           <div className="pt-6">
             <Button type="submit" disabled={isSaving}>
