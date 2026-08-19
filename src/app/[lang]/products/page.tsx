@@ -6,6 +6,7 @@ import type { Product, ProductCategory, ProductStatus, ProductSize, ProductTypeD
 import { ClientAuthWrapper } from '@/components/products/ClientAuthWrapper';
 import { ProductFiltersClientWrapper } from '@/components/products/ProductFiltersClientWrapper';
 import { DeleteAllProductsButton } from '@/components/products/DeleteAllProductsButton';
+import { ExportProductsButton } from '@/components/products/ExportProductsButton';
 
 interface ProductsPageProps {
   params: { lang: string };
@@ -29,6 +30,7 @@ export default async function ProductsPage({ params: routeParams }: { params: Pr
         <PageTitle className="mb-0">{t.pageTitle}</PageTitle>
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
             <ClientAuthWrapper lang={effectiveLang} addProductText={t.addProduct} />
+            <ExportProductsButton lang={effectiveLang} />
             <DeleteAllProductsButton lang={effectiveLang} />
         </div>
       </div>
