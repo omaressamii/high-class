@@ -122,6 +122,7 @@ export default function EditUserPage() {
     perm_products_edit: effectiveLang === 'ar' ? 'تعديل منتجات' : 'Edit Products',
     perm_products_delete: effectiveLang === 'ar' ? 'حذف منتجات' : 'Delete Products',
     perm_products_availability_view: effectiveLang === 'ar' ? 'عرض توفر المنتج' : 'View Product Availability',
+    perm_products_export: effectiveLang === 'ar' ? 'تصدير المنتجات إلى Excel' : 'Export Products to Excel',
     perm_customers_view: effectiveLang === 'ar' ? 'عرض العملاء' : 'View Customers',
     perm_customers_manage: effectiveLang === 'ar' ? 'إدارة العملاء' : 'Manage Customers',
     perm_orders_view: effectiveLang === 'ar' ? 'عرض الطلبات' : 'View Orders',

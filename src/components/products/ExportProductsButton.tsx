@@ -73,7 +73,7 @@ export function ExportProductsButton({ lang, products }: ExportProductsButtonPro
     }
   }, [branchVisibleProducts, productTypes, lang, toast, t.exportError, t.exportSuccess, t.noProducts]);
 
-  if (authIsLoading || !hasPermission('products_view')) {
+  if (authIsLoading || !hasPermission('products_export')) {
     return null;
   }
 

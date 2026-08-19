@@ -63,6 +63,7 @@ export const PERMISSION_STRINGS = [
   'products_edit',
   'products_delete',
   'products_availability_view',
+  'products_export',
   'customers_view',
   'customers_manage',
   'orders_view',
@@ -267,7 +268,7 @@ export const PERMISSION_GROUPS: PermissionGroup[] = [
   {
     id: 'products_group',
     nameKey: 'group_products_management',
-    permissions: ['products_view', 'products_view_details', 'products_add', 'products_edit', 'products_delete', 'products_availability_view'],
+    permissions: ['products_view', 'products_view_details', 'products_add', 'products_edit', 'products_delete', 'products_availability_view', 'products_export'],
   },
   {
     id: 'customers_group',

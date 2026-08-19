@@ -45,6 +45,7 @@ export function useOptimizedAuth() {
     canManageBranches: hasPermission('branches_manage'),
     canReceiveReturns: hasPermission('returns_receive'),
     canViewProductAvailability: hasPermission('products_availability_view'),
+    canExportProducts: hasPermission('products_export'),
   }), [hasPermission]);
 
   return {
