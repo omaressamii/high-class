@@ -8,6 +8,7 @@ const ARABIC_HEADERS = [
   'النوع (بيع-ايجار)',
   'الكمية',
   'الفرع',
+  'كود الصنف',
 ] as const;
 
 const ENGLISH_HEADERS = [
@@ -18,6 +19,7 @@ const ENGLISH_HEADERS = [
   'Type (Sale/Rent)',
   'Quantity',
   'Branch',
+  'Item Code',
 ] as const;
 
 function getProductTypeName(
@@ -61,6 +63,7 @@ export function buildProductsExportRows(
     getCategoryLabel(product.category, lang),
     product.quantityInStock ?? 0,
     getBranchLabel(product, lang),
+    product.productCode ?? '',
   ]);
 
   return [headers, ...rows];
@@ -84,6 +87,7 @@ export async function exportProductsToExcel(
     { wch: 20 },
     { wch: 10 },
     { wch: 22 },
+    { wch: 16 },
   ];
 
   const workbook = XLSX.utils.book_new();
