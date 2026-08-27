@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { PageTitle } from '@/components/shared/PageTitle';
 import { CustomerListClientWrapper } from '@/components/customers/CustomerListClientWrapper';
 import { ClientAuthWrapperForCustomersPage } from '@/components/customers/ClientAuthWrapperForCustomersPage';
+import { ExportCustomersButton } from '@/components/customers/ExportCustomersButton';
 import { ref, get, query, orderByChild } from "firebase/database";
 import { database } from "@/lib/firebase";
 import type { Customer } from '@/types';
@@ -35,6 +36,7 @@ async function getCustomersFromRealtimeDB(): Promise<Customer[] | null> {
           id: id,
           fullName: data.fullName || 'N/A',
           phoneNumber: data.phoneNumber || 'N/A',
+          secondaryPhoneNumber: data.secondaryPhoneNumber || undefined,
           address: data.address || undefined,
           idCardNumber: data.idCardNumber || undefined,
           notes: data.notes || undefined,
@@ -114,7 +116,10 @@ export default async function CustomersPage({ params: routeParams }: { params: P
     <div className="space-y-6 sm:space-y-8">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <PageTitle className="mb-0">{t.pageTitle}</PageTitle>
-        <ClientAuthWrapperForCustomersPage lang={effectiveLang} addCustomerText={t.addCustomer} />
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
+          <ExportCustomersButton lang={effectiveLang} customers={customers.length > 0 ? customers : undefined} />
+          <ClientAuthWrapperForCustomersPage lang={effectiveLang} addCustomerText={t.addCustomer} />
+        </div>
       </div>
       
       {customers.length > 0 ? (

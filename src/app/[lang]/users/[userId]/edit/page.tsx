@@ -125,6 +125,7 @@ export default function EditUserPage() {
     perm_products_export: effectiveLang === 'ar' ? 'تصدير المنتجات إلى Excel' : 'Export Products to Excel',
     perm_customers_view: effectiveLang === 'ar' ? 'عرض العملاء' : 'View Customers',
     perm_customers_manage: effectiveLang === 'ar' ? 'إدارة العملاء' : 'Manage Customers',
+    perm_customers_export: effectiveLang === 'ar' ? 'تصدير العملاء إلى Excel' : 'Export Customers to Excel',
     perm_orders_view: effectiveLang === 'ar' ? 'عرض الطلبات' : 'View Orders',
     perm_orders_add: effectiveLang === 'ar' ? 'إضافة طلبات' : 'Add Orders',
     perm_orders_edit_price: effectiveLang === 'ar' ? 'تعديل سعر الطلب' : 'Edit Order Price',

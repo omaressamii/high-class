@@ -66,6 +66,7 @@ export const PERMISSION_STRINGS = [
   'products_export',
   'customers_view',
   'customers_manage',
+  'customers_export',
   'orders_view',
   'orders_add',
   'orders_edit_price',
@@ -111,6 +112,7 @@ export interface Customer {
   id: string;
   fullName: string;
   phoneNumber: string;
+  secondaryPhoneNumber?: string;
   address?: string;
   idCardNumber?: string;
   notes?: string;
@@ -273,7 +275,7 @@ export const PERMISSION_GROUPS: PermissionGroup[] = [
   {
     id: 'customers_group',
     nameKey: 'group_customers_management',
-    permissions: ['customers_view', 'customers_manage'],
+    permissions: ['customers_view', 'customers_manage', 'customers_export'],
   },
   {
     id: 'orders_group',
