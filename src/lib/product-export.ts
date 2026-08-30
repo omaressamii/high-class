@@ -1,4 +1,5 @@
-import type { Product, ProductTypeDefinition } from '@/types';
+import type { Order, Product, ProductTypeDefinition } from '@/types';
+import { getCurrentStockBalance } from '@/lib/product-utils';
 
 const ARABIC_HEADERS = [
   'اسم الصنف',
@@ -51,7 +52,8 @@ function getBranchLabel(product: Product, lang: 'ar' | 'en'): string {
 export function buildProductsExportRows(
   products: Product[],
   productTypes: ProductTypeDefinition[],
-  lang: 'ar' | 'en'
+  lang: 'ar' | 'en',
+  orders?: Order[]
 ): (string | number)[][] {
   const headers = lang === 'ar' ? [...ARABIC_HEADERS] : [...ENGLISH_HEADERS];
 
@@ -61,7 +63,8 @@ export function buildProductsExportRows(
     product.size,
     product.price,
     getCategoryLabel(product.category, lang),
-    product.quantityInStock ?? 0,
+    // Current stock balance (initialStock − sold), not starting/initial stock
+    getCurrentStockBalance(product, orders),
     getBranchLabel(product, lang),
     product.productCode ?? '',
   ]);
@@ -73,10 +76,11 @@ export async function exportProductsToExcel(
   products: Product[],
   productTypes: ProductTypeDefinition[],
   lang: 'ar' | 'en',
-  filename?: string
+  filename?: string,
+  orders?: Order[]
 ): Promise<void> {
   const XLSX = await import('xlsx');
-  const data = buildProductsExportRows(products, productTypes, lang);
+  const data = buildProductsExportRows(products, productTypes, lang, orders);
   const worksheet = XLSX.utils.aoa_to_sheet(data);
 
   worksheet['!cols'] = [

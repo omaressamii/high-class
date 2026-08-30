@@ -5,7 +5,53 @@
 
 import { ref, get } from 'firebase/database';
 import { database } from '@/lib/firebase';
-import type { Product } from '@/types';
+import type { Order, Product } from '@/types';
+
+const SALE_STATUSES_FOR_SOLD_COUNT = [
+  'Ongoing',
+  'Pending Preparation',
+  'Prepared',
+  'Delivered to Customer',
+  'Completed',
+] as const;
+
+/**
+ * Sold quantity for a product — matches ProductCard / ProductQuantityDetails.
+ * Prefers live order totals; falls back to product.quantitySold from the database.
+ */
+export function getActualSoldQuantity(product: Product, orders?: Order[]): number {
+  if (!orders || orders.length === 0) {
+    return product.quantitySold || 0;
+  }
+
+  return orders
+    .filter(
+      (order) =>
+        order.transactionType === 'Sale' &&
+        SALE_STATUSES_FOR_SOLD_COUNT.includes(
+          order.status as (typeof SALE_STATUSES_FOR_SOLD_COUNT)[number]
+        )
+    )
+    .reduce((total, order) => {
+      if (order.items && order.items.length > 0) {
+        const productItems = order.items.filter((item) => item.productId === product.id);
+        return total + productItems.reduce((sum, item) => sum + (item.quantity || 0), 0);
+      }
+      if (order.productId === product.id) {
+        return total + 1;
+      }
+      return total;
+    }, 0);
+}
+
+/**
+ * Current stock balance (not starting/initial stock).
+ * Same formula as the products UI: initialStock − sold.
+ */
+export function getCurrentStockBalance(product: Product, orders?: Order[]): number {
+  const sold = getActualSoldQuantity(product, orders);
+  return (product.initialStock || 0) - sold;
+}
 
 /**
  * Check if a product code (barcode) already exists in the database

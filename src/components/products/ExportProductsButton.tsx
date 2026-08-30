@@ -16,7 +16,12 @@ interface ExportProductsButtonProps {
 
 export function ExportProductsButton({ lang, products }: ExportProductsButtonProps) {
   const { isLoading: authIsLoading, hasPermission, currentUser } = useAuth();
-  const { products: realtimeProducts, productTypes, isLoading: realtimeLoading } = useRealtimeData();
+  const {
+    products: realtimeProducts,
+    productTypes,
+    orders,
+    isLoading: realtimeLoading,
+  } = useRealtimeData();
   const { toast } = useToast();
   const [isExporting, setIsExporting] = useState(false);
 
@@ -58,7 +63,7 @@ export function ExportProductsButton({ lang, products }: ExportProductsButtonPro
 
     setIsExporting(true);
     try {
-      await exportProductsToExcel(branchVisibleProducts, productTypes, lang);
+      await exportProductsToExcel(branchVisibleProducts, productTypes, lang, undefined, orders);
       toast({
         title: t.exportSuccess(branchVisibleProducts.length),
       });
@@ -71,7 +76,7 @@ export function ExportProductsButton({ lang, products }: ExportProductsButtonPro
     } finally {
       setIsExporting(false);
     }
-  }, [branchVisibleProducts, productTypes, lang, toast, t.exportError, t.exportSuccess, t.noProducts]);
+  }, [branchVisibleProducts, productTypes, lang, orders, toast, t.exportError, t.exportSuccess, t.noProducts]);
 
   if (authIsLoading || !hasPermission('products_export')) {
     return null;
